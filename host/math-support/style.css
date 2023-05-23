@@ -149,9 +149,9 @@ post[with-notice] > sub-post > post-content > notice > sub-notice {
 post[with-notice] > sub-post > post-content > notice > sub-notice > notice-content {
 	display: inline-block;
 	vertical-align: top;
-	width: calc(60.92964824% - 60px);
-	padding: 0px 4.08496732px 0px 60px;
-	background-size: 50px;
+	width: calc(60% - 50px);
+	padding: 0px 0px 0px 50px;
+	background-size: 40px;
 	background-position: 0px center;
 	background-repeat: no-repeat;
 }
