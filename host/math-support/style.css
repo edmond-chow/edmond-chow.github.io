@@ -155,6 +155,9 @@ post[with-notice] > sub-post > post-content > notice > sub-notice > notice-conte
 	background-position: 0px center;
 	background-repeat: no-repeat;
 }
+major.tiny > sub-major post[with-notice] > sub-post > post-content > notice > sub-notice > notice-content {
+	width: calc(80% - 50px);
+}
 post[with-notice] > sub-post > post-content > notice.alert > sub-notice > notice-content {
 	background-image: url(security-maintenance-alert.png);
 }
