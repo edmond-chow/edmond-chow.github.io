@@ -71,7 +71,7 @@ post[with-collapsed] > sub-post > post-content {
 post[with-collapsed] > sub-post.visibled > post-content {
 	overflow-y: visible;
 }
-post.has-notice > sub-post > post-content {
+post[with-notice] > sub-post > post-content {
 	padding: 0px !important;
 }
 /* custom add-ins */
@@ -123,17 +123,20 @@ major.tiny > sub-major post > sub-post > post-content > img:last-of-type {
 post > sub-post > post-leader > post-leader-advance > button.advance.visibility:not(:first-of-type) {
 	display: none;
 }
-/* notice */
-notice {
+/* post[with-notice] > sub-post > post-content > notice */
+post[with-notice] > sub-post > post-content > notice {
 	display: block;
 	vertical-align: top;
 	width: auto;
 	padding: 0px 16px 16px 16px;
 }
-major.tiny notice {
+post[with-notice] > sub-post > post-content > * {
+	display: none;
+}
+major.tiny > sub-major post[with-notice] > sub-post > post-content > notice {
 	padding: 0px 12px 12px 12px;
 }
-notice > sub-notice {
+post[with-notice] > sub-post > post-content > notice > sub-notice {
 	display: block;
 	vertical-align: top;
 	width: auto;
@@ -143,45 +146,45 @@ notice > sub-notice {
 	border-radius: 5px;
 	text-align: center;
 }
-notice > sub-notice > notice-content {
+post[with-notice] > sub-post > post-content > notice > sub-notice > notice-content {
 	display: inline-block;
 	vertical-align: top;
 	width: calc(60.92964824% - 60px);
-	padding: 0px 0px 0px 60px;
+	padding: 0px 4.08496732px 0px 60px;
 	background-size: 50px;
 	background-position: 0px center;
 	background-repeat: no-repeat;
 }
-notice.alert > sub-notice > notice-content {
+post[with-notice] > sub-post > post-content > notice.alert > sub-notice > notice-content {
 	background-image: url(security-maintenance-alert.png);
 }
-notice.error > sub-notice > notice-content {
+post[with-notice] > sub-post > post-content > notice.error > sub-notice > notice-content {
 	background-image: url(security-maintenance-error.png);
 }
-notice.information > sub-notice > notice-content {
+post[with-notice] > sub-post > post-content > notice.information > sub-notice > notice-content {
 	background-image: url(security-maintenance-information.png);
 }
-notice > sub-notice > notice-content > h3:first-child {
+post[with-notice] > sub-post > post-content > notice > sub-notice > notice-content > h3:first-child {
 	padding: 0px 0px 10px 0px;
 	line-height: 25px;
 	font-weight: bold;
 	display: block;
 	background: unset;
 }
-notice > sub-notice > notice-content > p {
+post[with-notice] > sub-post > post-content > notice > sub-notice > notice-content > p {
 	padding: 0px 0px 6px 0px;
 	line-height: 21px;
 	font-weight: bold;
 	display: block;
 	background: unset;
 }
-notice > sub-notice > notice-content > p:last-of-type {
+post[with-notice] > sub-post > post-content > notice > sub-notice > notice-content > p:last-of-type {
 	padding: 0px;
 }
-notice > sub-notice > notice-content number {
+post[with-notice] > sub-post > post-content > notice > sub-notice > notice-content number {
 	display: inline;
 	font-weight: 500;
 }
-notice > sub-notice > notice-content > * {
+post[with-notice] > sub-post > post-content > notice > sub-notice > notice-content > * {
 	display: none;
 }

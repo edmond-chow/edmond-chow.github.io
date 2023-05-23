@@ -102,9 +102,9 @@ requestAnimationFrame(function delegate() {
 			/* '.has-notice' for the 'post's */ {
 				for (let i = 0; i < postNode.length; i++) {
 					if (postNode[i].has(':scope > sub-post > post-content > notice')) {
-						postNode[i].classList.add('has-notice');
+						postNode[i].setAttribute('with-notice', '');
 					} else {
-						postNode[i].classList.remove('has-notice');
+						postNode[i].removeAttribute('with-notice');
 					}
 				}
 			}
