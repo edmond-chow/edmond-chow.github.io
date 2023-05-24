@@ -66,7 +66,10 @@ post > sub-post > post-leader > post-leader-advance {
 post[with-collapsed] > sub-post > post-content {
 	aspect-ratio: 16 / 9;
 	overflow-y: overlay;
-	padding: 0px !important;
+	padding: 0px 0px 16px 0px !important;
+}
+major.tiny > sub-major post[with-collapsed] > sub-post > post-content {
+	padding: 0px 0px 12px 0px !important;
 }
 post[with-collapsed] > sub-post.visibled > post-content {
 	overflow-y: visible;
@@ -110,7 +113,7 @@ post > sub-post > post-content > img {
 	aspect-ratio: 1275 / 1754;
 }
 post > sub-post > post-content > img:last-of-type {
-	margin: 0px 0px 16px 16px;
+	margin-bottom: 0px !important;
 }
 major.tiny > sub-major post > sub-post > post-content > img {
 	display: block;
@@ -118,7 +121,7 @@ major.tiny > sub-major post > sub-post > post-content > img {
 	margin: 0px 0px 6px 12px;
 }
 major.tiny > sub-major post > sub-post > post-content > img:last-of-type {
-	margin: 0px 0px 12px 12px;
+	margin-bottom: 0px !important;
 }
 post > sub-post > post-leader > post-leader-advance > button.advance.visibility:not(:first-of-type) {
 	display: none;
