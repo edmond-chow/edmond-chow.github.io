@@ -565,19 +565,15 @@ body, body#blur major > sub-major > post > sub-post:after {
 						continue;
 					}
 					let targetNode = dropdownNode[i].get(':scope > dropdown-content');
-					if (!inClient(dropdownNode[i])) {
-						targetNode.classList.add('hidden');
-						targetNode.style.maxHeight = '';
-						targetNode.style.left = '';
-						targetNode.style.right = '';
-						continue;
-					}
 					let top = dropdownNode[i].getBoundingClientRect().bottom + 6;
 					let bottom = document.body.clientHeight - dropdownNode[i].getBoundingClientRect().bottom;
-					if (top < 69 || bottom < 64) {
+					if (top < 69 || bottom < 64 || !inClient(dropdownNode[i])) {
 						targetNode.classList.add('hidden');
 						targetNode.style.maxHeight = '';
 						targetNode.style.top = '';
+						targetNode.style.left = '';
+						targetNode.style.right = '';
+						continue;
 					} else {
 						targetNode.classList.remove('hidden');
 						targetNode.style.maxHeight = (bottom - 28).toString() + 'px';
