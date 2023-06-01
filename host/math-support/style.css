@@ -56,7 +56,7 @@
 	}
 }
 /* overridden */
-body, body#blur major > sub-major > post > sub-post:after {
+basis-layer, backdrop-container > blurred-filter {
 	background-image: url(analysis.jpg);
 }
 post > sub-post > post-leader > post-leader-advance {
