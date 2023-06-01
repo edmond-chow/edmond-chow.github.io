@@ -666,7 +666,7 @@ body > basis-layer, major > sub-major > post > sub-post > backdrop-container > b
 					continue;
 				}
 				let backdropContainerNode = postNode[i].get(':scope > sub-post > backdrop-container');
-				if (inClient(postNode[i])) {
+				if (!navigator.userAgent.includes('mobile') || inClient(postNode[i])) {
 					backdropContainerNode.classList.remove('suspended');
 				} else {
 					backdropContainerNode.classList.add('suspended');
