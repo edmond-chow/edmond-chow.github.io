@@ -24,17 +24,32 @@
 			backdrop-filter: blur(14px);
 		}
 		body::-webkit-scrollbar-thumb {
-			background: orange;
+			background: #FFA500;
 			border: 4px solid transparent;
 			background-clip: padding-box;
 		}
 		body::-webkit-scrollbar-thumb:hover {
-			background: orangered;
+			background: #EBB069;
 			border: 4px solid transparent;
 			background-clip: padding-box;
 		}
 		body::-webkit-scrollbar-thumb:active {
-			background: darkorange;
+			background: #A55A00;
+			border: 4px solid transparent;
+			background-clip: padding-box;
+		}
+		body.chung-style::-webkit-scrollbar-thumb {
+			background: #FF69B4;
+			border: 4px solid transparent;
+			background-clip: padding-box;
+		}
+		body.chung-style::-webkit-scrollbar-thumb:hover {
+			background: #9F4A56;
+			border: 4px solid transparent;
+			background-clip: padding-box;
+		}
+		body.chung-style::-webkit-scrollbar-thumb:active {
+			background: #FFB6c1;
 			border: 4px solid transparent;
 			background-clip: padding-box;
 		}
@@ -51,6 +66,21 @@
 	}
 	::-webkit-scrollbar-thumb:active {
 		background: #106601;
+		border-color: transparent;
+		background-clip: padding-box;
+	}
+	body.chung-style ::-webkit-scrollbar-thumb {
+		background: #FFD54F;
+		border-color: transparent;
+		background-clip: padding-box;
+	}
+	body.chung-style ::-webkit-scrollbar-thumb:hover {
+		background: #FFEBA9;
+		border-color: transparent;
+		background-clip: padding-box;
+	}
+	body.chung-style ::-webkit-scrollbar-thumb:active {
+		background: #7E6A27;
 		border-color: transparent;
 		background-clip: padding-box;
 	}
@@ -104,6 +134,9 @@ body#blur post > sub-post > post-leader > post-leader-section > post-leader-date
 }
 body.chung-style top > a.active, body.chung-style button {
 	color: #FFD54F;
+}
+body.chung-style ::selection {
+	color: #FF1493;
 }
 /* customized */
 top > a:first-child {
