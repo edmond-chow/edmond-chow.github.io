@@ -107,6 +107,9 @@ post[with-collapsed] > sub-post.visibled > post-content {
 post[with-notice] > sub-post > post-content {
 	padding: 0px !important;
 }
+post[with-inline-frame] > sub-post > post-content {
+	padding: 0px !important;
+}
 /* feature */
 post > sub-post > post-leader > post-leader-section > post-leader-date {
 	width: auto;
@@ -158,8 +161,8 @@ post[with-notice] > sub-post > post-content > notice {
 	width: auto;
 	padding: 0px 16px 16px 16px;
 }
-post[with-notice] > sub-post > post-content > * {
-	display: none;
+post[with-notice] > sub-post > post-content > :not(notice, iframe:first-of-type:last-child) {
+	display: none !important;
 }
 major.tiny > sub-major post[with-notice] > sub-post > post-content > notice {
 	padding: 0px 12px 12px 12px;
@@ -173,6 +176,16 @@ post[with-notice] > sub-post > post-content > notice > sub-notice {
 	background: rgba(255, 255, 255, 0.3);
 	border-radius: 5px;
 	text-align: center;
+}
+body.chung-style post[with-notice] > sub-post > post-content > notice.chung-notice > sub-notice {
+	border: #FFD54F 2px solid;
+	padding: 8px;
+	background-image: url('chung-notice.jpg');
+	background-position: center;
+	background-size: cover;
+}
+body.chung-style post[with-notice] > sub-post > post-content > notice.chung-notice > sub-notice ::selection {
+	background-color: #FFD54F;
 }
 post[with-notice] > sub-post > post-content > notice > sub-notice > notice-content {
 	display: inline-block;
@@ -218,4 +231,20 @@ post[with-notice] > sub-post > post-content > notice > sub-notice > notice-conte
 }
 post[with-notice] > sub-post > post-content > notice > sub-notice > notice-content > * {
 	display: none;
+}
+/* post[with-inline-frame] > sub-post > post-content > iframe:first-of-type:last-child */
+post[with-inline-frame] > sub-post > post-content > iframe:first-of-type:last-child {
+	width: 100%;
+	display: block;
+}
+body#blur post[with-inline-frame] > sub-post > post-content > iframe:first-of-type:last-child {
+	border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+body#blur major.tiny > sub-major post[with-inline-frame] > sub-post > post-content > iframe:first-of-type:last-child {
+	border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+}
+post[with-inline-frame] > sub-post > post-content > :not(notice, iframe:first-of-type:last-child) {
+	display: none !important;
 }

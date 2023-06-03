@@ -120,6 +120,18 @@ requestAnimationFrame(function delegate() {
 				}
 			}
 		}
+		/* inline-frame */ {
+			let postNode = forAllTag('post');
+			/* '.has-notice' for the 'post's */ {
+				for (let i = 0; i < postNode.length; i++) {
+					if (postNode[i].has(':scope > sub-post > post-content > iframe')) {
+						postNode[i].setAttribute('with-inline-frame', '');
+					} else {
+						postNode[i].removeAttribute('with-inline-frame');
+					}
+				}
+			}
+		}
 		/* img */ {
 			/* '[deferred-src]' for the 'img's */ {
 				let imgNode = forAll('img[deferred-src]');
