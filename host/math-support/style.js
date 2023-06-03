@@ -94,6 +94,14 @@ requestAnimationFrame(function delegate() {
 				}
 			}
 		}
+		/* iframe */ {
+			/* '[deferred-src]' for the 'iframe's */ {
+				let iframeNode = forAll('iframe[deferred-src]');
+				for (let i = 0; i < iframeNode.length; i++) {
+					iframeNode[i].addEventListener('error', onErrorLoaded);
+				}
+			}
+		}
 	}
 	/* [ pseudo-style ] */
 	{
@@ -148,6 +156,26 @@ requestAnimationFrame(function delegate() {
 					if (!inScrollable(imgNode[i])) {
 						imgNode[i].setAttribute('deferred-src', imgNode[i].getAttribute('pre-deferred-src'));
 						imgNode[i].removeAttribute('pre-deferred-src');
+					}
+				}
+			}
+		}
+		/* iframe */ {
+			/* '[deferred-src]' for the 'iframe's */ {
+				let iframeNode = forAll('iframe[deferred-src]');
+				for (let i = 0; i < iframeNode.length; i++) {
+					if (inScrollable(iframeNode[i])) {
+						iframeNode[i].setAttribute('src', iframeNode[i].getAttribute('deferred-src'));
+						iframeNode[i].removeAttribute('deferred-src');
+					}
+				}
+			}
+			/* '[pre-deferred-src]' for the 'iframe's */ {
+				let iframeNode = forAll('iframe[pre-deferred-src]');
+				for (let i = 0; i < iframeNode.length; i++) {
+					if (!inScrollable(iframeNode[i])) {
+						iframeNode[i].setAttribute('deferred-src', iframeNode[i].getAttribute('pre-deferred-src'));
+						iframeNode[i].removeAttribute('pre-deferred-src');
 					}
 				}
 			}
