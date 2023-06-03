@@ -34,10 +34,10 @@ function inScrollable(node) {
 		return (left && right) && (top && bottom);
 	}
 	let parentNode = node.parentElement;
-	while (parentNode != null && !isScrollable(parentNode)) {
+	while (parentNode != document.body && !isScrollable(parentNode)) {
 		parentNode = parentNode.parentElement;
 	}
-	return parentNode != null ? isInside(node, parentNode) : inClient(node);
+	return parentNode != document.body ? isInside(node, parentNode) : inClient(node);
 }
 requestAnimationFrame(function delegate() {
 	requestAnimationFrame(delegate);
