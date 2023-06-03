@@ -29,12 +29,12 @@
 			background-clip: padding-box;
 		}
 		body::-webkit-scrollbar-thumb:hover {
-			background: yellow;
+			background: orangered;
 			border: 4px solid transparent;
 			background-clip: padding-box;
 		}
 		body::-webkit-scrollbar-thumb:active {
-			background: red;
+			background: darkorange;
 			border: 4px solid transparent;
 			background-clip: padding-box;
 		}
@@ -77,7 +77,7 @@ post[with-collapsed] > sub-post.visibled > post-content {
 post[with-notice] > sub-post > post-content {
 	padding: 0px !important;
 }
-/* custom add-ins */
+/* feature */
 post > sub-post > post-leader > post-leader-section > post-leader-date {
 	width: auto;
 	vertical-align: top;
@@ -101,6 +101,9 @@ post > sub-post > post-leader > post-leader-section > post-leader-date:not(:firs
 }
 body#blur post > sub-post > post-leader > post-leader-section > post-leader-date {
 	color: rgba(0,0,0,0.5);
+}
+body.chung-style top > a.active, body.chung-style button {
+	color: #FFD54F;
 }
 /* customized */
 top > a:first-child {
