@@ -1,23 +1,4 @@
 let isMathSupportLoaded = false;
-function onVisibleClick() {
-	if (this.id == 'visibled') {
-		this.id = '';
-		this.classList.remove('up');
-		this.classList.add('down');
-		this.textContent = '展開';
-		this.parentElement?.parentElement?.parentElement?.classList.remove('visibled');
-	} else {
-		this.id = 'visibled';
-		this.classList.add('up');
-		this.classList.remove('down');
-		this.textContent = '縮小';
-		this.parentElement?.parentElement?.parentElement?.classList.add('visibled');
-	}
-}
-function onErrorLoaded() {
-	this.setAttribute('pre-deferred-src', this.getAttribute('src'));
-	this.removeAttribute('src');
-}
 function isScrollable(node) {
 	let scrollableX = node.scrollWidth > node.clientWidth;
 	let scrollableY = node.scrollHeight > node.clientHeight;
@@ -73,6 +54,21 @@ requestAnimationFrame(function delegate() {
 					buttonNode.classList.add('down');
 					buttonNode.textContent = '展開';
 					buttonNode.parentElement?.parentElement?.parentElement?.classList.remove('visibled');
+					function onVisibleClick() {
+						if (buttonNode.id == 'visibled') {
+							buttonNode.id = '';
+							buttonNode.classList.remove('up');
+							buttonNode.classList.add('down');
+							buttonNode.textContent = '展開';
+							buttonNode.parentElement?.parentElement?.parentElement?.classList.remove('visibled');
+						} else {
+							buttonNode.id = 'visibled';
+							buttonNode.classList.add('up');
+							buttonNode.classList.remove('down');
+							buttonNode.textContent = '縮小';
+							buttonNode.parentElement?.parentElement?.parentElement?.classList.add('visibled');
+						}
+					}
 					buttonNode.addEventListener('click', onVisibleClick);
 				}
 			}
@@ -90,6 +86,10 @@ requestAnimationFrame(function delegate() {
 			/* '[deferred-src]' for the 'img's */ {
 				let imgNode = forAll('img[deferred-src]');
 				for (let i = 0; i < imgNode.length; i++) {
+					function onErrorLoaded() {
+						imgNode[i].setAttribute('pre-deferred-src', imgNode[i].getAttribute('src'));
+						imgNode[i].removeAttribute('src');
+					}
 					imgNode[i].addEventListener('error', onErrorLoaded);
 				}
 			}
@@ -98,7 +98,13 @@ requestAnimationFrame(function delegate() {
 			/* '[deferred-src]' for the 'iframe's */ {
 				let iframeNode = forAll('iframe[deferred-src]');
 				for (let i = 0; i < iframeNode.length; i++) {
-					iframeNode[i].addEventListener('error', onErrorLoaded);
+					iframeNode[i].request = new XMLHttpRequest();
+					function onIframeErrorLoaded() {
+						if (iframeNode[i].request.status >= 400 && iframeNode[i].request.status <= 599) {
+							iframeNode[i].setAttribute('pre-deferred-src', '');
+						}
+					}
+					iframeNode[i].request.addEventListener('load', onIframeErrorLoaded);
 				}
 			}
 		}
@@ -165,6 +171,8 @@ requestAnimationFrame(function delegate() {
 				let iframeNode = forAll('iframe[deferred-src]');
 				for (let i = 0; i < iframeNode.length; i++) {
 					if (inScrollable(iframeNode[i])) {
+						iframeNode[i].request.open('GET', iframeNode[i].getAttribute('deferred-src'), true);
+						iframeNode[i].request.send();
 						iframeNode[i].setAttribute('src', iframeNode[i].getAttribute('deferred-src'));
 						iframeNode[i].removeAttribute('deferred-src');
 					}
@@ -174,8 +182,9 @@ requestAnimationFrame(function delegate() {
 				let iframeNode = forAll('iframe[pre-deferred-src]');
 				for (let i = 0; i < iframeNode.length; i++) {
 					if (!inScrollable(iframeNode[i])) {
-						iframeNode[i].setAttribute('deferred-src', iframeNode[i].getAttribute('pre-deferred-src'));
+						iframeNode[i].setAttribute('deferred-src', iframeNode[i].getAttribute('src'));
 						iframeNode[i].removeAttribute('pre-deferred-src');
+						iframeNode[i].removeAttribute('src');
 					}
 				}
 			}
