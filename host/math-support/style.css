@@ -1,16 +1,16 @@
 @charset 'UTF-8';
 /* icons */
 .back {
-	background-image:url(icons8-back-arrow-64.png);
+	background-image:url('icons8-back-arrow-64.png');
 }
 .next {
-	background-image:url(icons8-forward-button-64.png);
+	background-image:url('icons8-forward-button-64.png');
 }
 .up {
-	background-image:url(icons8-slide-up-64.png);
+	background-image:url('icons8-slide-up-64.png');
 }
 .down {
-	background-image:url(icons8-down-button-64.png);
+	background-image:url('icons8-down-button-64.png');
 }
 /* scroll */
 @supports selector(::-webkit-scrollbar) {
@@ -87,7 +87,10 @@
 }
 /* overridden */
 body > basis-layer, major > sub-major > post > sub-post > backdrop-container > blurred-filter {
-	background-image: url(analysis.jpg);
+	background-image: url('analysis.jpg');
+}
+body.chung-style > basis-layer, body.chung-style major > sub-major > post > sub-post > backdrop-container > blurred-filter {
+	background-image: url('chung-galaxy.jpg');
 }
 post > sub-post > post-leader > post-leader-advance {
 	max-width: max-content !important;
@@ -140,7 +143,7 @@ body.chung-style ::selection {
 }
 /* customized */
 top > a:first-child {
-	background-image: url(calculator.ico);
+	background-image: url('calculator.ico');
 }
 post > sub-post > post-content > img {
 	display: block;
@@ -200,13 +203,13 @@ major.tiny > sub-major post[with-notice] > sub-post > post-content > notice > su
 	width: calc(80% - 50px);
 }
 post[with-notice] > sub-post > post-content > notice.alert > sub-notice > notice-content {
-	background-image: url(security-maintenance-alert.png);
+	background-image: url('security-maintenance-alert.png');
 }
 post[with-notice] > sub-post > post-content > notice.error > sub-notice > notice-content {
-	background-image: url(security-maintenance-error.png);
+	background-image: url('security-maintenance-error.png');
 }
 post[with-notice] > sub-post > post-content > notice.information > sub-notice > notice-content {
-	background-image: url(security-maintenance-information.png);
+	background-image: url('security-maintenance-information.png');
 }
 post[with-notice] > sub-post > post-content > notice > sub-notice > notice-content > h3:first-child {
 	padding: 0px 0px 10px 0px;
