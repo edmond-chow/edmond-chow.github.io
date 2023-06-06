@@ -97,7 +97,7 @@ post > sub-post > post-leader > post-leader-advance {
 }
 post[with-collapsed] > sub-post > post-content {
 	aspect-ratio: 16 / 9;
-	overflow-y: overlay;
+	overflow-y: scroll;
 	padding: 0px 0px 16px 16px !important;
 }
 major.tiny > sub-major post[with-collapsed] > sub-post > post-content {
@@ -146,7 +146,7 @@ top > a:first-child {
 }
 post > sub-post > post-content > img {
 	display: block;
-	width: calc(70% - 14px);
+	width: 70%;
 	margin: 0px 0px 6px 0px;
 	aspect-ratio: 1275 / 1754;
 }
