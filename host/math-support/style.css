@@ -17,7 +17,6 @@
 	@media (pointer:fine) {
 		body {
 			overflow: overlay;
-			display: block;
 		}
 		body::-webkit-scrollbar-track, body::-webkit-scrollbar-corner {
 			background-color: transparent;
