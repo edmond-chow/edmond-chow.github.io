@@ -21,7 +21,6 @@
 		}
 		body::-webkit-scrollbar-track, body::-webkit-scrollbar-corner {
 			background-color: transparent;
-			backdrop-filter: blur(14px);
 		}
 		body::-webkit-scrollbar-thumb {
 			background: #FFA500;
