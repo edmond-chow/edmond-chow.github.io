@@ -115,7 +115,7 @@ requestAnimationFrame(function delegate() {
 			let postNode = forAllTag('post');
 			/* '[with-notice]' for the 'post's */ {
 				for (let i = 0; i < postNode.length; i++) {
-					if (postNode[i].has(':scope > sub-post > post-content > notice') && !postNode[i].has(':scope > sub-post > post-content > post') && !postNode[i].hasAttribute('non-inlined')) {
+					if (postNode[i].has(':scope > sub-post > post-content > notice') && !postNode[i].has(':scope > sub-post > post-content > post') && !postNode[i].hasAttribute('with-collapsed')) {
 						postNode[i].setAttribute('with-notice', '');
 					} else {
 						postNode[i].removeAttribute('with-notice');
@@ -140,7 +140,7 @@ requestAnimationFrame(function delegate() {
 			let postNode = forAllTag('post');
 			/* '[with-inline-frame]' for the 'post's */ {
 				for (let i = 0; i < postNode.length; i++) {
-					if (postNode[i].has(':scope > sub-post > post-content > iframe:first-of-type:last-child') && !postNode[i].has(':scope > sub-post > post-content > post') && !postNode[i].hasAttribute('non-inlined')) {
+					if (postNode[i].has(':scope > sub-post > post-content > iframe:first-of-type:last-child') && !postNode[i].has(':scope > sub-post > post-content > post') && !postNode[i].hasAttribute('with-collapsed')) {
 						postNode[i].setAttribute('with-inline-frame', '');
 					} else {
 						postNode[i].removeAttribute('with-inline-frame');
@@ -152,7 +152,7 @@ requestAnimationFrame(function delegate() {
 			let postNode = forAllTag('post');
 			/* '[with-graphics]' for the 'post's */ {
 				for (let i = 0; i < postNode.length; i++) {
-					if (postNode[i].has(':scope > sub-post > post-content > img:first-child:last-of-type') && !postNode[i].has(':scope > sub-post > post-content > post') && !postNode[i].hasAttribute('non-inlined')) {
+					if (postNode[i].has(':scope > sub-post > post-content > img:first-child:last-of-type') && !postNode[i].has(':scope > sub-post > post-content > post') && !postNode[i].hasAttribute('with-collapsed')) {
 						postNode[i].setAttribute('with-graphics', '');
 					} else {
 						postNode[i].removeAttribute('with-graphics');
