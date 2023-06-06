@@ -113,9 +113,9 @@ requestAnimationFrame(function delegate() {
 	{
 		/* notice */ {
 			let postNode = forAllTag('post');
-			/* '.has-notice' for the 'post's */ {
+			/* '[with-notice]' for the 'post's */ {
 				for (let i = 0; i < postNode.length; i++) {
-					if (postNode[i].has(':scope > sub-post > post-content > notice')) {
+					if (postNode[i].has(':scope > sub-post > post-content > notice') && !postNode[i].has(':scope > sub-post > post-content > post') && !postNode[i].hasAttribute('non-inlined')) {
 						postNode[i].setAttribute('with-notice', '');
 					} else {
 						postNode[i].removeAttribute('with-notice');
@@ -127,21 +127,35 @@ requestAnimationFrame(function delegate() {
 			let noticeNode = forAllTag('notice');
 			/* '.no-space' for the 'notice's */ {
 				for (let i = 0; i < noticeNode.length; i++) {
-					let noticeContentNode = noticeNode[i].get(':scope > sub-notice > notice-content');
-					if (!noticeContentNode.classList.contains('no-space')) {
-						noticeContentNode.classList.add('no-space');
+					if (noticeNode[i].has(':scope > sub-notice > notice-content')) {
+						let noticeContentNode = noticeNode[i].get(':scope > sub-notice > notice-content');
+						if (!noticeContentNode.classList.contains('no-space')) {
+							noticeContentNode.classList.add('no-space');
+						}
 					}
 				}
 			}
 		}
 		/* inline-frame */ {
 			let postNode = forAllTag('post');
-			/* '.has-notice' for the 'post's */ {
+			/* '[with-inline-frame]' for the 'post's */ {
 				for (let i = 0; i < postNode.length; i++) {
-					if (postNode[i].has(':scope > sub-post > post-content > iframe')) {
+					if (postNode[i].has(':scope > sub-post > post-content > iframe:first-of-type:last-child') && !postNode[i].has(':scope > sub-post > post-content > post') && !postNode[i].hasAttribute('non-inlined')) {
 						postNode[i].setAttribute('with-inline-frame', '');
 					} else {
 						postNode[i].removeAttribute('with-inline-frame');
+					}
+				}
+			}
+		}
+		/* graphics */ {
+			let postNode = forAllTag('post');
+			/* '[with-graphics]' for the 'post's */ {
+				for (let i = 0; i < postNode.length; i++) {
+					if (postNode[i].has(':scope > sub-post > post-content > img:first-child:last-of-type') && !postNode[i].has(':scope > sub-post > post-content > post') && !postNode[i].hasAttribute('non-inlined')) {
+						postNode[i].setAttribute('with-graphics', '');
+					} else {
+						postNode[i].removeAttribute('with-graphics');
 					}
 				}
 			}
