@@ -96,14 +96,14 @@ post > sub-post > post-leader > post-leader-advance {
 }
 post[with-collapsed] > sub-post > post-content {
 	aspect-ratio: 16 / 9;
-	overflow-y: overlay;
+	overflow-y: scroll;
 	padding: 0px 0px 16px 16px !important;
 }
 major.tiny > sub-major post[with-collapsed] > sub-post > post-content {
 	padding: 0px 0px 12px 12px !important;
 }
 post[with-collapsed] > sub-post.visibled > post-content {
-	overflow-y: visible;
+	aspect-ratio: auto;
 }
 post[with-notice] > sub-post > post-content {
 	padding: 0px !important;
