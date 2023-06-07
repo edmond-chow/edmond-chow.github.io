@@ -58,12 +58,12 @@
 		background-clip: padding-box;
 	}
 	::-webkit-scrollbar-thumb:hover {
-		background: #106601;
+		background: #71CC19;
 		border-color: transparent;
 		background-clip: padding-box;
 	}
 	::-webkit-scrollbar-thumb:active {
-		background: #71CC19;
+		background: #106601;
 		border-color: transparent;
 		background-clip: padding-box;
 	}
