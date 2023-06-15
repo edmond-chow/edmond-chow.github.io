@@ -176,10 +176,15 @@ post[with-notice] > sub-post > post-content > notice > sub-notice {
 	vertical-align: top;
 	width: auto;
 	padding: 10px;
-	box-shadow: 0 0 32px rgba(0, 0, 0, 0.5);
-	background: rgba(255, 255, 255, 0.3);
+	border: 1px solid rgba(247, 247, 247, .7);
+    background-color: rgba(0, 0, 0, .5);
 	border-radius: 5px;
 	text-align: center;
+}
+body#blur post[with-notice] > sub-post > post-content > notice > sub-notice {
+	border: 0px;
+	box-shadow: 0 0 32px rgba(0, 0, 0, 0.5);
+	background-color: rgba(255, 255, 255, 0.3);
 }
 body.chung-style post[with-notice] > sub-post > post-content > notice.chung-notice > sub-notice {
 	border: #FFD54F 2px solid;
