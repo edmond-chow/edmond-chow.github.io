@@ -116,18 +116,12 @@ post[with-graphics] > sub-post > post-content {
 }
 /* feature */
 post > sub-post > post-leader > post-leader-section > post-leader-date {
-	width: auto;
-	vertical-align: top;
 	display: inline-flex;
 	padding: 20px 20px 27px 20px;
-	margin: 0px;
 	line-height: 21px;
 	min-height: 21px;
 	font-size: 16px;
 	color: white;
-	text-decoration: none;
-	overflow-wrap: anywhere;
-	word-break: normal;
 	flex-grow: 0;
 }
 major.tiny > sub-major post > sub-post > post-leader > post-leader-section > post-leader-date {
@@ -147,7 +141,6 @@ top > a:first-child {
 	background-image: url('calculator.ico');
 }
 post > sub-post > post-content > img {
-	display: block;
 	width: 70%;
 	margin: 0px 0px 6px 0px;
 	aspect-ratio: 1275 / 1754;
@@ -160,9 +153,6 @@ post > sub-post > post-leader > post-leader-advance > button.advance.visibility:
 }
 /* post[with-notice] > sub-post > post-content > notice */
 post[with-notice] > sub-post > post-content > notice {
-	display: block;
-	vertical-align: top;
-	width: auto;
 	padding: 0px 16px 16px 16px;
 }
 post[with-notice] > sub-post > post-content > :not(notice, iframe:first-of-type:last-child, img:first-child:last-of-type) {
@@ -172,17 +162,14 @@ major.tiny > sub-major post[with-notice] > sub-post > post-content > notice {
 	padding: 0px 12px 12px 12px;
 }
 post[with-notice] > sub-post > post-content > notice > sub-notice {
-	display: block;
-	vertical-align: top;
-	width: auto;
 	padding: 10px;
 	border: 1px solid rgba(247, 247, 247, .7);
     background-color: rgba(0, 0, 0, .5);
-	border-radius: 5px;
 	text-align: center;
 }
 body#blur post[with-notice] > sub-post > post-content > notice > sub-notice {
 	border: 0px;
+	border-radius: 5px;
 	box-shadow: 0 0 32px rgba(0, 0, 0, 0.5);
 	background-color: rgba(255, 255, 255, 0.3);
 }
@@ -198,12 +185,11 @@ body.chung-style post[with-notice] > sub-post > post-content > notice.chung-noti
 }
 post[with-notice] > sub-post > post-content > notice > sub-notice > notice-content {
 	display: inline-block;
-	vertical-align: top;
 	width: calc(60% - 50px);
 	padding: 0px 0px 0px 50px;
+	background-repeat: no-repeat;
 	background-size: 40px;
 	background-position: 0px center;
-	background-repeat: no-repeat;
 }
 major.tiny > sub-major post[with-notice] > sub-post > post-content > notice > sub-notice > notice-content {
 	width: calc(80% - 50px);
@@ -246,7 +232,6 @@ post[with-notice] > sub-post > post-content > notice > sub-notice > notice-conte
 /* post[with-inline-frame] > sub-post > post-content > iframe:first-of-type:last-child */
 post[with-inline-frame] > sub-post > post-content > iframe:first-of-type:last-child {
 	width: 100%;
-	display: block;
 }
 body#blur post[with-inline-frame] > sub-post > post-content > iframe:first-of-type:last-child {
 	border-bottom-left-radius: 8px;
@@ -262,7 +247,6 @@ post[with-inline-frame] > sub-post > post-content > :not(notice, iframe:first-of
 /* post[with-graphics] > sub-post > post-content > img:first-child:last-of-type */
 post[with-graphics] > sub-post > post-content > img:first-child:last-of-type {
 	width: 100%;
-	display: block;
 	aspect-ratio: auto 16 / 9;
 	padding: 0px 0px 16px 0px;
 }
