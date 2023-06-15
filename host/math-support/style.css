@@ -84,7 +84,7 @@
 	}
 }
 /* overridden */
-body > basis-layer, major > sub-major > post > sub-post > backdrop-container > blurred-filter {
+body > basis-layer, body#blur major > sub-major > post > sub-post > backdrop-container > blurred-filter {
 	background-image: url('analysis.jpg');
 }
 body.chung-style > basis-layer, body.chung-style major > sub-major > post > sub-post > backdrop-container > blurred-filter {
@@ -213,6 +213,7 @@ post[with-notice] > sub-post > post-content > notice.information > sub-notice > 
 	background-image: url('security-maintenance-information.png');
 }
 post[with-notice] > sub-post > post-content > notice > sub-notice > notice-content > h3:first-child {
+	text-align: center;
 	padding: 0px 0px 10px 0px;
 	line-height: 25px;
 	font-weight: bold;
@@ -220,6 +221,7 @@ post[with-notice] > sub-post > post-content > notice > sub-notice > notice-conte
 	background: unset;
 }
 post[with-notice] > sub-post > post-content > notice > sub-notice > notice-content > p {
+	text-align: center;
 	padding: 0px 0px 6px 0px;
 	line-height: 21px;
 	font-weight: bold;
