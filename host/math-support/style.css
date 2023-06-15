@@ -87,7 +87,7 @@
 body > basis-layer, body#blur major > sub-major > post > sub-post > backdrop-container > blurred-filter {
 	background-image: url('analysis.jpg');
 }
-body.chung-style > basis-layer, body.chung-style major > sub-major > post > sub-post > backdrop-container > blurred-filter {
+body.chung-style > basis-layer, body#blur.chung-style major > sub-major > post > sub-post > backdrop-container > blurred-filter {
 	background-image: url('chung-galaxy.jpg');
 }
 post > sub-post > post-leader > post-leader-advance {
