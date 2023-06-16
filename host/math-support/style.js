@@ -38,35 +38,47 @@ requestAnimationFrame(function delegate() {
 			/* events for the 'post > sub-post > post-leader > post-leader-advance > button.visibility's */ {
 				let postNode = forAll('post[with-collapsed]');
 				for (let i = 0; i < postNode.length; i++) {
-					let postLeaderAdvanceNode = postNode[i].get('post > sub-post > post-leader > post-leader-advance');
-					if (postLeaderAdvanceNode == null) {
+					if (!postNode[i].has(':scope > sub-post > post-leader > post-leader-advance')) {
 						continue;
 					}
-					let buttonNode = postLeaderAdvanceNode.get('button.advance.visibility');
-					if (buttonNode == null) {
-						buttonNode = document.createElement('button');
-						buttonNode.classList.add('advance');
-						buttonNode.classList.add('visibility');
-						postLeaderAdvanceNode.append(buttonNode);
-					}
+					let postLeaderAdvanceNode = postNode[i].get(':scope > sub-post > post-leader > post-leader-advance');
+					let buttonNode = function() {
+						if (postLeaderAdvanceNode.has(':scope > button.advance.visibility')) {
+							return postLeaderAdvanceNode.get(':scope > button.advance.visibility');
+						} else {
+							let buttonNode = document.createElement('button');
+							buttonNode.classList.add('advance');
+							buttonNode.classList.add('visibility');
+							postLeaderAdvanceNode.append(buttonNode);
+							return buttonNode;
+						}
+					}();
 					buttonNode.id = '';
 					buttonNode.classList.remove('up');
 					buttonNode.classList.add('down');
 					buttonNode.textContent = '展開';
-					buttonNode.parentElement?.parentElement?.parentElement?.classList.remove('visibled');
+					let capturedPostNode = postNode[i];
 					function onVisibleClick() {
+						if (!capturedPostNode.has(':scope > sub-post > post-leader > post-leader-advance') || !capturedPostNode.has(':scope > sub-post > post-content')) {
+							return;
+						}
+						let postLeaderAdvanceNode = capturedPostNode.get(':scope > sub-post > post-leader > post-leader-advance');
+						let postContentNode = capturedPostNode.get(':scope > sub-post > post-content');
+						if (buttonNode.parentElement != postLeaderAdvanceNode) {
+							return;
+						}
 						if (buttonNode.id == 'visibled') {
 							buttonNode.id = '';
 							buttonNode.classList.remove('up');
 							buttonNode.classList.add('down');
 							buttonNode.textContent = '展開';
-							buttonNode.parentElement?.parentElement?.parentElement?.classList.remove('visibled');
+							postContentNode.style.aspectRatio = '';
 						} else {
 							buttonNode.id = 'visibled';
 							buttonNode.classList.add('up');
 							buttonNode.classList.remove('down');
 							buttonNode.textContent = '縮小';
-							buttonNode.parentElement?.parentElement?.parentElement?.classList.add('visibled');
+							postContentNode.style.aspectRatio = postContentNode.offsetWidth.toString() + ' / ' + postContentNode.scrollHeight.toString();
 						}
 					}
 					buttonNode.addEventListener('click', onVisibleClick);
