@@ -67,6 +67,24 @@ requestAnimationFrame(function delegate() {
 						if (buttonNode.parentElement != postLeaderAdvanceNode) {
 							return;
 						}
+						function freezer(action) {
+							let childNode = postContentNode.children;
+							for (let i = 0; i < childNode.length; i++) {
+								if (childNode[i].tagName == 'img'.toUpperCase() || childNode[i].tagName == 'iframe'.toUpperCase()) {
+									action(childNode[i]);
+								}
+							}
+						}
+						freezer(function(node) {
+							node.setAttribute('frozen', '');
+						});
+						function release() {
+							freezer(function(node) {
+								node.removeAttribute('frozen');
+							});
+						}
+						clearInterval(buttonNode.lastReleased);
+						buttonNode.lastReleased = setTimeout(release, 5000);
 						if (buttonNode.id == 'visibled') {
 							buttonNode.id = '';
 							buttonNode.classList.remove('up');
@@ -174,7 +192,7 @@ requestAnimationFrame(function delegate() {
 		}
 		/* img */ {
 			/* '[deferred-src]' for the 'img's */ {
-				let imgNode = forAll('img[deferred-src]');
+				let imgNode = forAll('img[deferred-src]:not([frozen])');
 				for (let i = 0; i < imgNode.length; i++) {
 					if (inScrollable(imgNode[i])) {
 						imgNode[i].setAttribute('src', imgNode[i].getAttribute('deferred-src'));
@@ -183,7 +201,7 @@ requestAnimationFrame(function delegate() {
 				}
 			}
 			/* '[pre-deferred-src]' for the 'img's */ {
-				let imgNode = forAll('img[pre-deferred-src]');
+				let imgNode = forAll('img[pre-deferred-src]:not([frozen])');
 				for (let i = 0; i < imgNode.length; i++) {
 					if (!inScrollable(imgNode[i])) {
 						imgNode[i].setAttribute('deferred-src', imgNode[i].getAttribute('pre-deferred-src'));
@@ -194,7 +212,7 @@ requestAnimationFrame(function delegate() {
 		}
 		/* iframe */ {
 			/* '[deferred-src]' for the 'iframe's */ {
-				let iframeNode = forAll('iframe[deferred-src]');
+				let iframeNode = forAll('iframe[deferred-src]:not([frozen])');
 				for (let i = 0; i < iframeNode.length; i++) {
 					if (inScrollable(iframeNode[i])) {
 						iframeNode[i].request.open('GET', iframeNode[i].getAttribute('deferred-src'), true);
@@ -205,7 +223,7 @@ requestAnimationFrame(function delegate() {
 				}
 			}
 			/* '[pre-deferred-src]' for the 'iframe's */ {
-				let iframeNode = forAll('iframe[pre-deferred-src]');
+				let iframeNode = forAll('iframe[pre-deferred-src]:not([frozen])');
 				for (let i = 0; i < iframeNode.length; i++) {
 					if (!inScrollable(iframeNode[i])) {
 						iframeNode[i].setAttribute('deferred-src', iframeNode[i].getAttribute('src'));

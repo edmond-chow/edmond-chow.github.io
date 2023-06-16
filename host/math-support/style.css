@@ -99,7 +99,8 @@ post[with-collapsed] > sub-post > post-content {
 	overflow-y: scroll;
 	padding: 0px 0px 16px 16px !important;
 	box-sizing: border-box;
-	transition-duration: 5s;
+	transition-duration: 1s;
+	transition-timing-function: ease-in-out;
 }
 major.tiny > sub-major post[with-collapsed] > sub-post > post-content {
 	padding: 0px 0px 12px 12px !important;
