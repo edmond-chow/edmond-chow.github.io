@@ -1,16 +1,16 @@
 @charset 'UTF-8';
 /* icons */
 .back {
-	background-image:url('icons8-back-arrow-64.png');
+	background-image: url('icons8-back-arrow-64.png');
 }
 .next {
-	background-image:url('icons8-forward-button-64.png');
+	background-image: url('icons8-forward-button-64.png');
 }
 .up {
-	background-image:url('icons8-slide-up-64.png');
+	background-image: url('icons8-slide-up-64.png');
 }
 .down {
-	background-image:url('icons8-down-button-64.png');
+	background-image: url('icons8-down-button-64.png');
 }
 /* scroll */
 @supports selector(::-webkit-scrollbar) {
