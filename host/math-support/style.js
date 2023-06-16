@@ -58,7 +58,7 @@ requestAnimationFrame(function delegate() {
 					buttonNode.classList.add('down');
 					buttonNode.textContent = '展開';
 					let capturedPostNode = postNode[i];
-					function onVisibleClick() {
+					buttonNode.addEventListener('click', function onVisibleClick() {
 						if (!capturedPostNode.has(':scope > sub-post > post-leader > post-leader-advance') || !capturedPostNode.has(':scope > sub-post > post-content')) {
 							return;
 						}
@@ -82,9 +82,10 @@ requestAnimationFrame(function delegate() {
 							freezer(function(node) {
 								node.removeAttribute('frozen');
 							});
+							buttonNode.classList.remove('disabled');
 						}
 						clearInterval(buttonNode.lastReleased);
-						buttonNode.lastReleased = setTimeout(release, 5000);
+						buttonNode.lastReleased = setTimeout(release, 1000);
 						if (buttonNode.id == 'visibled') {
 							buttonNode.id = '';
 							buttonNode.classList.remove('up');
@@ -98,8 +99,8 @@ requestAnimationFrame(function delegate() {
 							buttonNode.textContent = '縮小';
 							postContentNode.style.aspectRatio = postContentNode.offsetWidth.toString() + ' / ' + postContentNode.scrollHeight.toString();
 						}
-					}
-					buttonNode.addEventListener('click', onVisibleClick);
+						buttonNode.classList.add('disabled');
+					});
 				}
 			}
 			/* integrating the 'post-leader-date's by including the '[date-string]'s */ {
@@ -116,11 +117,11 @@ requestAnimationFrame(function delegate() {
 			/* '[deferred-src]' for the 'img's */ {
 				let imgNode = forAll('img[deferred-src]');
 				for (let i = 0; i < imgNode.length; i++) {
-					function onErrorLoaded() {
-						imgNode[i].setAttribute('pre-deferred-src', imgNode[i].getAttribute('src'));
-						imgNode[i].removeAttribute('src');
-					}
-					imgNode[i].addEventListener('error', onErrorLoaded);
+					let capturedImgNode = imgNode[i];
+					imgNode[i].addEventListener('error', function onErrorLoaded() {
+						capturedImgNode.setAttribute('pre-deferred-src', capturedImgNode.getAttribute('src'));
+						capturedImgNode.removeAttribute('src');
+					});
 				}
 			}
 		}
@@ -129,12 +130,12 @@ requestAnimationFrame(function delegate() {
 				let iframeNode = forAll('iframe[deferred-src]');
 				for (let i = 0; i < iframeNode.length; i++) {
 					iframeNode[i].request = new XMLHttpRequest();
-					function onIframeErrorLoaded() {
-						if (iframeNode[i].request.status >= 400 && iframeNode[i].request.status <= 599) {
-							iframeNode[i].setAttribute('pre-deferred-src', '');
+					let capturedIframeNode = iframeNode[i];
+					iframeNode[i].request.addEventListener('load', function onIframeErrorLoaded() {
+						if (capturedIframeNode.request.status >= 400 && capturedIframeNode.request.status <= 599) {
+							capturedIframeNode.setAttribute('pre-deferred-src', '');
 						}
-					}
-					iframeNode[i].request.addEventListener('load', onIframeErrorLoaded);
+					});
 				}
 			}
 		}
