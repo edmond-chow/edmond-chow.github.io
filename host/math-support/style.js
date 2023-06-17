@@ -79,7 +79,7 @@ requestAnimationFrame(function delegate() {
 						freezer(function(node) {
 							node.setAttribute('frozen', '');
 						});
-						clearInterval(buttonNode.lastReleased);
+						clearTimeout(buttonNode.lastReleased);
 						buttonNode.lastReleased = setTimeout(function release() {
 							freezer(function(node) {
 								node.removeAttribute('frozen');
@@ -101,10 +101,35 @@ requestAnimationFrame(function delegate() {
 						}
 						buttonNode.classList.add('disabled');
 					}
+					function onResized() {
+						if (!capturedPostNode.has(':scope > sub-post > post-leader > post-leader-advance') || !capturedPostNode.has(':scope > sub-post > post-content')) {
+							return;
+						}
+						let postLeaderAdvanceNode = capturedPostNode.get(':scope > sub-post > post-leader > post-leader-advance');
+						let postContentNode = capturedPostNode.get(':scope > sub-post > post-content');
+						if (buttonNode.parentElement != postLeaderAdvanceNode) {
+							return;
+						}
+						if (buttonNode.id == 'visibled') {
+							postContentNode.style.aspectRatio = 'auto';
+						}
+						postContentNode.classList.add('resized');
+						buttonNode.classList.add('pseudo-disabled');
+						clearTimeout(buttonNode.lastResized);
+						buttonNode.lastResized = setTimeout(function release() {
+							if (buttonNode.id == 'visibled') {
+								postContentNode.style.aspectRatio = postContentNode.offsetWidth.toString() + ' / ' + postContentNode.scrollHeight.toString();
+							}
+							postContentNode.classList.remove('resized');
+							buttonNode.classList.remove('pseudo-disabled');
+						}, 250);
+					}
 					buttonNode.release = function() {
 						buttonNode.removeEventListener('click', onVisibleClick);
+						window.removeEventListener('resize', onResized);
 					}
 					buttonNode.addEventListener('click', onVisibleClick);
+					window.addEventListener('resize', onResized);
 				}
 			}
 			/* integrating the 'post-leader-date's by including the '[date-string]'s */ {
