@@ -113,32 +113,6 @@ requestAnimationFrame(function delegate() {
 				}
 			}
 		}
-		/* img */ {
-			/* '[deferred-src]' for the 'img's */ {
-				let imgNode = forAll('img[deferred-src]');
-				for (let i = 0; i < imgNode.length; i++) {
-					let capturedImgNode = imgNode[i];
-					imgNode[i].addEventListener('error', function onErrorLoaded() {
-						capturedImgNode.setAttribute('pre-deferred-src', capturedImgNode.getAttribute('src'));
-						capturedImgNode.removeAttribute('src');
-					});
-				}
-			}
-		}
-		/* iframe */ {
-			/* '[deferred-src]' for the 'iframe's */ {
-				let iframeNode = forAll('iframe[deferred-src]');
-				for (let i = 0; i < iframeNode.length; i++) {
-					iframeNode[i].request = new XMLHttpRequest();
-					let capturedIframeNode = iframeNode[i];
-					iframeNode[i].request.addEventListener('load', function onIframeErrorLoaded() {
-						if (capturedIframeNode.request.status >= 400 && capturedIframeNode.request.status <= 599) {
-							capturedIframeNode.setAttribute('pre-deferred-src', '');
-						}
-					});
-				}
-			}
-		}
 	}
 	/* [ pseudo-style ] */
 	{
@@ -198,6 +172,19 @@ requestAnimationFrame(function delegate() {
 					if (inScrollable(imgNode[i])) {
 						imgNode[i].setAttribute('src', imgNode[i].getAttribute('deferred-src'));
 						imgNode[i].removeAttribute('deferred-src');
+						let capturedImgNode = imgNode[i];
+						function onError() {
+							capturedImgNode.setAttribute('pre-deferred-src', capturedImgNode.getAttribute('src'));
+							capturedImgNode.removeAttribute('src');
+							capturedImgNode.removeEventListener('load', onLoad);
+							capturedImgNode.removeEventListener('error', onError);
+						}
+						function onLoad() {
+							capturedImgNode.removeEventListener('load', onLoad);
+							capturedImgNode.removeEventListener('error', onError);
+						}
+						imgNode[i].addEventListener('error', onError);
+						imgNode[i].addEventListener('load', onLoad);
 					}
 				}
 			}
@@ -216,19 +203,27 @@ requestAnimationFrame(function delegate() {
 				let iframeNode = forAll('iframe[deferred-src]:not([frozen])');
 				for (let i = 0; i < iframeNode.length; i++) {
 					if (inScrollable(iframeNode[i])) {
-						iframeNode[i].request.open('GET', iframeNode[i].getAttribute('deferred-src'), true);
-						iframeNode[i].request.send();
 						iframeNode[i].setAttribute('src', iframeNode[i].getAttribute('deferred-src'));
 						iframeNode[i].removeAttribute('deferred-src');
+						iframeNode[i].request = new XMLHttpRequest();
+						let capturedIframeNode = iframeNode[i];
+						iframeNode[i].request.addEventListener('load', function onLoad() {
+							if (capturedIframeNode.request.status >= 400 && capturedIframeNode.request.status <= 599) {
+								capturedIframeNode.setAttribute('referred', '');
+							}
+							capturedIframeNode.request.removeEventListener('load', onLoad);
+						});
+						iframeNode[i].request.open('GET', iframeNode[i].getAttribute('deferred-src'), true);
+						iframeNode[i].request.send();
 					}
 				}
 			}
-			/* '[pre-deferred-src]' for the 'iframe's */ {
-				let iframeNode = forAll('iframe[pre-deferred-src]:not([frozen])');
+			/* '[referred]' for the 'iframe's */ {
+				let iframeNode = forAll('iframe[referred]:not([frozen])');
 				for (let i = 0; i < iframeNode.length; i++) {
 					if (!inScrollable(iframeNode[i])) {
 						iframeNode[i].setAttribute('deferred-src', iframeNode[i].getAttribute('src'));
-						iframeNode[i].removeAttribute('pre-deferred-src');
+						iframeNode[i].removeAttribute('referred');
 						iframeNode[i].removeAttribute('src');
 					}
 				}
