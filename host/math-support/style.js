@@ -58,7 +58,8 @@ requestAnimationFrame(function delegate() {
 					buttonNode.classList.add('down');
 					buttonNode.textContent = '展開';
 					let capturedPostNode = postNode[i];
-					buttonNode.addEventListener('click', function onVisibleClick() {
+					buttonNode.release?.call();
+					function onVisibleClick() {
 						if (!capturedPostNode.has(':scope > sub-post > post-leader > post-leader-advance') || !capturedPostNode.has(':scope > sub-post > post-content')) {
 							return;
 						}
@@ -78,14 +79,13 @@ requestAnimationFrame(function delegate() {
 						freezer(function(node) {
 							node.setAttribute('frozen', '');
 						});
-						function release() {
+						clearInterval(buttonNode.lastReleased);
+						buttonNode.lastReleased = setTimeout(function release() {
 							freezer(function(node) {
 								node.removeAttribute('frozen');
 							});
 							buttonNode.classList.remove('disabled');
-						}
-						clearInterval(buttonNode.lastReleased);
-						buttonNode.lastReleased = setTimeout(release, 1000);
+						}, 1000);
 						if (buttonNode.id == 'visibled') {
 							buttonNode.id = '';
 							buttonNode.classList.remove('up');
@@ -100,7 +100,11 @@ requestAnimationFrame(function delegate() {
 							postContentNode.style.aspectRatio = postContentNode.offsetWidth.toString() + ' / ' + postContentNode.scrollHeight.toString();
 						}
 						buttonNode.classList.add('disabled');
-					});
+					}
+					buttonNode.release = function() {
+						buttonNode.removeEventListener('click', onVisibleClick);
+					}
+					buttonNode.addEventListener('click', onVisibleClick);
 				}
 			}
 			/* integrating the 'post-leader-date's by including the '[date-string]'s */ {
