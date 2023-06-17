@@ -207,8 +207,6 @@ requestAnimationFrame(function delegate() {
 				let iframeNode = forAll('iframe[deferred-src]:not([frozen])');
 				for (let i = 0; i < iframeNode.length; i++) {
 					if (inScrollable(iframeNode[i])) {
-						iframeNode[i].setAttribute('src', iframeNode[i].getAttribute('deferred-src'));
-						iframeNode[i].removeAttribute('deferred-src');
 						iframeNode[i].request = new XMLHttpRequest();
 						let capturedIframeNode = iframeNode[i];
 						iframeNode[i].request.addEventListener('load', function onLoad() {
@@ -219,6 +217,8 @@ requestAnimationFrame(function delegate() {
 						});
 						iframeNode[i].request.open('GET', iframeNode[i].getAttribute('deferred-src'), true);
 						iframeNode[i].request.send();
+						iframeNode[i].setAttribute('src', iframeNode[i].getAttribute('deferred-src'));
+						iframeNode[i].removeAttribute('deferred-src');
 					}
 				}
 			}
