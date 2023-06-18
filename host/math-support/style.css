@@ -22,63 +22,63 @@
 			background-color: transparent;
 		}
 		body::-webkit-scrollbar-thumb {
-			background: #FFA500;
+			background-color: #FFA500;
 			border: 4px solid transparent;
 			background-clip: padding-box;
 		}
 		body::-webkit-scrollbar-thumb:hover {
-			background: #EBB069;
+			background-color: #EBB069;
 			border: 4px solid transparent;
 			background-clip: padding-box;
 		}
 		body::-webkit-scrollbar-thumb:active {
-			background: #A55A00;
+			background-color: #A55A00;
 			border: 4px solid transparent;
 			background-clip: padding-box;
 		}
 		body.chung-style::-webkit-scrollbar-thumb {
-			background: #FF69B4;
+			background-color: #FF69B4;
 			border: 4px solid transparent;
 			background-clip: padding-box;
 		}
 		body.chung-style::-webkit-scrollbar-thumb:hover {
-			background: #FFB6c1;
+			background-color: #FFB6c1;
 			border: 4px solid transparent;
 			background-clip: padding-box;
 		}
 		body.chung-style::-webkit-scrollbar-thumb:active {
-			background: #9F4A56;
+			background-color: #9F4A56;
 			border: 4px solid transparent;
 			background-clip: padding-box;
 		}
 	}
 	::-webkit-scrollbar-thumb {
-		background: #4CAF50;
+		background-color: #4CAF50;
 		border-color: transparent;
 		background-clip: padding-box;
 	}
 	::-webkit-scrollbar-thumb:hover {
-		background: #71CC19;
+		background-color: #71CC19;
 		border-color: transparent;
 		background-clip: padding-box;
 	}
 	::-webkit-scrollbar-thumb:active {
-		background: #106601;
+		background-color: #106601;
 		border-color: transparent;
 		background-clip: padding-box;
 	}
 	body.chung-style ::-webkit-scrollbar-thumb {
-		background: #FFD54F;
+		background-color: #FFD54F;
 		border-color: transparent;
 		background-clip: padding-box;
 	}
 	body.chung-style ::-webkit-scrollbar-thumb:hover {
-		background: #FFEBA9;
+		background-color: #FFEBA9;
 		border-color: transparent;
 		background-clip: padding-box;
 	}
 	body.chung-style ::-webkit-scrollbar-thumb:active {
-		background: #7E6A27;
+		background-color: #7E6A27;
 		border-color: transparent;
 		background-clip: padding-box;
 	}
@@ -219,7 +219,7 @@ post[with-notice] > sub-post > post-content > notice > sub-notice > notice-conte
 	line-height: 25px;
 	font-weight: bold;
 	display: block;
-	background: unset;
+	background-image: unset;
 }
 post[with-notice] > sub-post > post-content > notice > sub-notice > notice-content > p {
 	text-align: center;
@@ -227,7 +227,7 @@ post[with-notice] > sub-post > post-content > notice > sub-notice > notice-conte
 	line-height: 21px;
 	font-weight: bold;
 	display: block;
-	background: unset;
+	background-image: unset;
 }
 post[with-notice] > sub-post > post-content > notice > sub-notice > notice-content > p:last-of-type {
 	padding: 0px;
