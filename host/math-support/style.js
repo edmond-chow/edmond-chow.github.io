@@ -36,6 +36,7 @@ requestAnimationFrame(function delegate() {
 		}
 		/* post */ {
 			/* events for the 'post > sub-post > post-leader > post-leader-advance > button.visibility's */ {
+				/* onVisibleClick */
 				let postNode = forAll('post[with-collapsed]');
 				for (let i = 0; i < postNode.length; i++) {
 					if (!postNode[i].has(':scope > sub-post > post-leader > post-leader-advance')) {
@@ -58,7 +59,7 @@ requestAnimationFrame(function delegate() {
 					buttonNode.classList.add('down');
 					buttonNode.textContent = '展開';
 					let capturedPostNode = postNode[i];
-					buttonNode.release?.call();
+					buttonNode.lastOnVisibleClickRelease?.call();
 					function onVisibleClick() {
 						if (!capturedPostNode.has(':scope > sub-post > post-leader > post-leader-advance') || !capturedPostNode.has(':scope > sub-post > post-content')) {
 							return;
@@ -80,7 +81,7 @@ requestAnimationFrame(function delegate() {
 							node.setAttribute('frozen', '');
 						});
 						clearTimeout(buttonNode.lastReleased);
-						buttonNode.lastReleased = setTimeout(function release() {
+						buttonNode.lastReleased = setTimeout(function asyncRelease() {
 							freezer(function(node) {
 								node.removeAttribute('frozen');
 							});
@@ -101,36 +102,58 @@ requestAnimationFrame(function delegate() {
 						}
 						buttonNode.classList.add('disabled');
 					}
-					function onResized() {
-						if (!capturedPostNode.has(':scope > sub-post > post-leader > post-leader-advance') || !capturedPostNode.has(':scope > sub-post > post-content')) {
-							return;
+					buttonNode.lastOnVisibleClickRelease = function() {
+						buttonNode.removeEventListener('click', onVisibleClick);
+						buttonNode.lastOnVisibleClickRelease = null;
+					}
+					buttonNode.addEventListener('click', onVisibleClick);
+				}
+				/* onResized */
+				window.lastOnResizedRelease?.call();
+				function onResized() {
+					let postNode = forAll('post[with-collapsed]');
+					for (let i = 0; i < postNode.length; i++) {
+						if (!postNode[i].has(':scope > sub-post > post-leader > post-leader-advance') || !postNode[i].has(':scope > sub-post > post-content')) {
+							continue;
 						}
-						let postLeaderAdvanceNode = capturedPostNode.get(':scope > sub-post > post-leader > post-leader-advance');
-						let postContentNode = capturedPostNode.get(':scope > sub-post > post-content');
-						if (buttonNode.parentElement != postLeaderAdvanceNode) {
-							return;
+						let postLeaderAdvanceNode = postNode[i].get(':scope > sub-post > post-leader > post-leader-advance');
+						let postContentNode = postNode[i].get(':scope > sub-post > post-content');
+						if (!postLeaderAdvanceNode.has(':scope > button.advance.visibility')) {
+							continue;
 						}
+						let buttonNode = postLeaderAdvanceNode.get(':scope > button.advance.visibility');
 						if (buttonNode.id == 'visibled') {
 							postContentNode.style.aspectRatio = 'auto';
 						}
 						postContentNode.classList.add('resized');
 						buttonNode.classList.add('pseudo-disabled');
-						clearTimeout(buttonNode.lastResized);
-						buttonNode.lastResized = setTimeout(function release() {
+					}
+					clearTimeout(window.lastResized);
+					window.lastResized = setTimeout(function asyncRelease() {
+						let postNode = forAll('post[with-collapsed]');
+						for (let i = 0; i < postNode.length; i++) {
+							if (!postNode[i].has(':scope > sub-post > post-leader > post-leader-advance') || !postNode[i].has(':scope > sub-post > post-content')) {
+								continue;
+							}
+							let postLeaderAdvanceNode = postNode[i].get(':scope > sub-post > post-leader > post-leader-advance');
+							let postContentNode = postNode[i].get(':scope > sub-post > post-content');
+							if (!postLeaderAdvanceNode.has(':scope > button.advance.visibility')) {
+								continue;
+							}
+							let buttonNode = postLeaderAdvanceNode.get(':scope > button.advance.visibility');
 							if (buttonNode.id == 'visibled') {
 								postContentNode.style.aspectRatio = postContentNode.offsetWidth.toString() + ' / ' + postContentNode.scrollHeight.toString();
 							}
 							postContentNode.classList.remove('resized');
 							buttonNode.classList.remove('pseudo-disabled');
-						}, 250);
-					}
-					buttonNode.release = function() {
-						buttonNode.removeEventListener('click', onVisibleClick);
-						window.removeEventListener('resize', onResized);
-					}
-					buttonNode.addEventListener('click', onVisibleClick);
-					window.addEventListener('resize', onResized);
+						}
+					}, 250);
 				}
+				window.lastOnResizedRelease = function() {
+					window.removeEventListener('resize', onResized);
+					window.lastOnResizedRelease = null;
+				}
+				window.addEventListener('resize', onResized);
 			}
 			/* integrating the 'post-leader-date's by including the '[date-string]'s */ {
 				let postNode = forAll('post[date-string]');
