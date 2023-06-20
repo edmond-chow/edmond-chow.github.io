@@ -300,7 +300,7 @@
 		display: none !important;
 	}
 }
-@layer extensions {
+@layer math-support-extensions {
 	/* icons */
 	.back {
 		background-image: url('icons8-back-arrow-64.png');
