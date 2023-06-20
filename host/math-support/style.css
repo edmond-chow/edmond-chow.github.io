@@ -10,6 +10,7 @@
 	@supports selector(::-webkit-scrollbar) {
 		@media (pointer: fine) {
 			body {
+				background-color: #f1f1f1 !important;
 				overflow: overlay;
 			}
 			body::-webkit-scrollbar-track, body::-webkit-scrollbar-corner {
