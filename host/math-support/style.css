@@ -10,7 +10,6 @@
 	@supports selector(::-webkit-scrollbar) {
 		@media (pointer: fine) {
 			body {
-				background-color: #f1f1f1 !important;
 				overflow: overlay;
 			}
 			body::-webkit-scrollbar-track, body::-webkit-scrollbar-corner {
@@ -315,4 +314,7 @@
 	.down {
 		background-image: url('icons8-down-button-64.png');
 	}
+}
+body {
+	background-color: #f1f1f1 !important;
 }
