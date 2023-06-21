@@ -85,18 +85,6 @@
 		}
 	}
 }
-@layer math-support-backdrop {
-	/* background-image with 'basis-layer, backdrop-container > blurred-filter' */
-	body > basis-layer, body#blur major > sub-major > post > sub-post > backdrop-container > blurred-filter {
-		background-image: url('analysis.jpg');
-	}
-}
-@layer math-support-backdrop-with-chung-style {
-	/* background-image with 'basis-layer, backdrop-container > blurred-filter' */
-	body.chung-style > basis-layer, body#blur.chung-style major > sub-major > post > sub-post > backdrop-container > blurred-filter {
-		background-image: url('chung-galaxy.jpg');
-	}
-}
 @layer math-support-features {
 	/* top */
 	top > a:first-child {
@@ -298,6 +286,18 @@
 	/* post[with-inline-frame] */
 	post[with-inline-frame] > sub-post > post-content > :not(notice, iframe:first-of-type:last-child, img:first-child:last-of-type) {
 		display: none !important;
+	}
+}
+@layer math-support-backdrop {
+	/* background-image with 'basis-layer, backdrop-container > blurred-filter' */
+	body basis-layer, body#blur major > sub-major > post > sub-post > backdrop-container > blurred-filter {
+		background-image: url('analysis.jpg');
+	}
+}
+@layer math-support-backdrop-with-chung-style {
+	/* background-image with 'basis-layer, backdrop-container > blurred-filter' */
+	body.chung-style basis-layer, body#blur.chung-style major > sub-major > post > sub-post > backdrop-container > blurred-filter {
+		background-image: url('chung-galaxy.jpg');
 	}
 }
 @layer math-support-extensions {

@@ -72,7 +72,7 @@ requestAnimationFrame(function delegate() {
 						function freezer(action) {
 							let childNode = postContentNode.children;
 							for (let i = 0; i < childNode.length; i++) {
-								if (childNode[i].tagName == 'img'.toUpperCase() || childNode[i].tagName == 'iframe'.toUpperCase()) {
+								if (childNode[i].tagName.toUpperCase() == 'img'.toUpperCase() || childNode[i].tagName.toUpperCase() == 'iframe'.toUpperCase()) {
 									action(childNode[i]);
 								}
 							}
