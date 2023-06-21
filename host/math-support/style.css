@@ -10,6 +10,7 @@
 	@supports selector(::-webkit-scrollbar) {
 		@media (pointer: fine) {
 			body {
+				background-color: #f1f1f1;
 				overflow: overlay;
 			}
 			body::-webkit-scrollbar-track, body::-webkit-scrollbar-corner {
@@ -267,25 +268,25 @@
 @layer math-support-features-after {
 	/* post > sub-post > post-leader > post-leader-section > post-leader-date */
 	post > sub-post > post-leader > post-leader-section > post-leader-date:not(:first-of-type) {
-		display: none !important;
+		display: none;
 	}
 }
 @layer math-support-features-after-with-constrained-container {
 	/* post[with-collapsed] */
 	post[with-collapsed] > sub-post > post-leader > post-leader-advance > button.advance.visibility:not(:first-of-type) {
-		display: none !important;
+		display: none;
 	}
 	/* post[with-graphics] */
 	post[with-graphics] > sub-post > post-content > :not(notice, iframe:first-of-type:last-child, img:first-child:last-of-type) {
-		display: none !important;
+		display: none;
 	}
 	/* post[with-notice] */
 	post[with-notice] > sub-post > post-content > :not(notice, iframe:first-of-type:last-child, img:first-child:last-of-type) {
-		display: none !important;
+		display: none;
 	}
 	/* post[with-inline-frame] */
 	post[with-inline-frame] > sub-post > post-content > :not(notice, iframe:first-of-type:last-child, img:first-child:last-of-type) {
-		display: none !important;
+		display: none;
 	}
 }
 @layer math-support-backdrop {
@@ -314,7 +315,4 @@
 	.down {
 		background-image: url('icons8-down-button-64.png');
 	}
-}
-body {
-	background-color: #f1f1f1 !important;
 }
