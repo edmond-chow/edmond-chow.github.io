@@ -215,7 +215,7 @@
 	post[with-notice] > sub-post > post-content > notice > sub-notice > notice-content > * {
 		display: none;
 	}
-	post[with-notice] > sub-post > post-content > notice > sub-notice > notice-content > h3.first-of-type {
+	post[with-notice] > sub-post > post-content > notice > sub-notice > notice-content > h3:first-of-type {
 		text-align: center;
 		display: block;
 		padding: 0px 0px 10px 0px;
