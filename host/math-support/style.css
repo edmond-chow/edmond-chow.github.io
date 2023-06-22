@@ -197,6 +197,7 @@
 		background-repeat: no-repeat;
 		background-size: 40px;
 		background-position: 0px center;
+		min-height: 40px;
 		width: calc(60% - 50px);
 	}
 	major.tiny > sub-major post[with-notice] > sub-post > post-content > notice > sub-notice > notice-content {
@@ -214,7 +215,7 @@
 	post[with-notice] > sub-post > post-content > notice > sub-notice > notice-content > * {
 		display: none;
 	}
-	post[with-notice] > sub-post > post-content > notice > sub-notice > notice-content > h3.first-visible-child {
+	post[with-notice] > sub-post > post-content > notice > sub-notice > notice-content > h3.first-of-type {
 		text-align: center;
 		display: block;
 		padding: 0px 0px 10px 0px;
