@@ -28,12 +28,6 @@ requestAnimationFrame(function delegate() {
 	/* [ structured-tag ] */
 	if (isLoaded == true && isMathSupportLoaded == false) {
 		isMathSupportLoaded = true;
-		/* notice */ {
-			/* structuring for the 'notice's */ {
-				insertSurround('notice', 'sub-notice');
-				insertSurround('notice > sub-notice', 'notice-content');
-			}
-		}
 		/* post */ {
 			/* events for the 'post > sub-post > post-leader > post-leader-advance > button.visibility's */ {
 				/* onVisibleClick */
@@ -43,7 +37,7 @@ requestAnimationFrame(function delegate() {
 						continue;
 					}
 					let postLeaderAdvanceNode = postNode[i].get(':scope > sub-post > post-leader > post-leader-advance');
-					let buttonNode = function() {
+					let buttonNode = function () {
 						if (postLeaderAdvanceNode.has(':scope > button.advance.visibility')) {
 							return postLeaderAdvanceNode.get(':scope > button.advance.visibility');
 						} else {
@@ -77,12 +71,12 @@ requestAnimationFrame(function delegate() {
 								}
 							}
 						}
-						freezer(function(node) {
+						freezer(function (node) {
 							node.setAttribute('frozen', '');
 						});
 						clearTimeout(buttonNode.lastReleased);
 						buttonNode.lastReleased = setTimeout(function asyncRelease() {
-							freezer(function(node) {
+							freezer(function (node) {
 								node.removeAttribute('frozen');
 							});
 							buttonNode.classList.remove('disabled');
@@ -102,7 +96,7 @@ requestAnimationFrame(function delegate() {
 						}
 						buttonNode.classList.add('disabled');
 					}
-					buttonNode.lastOnVisibleClickRelease = function() {
+					buttonNode.lastOnVisibleClickRelease = function () {
 						buttonNode.removeEventListener('click', onVisibleClick);
 						buttonNode.lastOnVisibleClickRelease = null;
 					}
@@ -149,7 +143,7 @@ requestAnimationFrame(function delegate() {
 						}
 					}, 250);
 				}
-				window.lastOnResizedRelease = function() {
+				window.lastOnResizedRelease = function () {
 					window.removeEventListener('resize', onResized);
 					window.lastOnResizedRelease = null;
 				}
@@ -165,47 +159,16 @@ requestAnimationFrame(function delegate() {
 				}
 			}
 		}
+		/* post[with-notice] */ {
+			/* '[with-notice]' for the 'post's */ {
+				insertSurround('post > sub-post > post-content > notice', 'sub-notice');
+				insertSurround('post > sub-post > post-content > notice > sub-notice', 'notice-content');
+			}
+		}
 	}
 	/* [ pseudo-style ] */
 	{
-		/* notice */ {
-			let postNode = forAllTag('post');
-			/* '[with-notice]' for the 'post's */ {
-				for (let i = 0; i < postNode.length; i++) {
-					if (postNode[i].has(':scope > sub-post > post-content > notice') && !postNode[i].has(':scope > sub-post > post-content > post') && !postNode[i].hasAttribute('with-collapsed')) {
-						postNode[i].setAttribute('with-notice', '');
-					} else {
-						postNode[i].removeAttribute('with-notice');
-					}
-				}
-			}
-		}
-		/* notice */ {
-			let noticeNode = forAllTag('notice');
-			/* '.no-space' for the 'notice's */ {
-				for (let i = 0; i < noticeNode.length; i++) {
-					if (noticeNode[i].has(':scope > sub-notice > notice-content')) {
-						let noticeContentNode = noticeNode[i].get(':scope > sub-notice > notice-content');
-						if (!noticeContentNode.classList.contains('no-space')) {
-							noticeContentNode.classList.add('no-space');
-						}
-					}
-				}
-			}
-		}
-		/* inline-frame */ {
-			let postNode = forAllTag('post');
-			/* '[with-inline-frame]' for the 'post's */ {
-				for (let i = 0; i < postNode.length; i++) {
-					if (postNode[i].has(':scope > sub-post > post-content > iframe:first-of-type:last-child') && !postNode[i].has(':scope > sub-post > post-content > post') && !postNode[i].hasAttribute('with-collapsed')) {
-						postNode[i].setAttribute('with-inline-frame', '');
-					} else {
-						postNode[i].removeAttribute('with-inline-frame');
-					}
-				}
-			}
-		}
-		/* graphics */ {
+		/* post[with-graphics] */ {
 			let postNode = forAllTag('post');
 			/* '[with-graphics]' for the 'post's */ {
 				for (let i = 0; i < postNode.length; i++) {
@@ -213,6 +176,37 @@ requestAnimationFrame(function delegate() {
 						postNode[i].setAttribute('with-graphics', '');
 					} else {
 						postNode[i].removeAttribute('with-graphics');
+					}
+				}
+			}
+		}
+		/* post[with-notice] */ {
+			let postNode = forAllTag('post');
+			/* '[with-notice]' for the 'post's */ {
+				for (let i = 0; i < postNode.length; i++) {
+					if (postNode[i].has(':scope > sub-post > post-content > notice') && !postNode[i].has(':scope > sub-post > post-content > post') && !postNode[i].hasAttribute('with-collapsed')) {
+						postNode[i].setAttribute('with-notice', '');
+						let noticeNode = postNode[i].get(':scope > sub-post > post-content > notice');
+						if (noticeNode.has(':scope > sub-notice > notice-content')) {
+							let noticeContentNode = noticeNode.get(':scope > sub-notice > notice-content');
+							if (!noticeContentNode.classList.contains('no-space')) {
+								noticeContentNode.classList.add('no-space');
+							}
+						}
+					} else {
+						postNode[i].removeAttribute('with-notice');
+					}
+				}
+			}
+		}
+		/* post[with-inline-frame] */ {
+			let postNode = forAllTag('post');
+			/* '[with-inline-frame]' for the 'post's */ {
+				for (let i = 0; i < postNode.length; i++) {
+					if (postNode[i].has(':scope > sub-post > post-content > iframe:first-of-type:last-child') && !postNode[i].has(':scope > sub-post > post-content > post') && !postNode[i].hasAttribute('with-collapsed')) {
+						postNode[i].setAttribute('with-inline-frame', '');
+					} else {
+						postNode[i].removeAttribute('with-inline-frame');
 					}
 				}
 			}
