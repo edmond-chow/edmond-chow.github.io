@@ -147,6 +147,7 @@
 @layer math-support-features-with-constrained-container {
 	/* post[with-collapsed] */
 	post[with-collapsed] > sub-post > post-content > img {
+		overflow: hidden;
 		width: 70%;
 		margin: 0px 0px 6px 0px;
 		aspect-ratio: 1275 / 1754;
@@ -156,6 +157,7 @@
 	}
 	/* post[with-graphics] */
 	post[with-graphics] > sub-post > post-content > img.first-visible-child:last-of-type {
+		overflow: hidden;
 		width: 100%;
 		padding: 0px 0px 16px 0px;
 		aspect-ratio: auto 16 / 9;
@@ -169,6 +171,7 @@
 		border-bottom-right-radius: 8px;
 	}
 	major.tiny > sub-major post[with-graphics] > sub-post > post-content > img.first-visible-child.last-visible-child {
+		padding: 0px;
 		border-bottom-left-radius: 6px;
 		border-bottom-right-radius: 6px;
 	}
@@ -238,6 +241,7 @@
 	}
 	/* post[with-inline-frame] */
 	post[with-inline-frame] > sub-post > post-content > iframe:first-of-type.last-visible-child {
+		overflow: hidden;
 		width: 100%;
 	}
 	body#blur post[with-inline-frame] > sub-post > post-content > iframe:first-of-type.last-visible-child {

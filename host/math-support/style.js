@@ -180,89 +180,78 @@ requestAnimationFrame(function delegate() {
 	}
 	/* [ pseudo-style ] */
 	{
-		function is(node, condition) {
-			if (node.hasAttribute('with-collapsed') || node.has(':scope > sub-post > post-content > post')) {
-				return false;
-			}
-			return condition(node);
-		}
-		/* post[with-graphics] */ {
+		/* post[with-graphics, with-notice, with-inline-frame] */ {
 			let postNode = forAllTag('post');
-			/* '[with-graphics]' for the 'post's */ {
+			/* '[with-graphics, with-notice, with-inline-frame]' for the 'post's */ {
 				for (let i = 0; i < postNode.length; i++) {
-					let bool = is(postNode[i], function (node) {
-						return node.has(':scope > sub-post > post-content > img:first-of-type:last-of-type');
-					});
-					if (bool) {
-						postNode[i].setAttribute('with-graphics', '');
-						let bool = is(postNode[i], function (node) {
-							let previousNode = node.get(':scope > sub-post > post-content > img:first-of-type:last-of-type').previousSibling;
-							while (previousNode != null) {
-								if (hasPartialSubstance(previousNode)) {
-									return false;
-								}
-								previousNode = previousNode.previousSibling;
+					function operate(node, attribute, selector, bind) {
+						function is(node, condition) {
+							if (node.hasAttribute('with-collapsed') || node.has(':scope > sub-post > post-content > post')) {
+								return false;
 							}
-							return true;
-						});
-						if (bool) {
-							postNode[i].get(':scope > sub-post > post-content > img:first-of-type:last-of-type').classList.add('first-visible-child');
-						} else {
-							postNode[i].get(':scope > sub-post > post-content > img:first-of-type:last-of-type').classList.remove('first-visible-child');
+							return condition(node);
 						}
-					} else {
-						postNode[i].removeAttribute('with-graphics');
+						function hasCondition(selector) {
+							let condition = function(node) {
+								return node.has(selector);
+							}
+							return condition;
+						}
+						function visibilityChecking(node, selector) {
+							function previousCondition(selector) {
+								let condition = function(node) {
+									let previousNode = node.get(selector).previousSibling;
+									while (previousNode != null) {
+										if (hasPartialSubstance(previousNode)) {
+											return false;
+										}
+										previousNode = previousNode.previousSibling;
+									}
+									return true;
+								}
+								return condition;
+							}
+							if (is(node, previousCondition(selector))) {
+								node.get(selector).classList.add('first-visible-child');
+							} else {
+								node.get(selector).classList.remove('first-visible-child');
+							}
+							function nextCondition(selector) {
+								let condition = function(node) {
+									let nextNode = node.get(selector).nextSibling;
+									while (nextNode != null) {
+										if (hasPartialSubstance(nextNode)) {
+											return false;
+										}
+										nextNode = nextNode.nextSibling;
+									}
+									return true;
+								}
+								return condition;
+							}
+							if (is(node, nextCondition(selector))) {
+								node.get(selector).classList.add('last-visible-child');
+							} else {
+								node.get(selector).classList.remove('last-visible-child');
+							}
+						}
+						if (is(node, hasCondition(selector))) {
+							node.setAttribute(attribute, '');
+							visibilityChecking(node, selector);
+							bind?.call(null, node);
+						} else {
+							node.removeAttribute(attribute);
+						}
 					}
-				}
-			}
-		}
-		/* post[with-notice] */ {
-			let postNode = forAllTag('post');
-			/* '[with-notice]' for the 'post's */ {
-				for (let i = 0; i < postNode.length; i++) {
-					let bool = is(postNode[i], function (node) {
-						return node.has(':scope > sub-post > post-content > notice');
-					});
-					if (bool) {
-						postNode[i].setAttribute('with-notice', '');
-						let noticeNode = postNode[i].get(':scope > sub-post > post-content > notice');
+					operate(postNode[i], 'with-graphics', ':scope > sub-post > post-content > img:first-of-type:last-of-type');
+					operate(postNode[i], 'with-notice', ':scope > sub-post > post-content > notice', function(node) {
+						let noticeNode = node.get(':scope > sub-post > post-content > notice');
 						if (noticeNode.has(':scope > sub-notice > notice-content')) {
 							let noticeContentNode = noticeNode.get(':scope > sub-notice > notice-content');
 							noticeContentNode.classList.add('no-space');
 						}
-					} else {
-						postNode[i].removeAttribute('with-notice');
-					}
-				}
-			}
-		}
-		/* post[with-inline-frame] */ {
-			let postNode = forAllTag('post');
-			/* '[with-inline-frame]' for the 'post's */ {
-				for (let i = 0; i < postNode.length; i++) {
-					let bool = is(postNode[i], function (node) {
-						return node.has(':scope > sub-post > post-content > iframe:first-of-type:last-of-type');
 					});
-					if (bool) {
-						postNode[i].setAttribute('with-inline-frame', '');
-						let bool = is(postNode[i], function (node) {
-							let nextNode = node.get(':scope > sub-post > post-content > iframe:first-of-type:last-of-type').nextSibling;
-							while (nextNode != null) {
-								if (hasPartialSubstance(nextNode)) {
-									return false;
-								}
-								nextNode = nextNode.nextSibling;
-							}
-							return true;
-						});
-						if (bool) {
-							postNode[i].get(':scope > sub-post > post-content > iframe:first-of-type:last-of-type').classList.add('last-visible-child');
-						} else {
-							postNode[i].get(':scope > sub-post > post-content > iframe:first-of-type:last-of-type').classList.remove('last-visible-child');
-						}
-					} else {
-						postNode[i].removeAttribute('with-inline-frame');
-					}
+					operate(postNode[i], 'with-inline-frame', ':scope > sub-post > post-content > iframe:first-of-type:last-of-type');
 				}
 			}
 		}
