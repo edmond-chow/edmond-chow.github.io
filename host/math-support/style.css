@@ -88,7 +88,7 @@
 }
 @layer math-support-features {
 	/* top */
-	top > a:first-child {
+	top > a:first-of-type {
 		background-image: url('calculator.ico');
 	}
 	/* post */
@@ -155,20 +155,20 @@
 		margin-bottom: 0px;
 	}
 	/* post[with-graphics] */
-	post[with-graphics] > sub-post > post-content > img:first-child:last-of-type {
+	post[with-graphics] > sub-post > post-content > img.first-visible-child:last-of-type {
 		width: 100%;
 		padding: 0px 0px 16px 0px;
 		aspect-ratio: auto 16 / 9;
 	}
-	major.tiny > sub-major post[with-graphics] > sub-post > post-content > img:first-child:last-of-type {
+	major.tiny > sub-major post[with-graphics] > sub-post > post-content > img.first-visible-child:last-of-type {
 		padding: 0px 0px 12px 0px;
 	}
-	post[with-graphics] > sub-post > post-content > img:first-child:last-child {
+	post[with-graphics] > sub-post > post-content > img.first-visible-child.last-visible-child {
 		padding: 0px;
 		border-bottom-left-radius: 8px;
 		border-bottom-right-radius: 8px;
 	}
-	major.tiny > sub-major post[with-graphics] > sub-post > post-content > img:first-child:last-child {
+	major.tiny > sub-major post[with-graphics] > sub-post > post-content > img.first-visible-child.last-visible-child {
 		border-bottom-left-radius: 6px;
 		border-bottom-right-radius: 6px;
 	}
@@ -214,7 +214,7 @@
 	post[with-notice] > sub-post > post-content > notice > sub-notice > notice-content > * {
 		display: none;
 	}
-	post[with-notice] > sub-post > post-content > notice > sub-notice > notice-content > h3:first-child {
+	post[with-notice] > sub-post > post-content > notice > sub-notice > notice-content > h3.first-visible-child {
 		text-align: center;
 		display: block;
 		padding: 0px 0px 10px 0px;
@@ -236,14 +236,14 @@
 		font-weight: 500;
 	}
 	/* post[with-inline-frame] */
-	post[with-inline-frame] > sub-post > post-content > iframe:first-of-type:last-child {
+	post[with-inline-frame] > sub-post > post-content > iframe:first-of-type.last-visible-child {
 		width: 100%;
 	}
-	body#blur post[with-inline-frame] > sub-post > post-content > iframe:first-of-type:last-child {
+	body#blur post[with-inline-frame] > sub-post > post-content > iframe:first-of-type.last-visible-child {
 		border-bottom-left-radius: 8px;
 		border-bottom-right-radius: 8px;
 	}
-	body#blur major.tiny > sub-major post[with-inline-frame] > sub-post > post-content > iframe:first-of-type:last-child {
+	body#blur major.tiny > sub-major post[with-inline-frame] > sub-post > post-content > iframe:first-of-type.last-visible-child {
 		border-bottom-left-radius: 6px;
 		border-bottom-right-radius: 6px;
 	}
@@ -277,15 +277,15 @@
 		display: none;
 	}
 	/* post[with-graphics] */
-	post[with-graphics] > sub-post > post-content > :not(notice, iframe:first-of-type:last-child, img:first-child:last-of-type) {
+	post[with-graphics] > sub-post > post-content > :not(notice, iframe:first-of-type.last-visible-child, img.first-visible-child:last-of-type) {
 		display: none;
 	}
 	/* post[with-notice] */
-	post[with-notice] > sub-post > post-content > :not(notice, iframe:first-of-type:last-child, img:first-child:last-of-type) {
+	post[with-notice] > sub-post > post-content > :not(notice, iframe:first-of-type.last-visible-child, img.first-visible-child:last-of-type) {
 		display: none;
 	}
 	/* post[with-inline-frame] */
-	post[with-inline-frame] > sub-post > post-content > :not(notice, iframe:first-of-type:last-child, img:first-child:last-of-type) {
+	post[with-inline-frame] > sub-post > post-content > :not(notice, iframe:first-of-type.last-visible-child, img.first-visible-child:last-of-type) {
 		display: none;
 	}
 }

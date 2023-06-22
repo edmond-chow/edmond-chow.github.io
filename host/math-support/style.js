@@ -1,4 +1,16 @@
 let isMathSupportLoaded = false;
+function hasPartialSubstance(node) {
+	if (node.nodeName == '#comment') {
+		return false;
+	} else if (node.nodeName == '#text' && removeSpace(node.wholeText) == '') {
+		return false;
+	} else if (node instanceof Element && node.nodeName == 'br'.toUpperCase()) {
+		return false;
+	} else if (node instanceof Element && window.getComputedStyle(node).display == 'none') {
+		return false;
+	}
+	return true;
+}
 function isScrollable(node) {
 	let scrollableX = node.scrollWidth > node.clientWidth;
 	let scrollableY = node.scrollHeight > node.clientHeight;
@@ -168,12 +180,36 @@ requestAnimationFrame(function delegate() {
 	}
 	/* [ pseudo-style ] */
 	{
+		function is(node, condition) {
+			if (node.hasAttribute('with-collapsed') || node.has(':scope > sub-post > post-content > post')) {
+				return false;
+			}
+			return condition(node);
+		}
 		/* post[with-graphics] */ {
 			let postNode = forAllTag('post');
 			/* '[with-graphics]' for the 'post's */ {
 				for (let i = 0; i < postNode.length; i++) {
-					if (postNode[i].has(':scope > sub-post > post-content > img:first-child:last-of-type') && !postNode[i].has(':scope > sub-post > post-content > post') && !postNode[i].hasAttribute('with-collapsed')) {
+					let bool = is(postNode[i], function (node) {
+						return node.has(':scope > sub-post > post-content > img:first-of-type:last-of-type');
+					});
+					if (bool) {
 						postNode[i].setAttribute('with-graphics', '');
+						let bool = is(postNode[i], function (node) {
+							let previousNode = node.get(':scope > sub-post > post-content > img:first-of-type:last-of-type').previousSibling;
+							while (previousNode != null) {
+								if (hasPartialSubstance(previousNode)) {
+									return false;
+								}
+								previousNode = previousNode.previousSibling;
+							}
+							return true;
+						});
+						if (bool) {
+							postNode[i].get(':scope > sub-post > post-content > img:first-of-type:last-of-type').classList.add('first-visible-child');
+						} else {
+							postNode[i].get(':scope > sub-post > post-content > img:first-of-type:last-of-type').classList.remove('first-visible-child');
+						}
 					} else {
 						postNode[i].removeAttribute('with-graphics');
 					}
@@ -184,14 +220,15 @@ requestAnimationFrame(function delegate() {
 			let postNode = forAllTag('post');
 			/* '[with-notice]' for the 'post's */ {
 				for (let i = 0; i < postNode.length; i++) {
-					if (postNode[i].has(':scope > sub-post > post-content > notice') && !postNode[i].has(':scope > sub-post > post-content > post') && !postNode[i].hasAttribute('with-collapsed')) {
+					let bool = is(postNode[i], function (node) {
+						return node.has(':scope > sub-post > post-content > notice');
+					});
+					if (bool) {
 						postNode[i].setAttribute('with-notice', '');
 						let noticeNode = postNode[i].get(':scope > sub-post > post-content > notice');
 						if (noticeNode.has(':scope > sub-notice > notice-content')) {
 							let noticeContentNode = noticeNode.get(':scope > sub-notice > notice-content');
-							if (!noticeContentNode.classList.contains('no-space')) {
-								noticeContentNode.classList.add('no-space');
-							}
+							noticeContentNode.classList.add('no-space');
 						}
 					} else {
 						postNode[i].removeAttribute('with-notice');
@@ -203,8 +240,26 @@ requestAnimationFrame(function delegate() {
 			let postNode = forAllTag('post');
 			/* '[with-inline-frame]' for the 'post's */ {
 				for (let i = 0; i < postNode.length; i++) {
-					if (postNode[i].has(':scope > sub-post > post-content > iframe:first-of-type:last-child') && !postNode[i].has(':scope > sub-post > post-content > post') && !postNode[i].hasAttribute('with-collapsed')) {
+					let bool = is(postNode[i], function (node) {
+						return node.has(':scope > sub-post > post-content > iframe:first-of-type:last-of-type');
+					});
+					if (bool) {
 						postNode[i].setAttribute('with-inline-frame', '');
+						let bool = is(postNode[i], function (node) {
+							let nextNode = node.get(':scope > sub-post > post-content > iframe:first-of-type:last-of-type').nextSibling;
+							while (nextNode != null) {
+								if (hasPartialSubstance(nextNode)) {
+									return false;
+								}
+								nextNode = nextNode.nextSibling;
+							}
+							return true;
+						});
+						if (bool) {
+							postNode[i].get(':scope > sub-post > post-content > iframe:first-of-type:last-of-type').classList.add('last-visible-child');
+						} else {
+							postNode[i].get(':scope > sub-post > post-content > iframe:first-of-type:last-of-type').classList.remove('last-visible-child');
+						}
 					} else {
 						postNode[i].removeAttribute('with-inline-frame');
 					}
