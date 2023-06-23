@@ -165,15 +165,9 @@
 	major.tiny > sub-major post[with-graphics] > sub-post > post-content > img.first-visible-child:last-of-type {
 		padding: 0px 0px 12px 0px;
 	}
-	post[with-graphics] > sub-post > post-content > img.first-visible-child.last-visible-child {
-		padding: 0px;
-		border-bottom-left-radius: 8px;
-		border-bottom-right-radius: 8px;
-	}
-	major.tiny > sub-major post[with-graphics] > sub-post > post-content > img.first-visible-child.last-visible-child {
-		padding: 0px;
-		border-bottom-left-radius: 6px;
-		border-bottom-right-radius: 6px;
+	body#blur post[with-graphics] > sub-post > post-content > img.first-visible-child.last-visible-child {
+		border-bottom-left-radius: inherit;
+		border-bottom-right-radius: inherit;
 	}
 	/* post[with-notice] */
 	post[with-notice] > sub-post > post-content > notice {
@@ -245,12 +239,8 @@
 		width: 100%;
 	}
 	body#blur post[with-inline-frame] > sub-post > post-content > iframe:first-of-type.last-visible-child {
-		border-bottom-left-radius: 8px;
-		border-bottom-right-radius: 8px;
-	}
-	body#blur major.tiny > sub-major post[with-inline-frame] > sub-post > post-content > iframe:first-of-type.last-visible-child {
-		border-bottom-left-radius: 6px;
-		border-bottom-right-radius: 6px;
+		border-bottom-left-radius: inherit;
+		border-bottom-right-radius: inherit;
 	}
 }
 @layer math-support-features-with-constrained-container-with-chung-style {
@@ -284,6 +274,9 @@
 	/* post[with-graphics] */
 	post[with-graphics] > sub-post > post-content > :not(notice, iframe:first-of-type.last-visible-child, img.first-visible-child:last-of-type) {
 		display: none;
+	}
+	post[with-graphics] > sub-post > post-content > img.first-visible-child.last-visible-child {
+		padding: 0px;
 	}
 	/* post[with-notice] */
 	post[with-notice] > sub-post > post-content > :not(notice, iframe:first-of-type.last-visible-child, img.first-visible-child:last-of-type) {
