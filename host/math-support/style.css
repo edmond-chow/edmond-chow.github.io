@@ -276,7 +276,7 @@
 		display: none;
 	}
 	post[with-graphics] > sub-post > post-content > img.first-visible-child.last-visible-child {
-		padding: 0px;
+		padding-bottom: 0px;
 	}
 	/* post[with-notice] */
 	post[with-notice] > sub-post > post-content > :not(notice, iframe:first-of-type.last-visible-child, img.first-visible-child:last-of-type) {
