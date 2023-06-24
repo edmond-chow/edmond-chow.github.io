@@ -147,6 +147,7 @@
 @layer math-support-features-with-constrained-container {
 	/* post[with-collapsed] */
 	post[with-collapsed] > sub-post > post-content > img {
+		overflow: hidden;
 		width: 70%;
 		margin: 0px 0px 6px 0px;
 		aspect-ratio: 1275 / 1754;

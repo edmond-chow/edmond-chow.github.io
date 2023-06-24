@@ -1,4 +1,11 @@
 let isMathSupportLoaded = false;
+function switchBlurredState() {
+	if (document.body.id == 'blur') {
+		document.body.id = '';
+	} else {
+		document.body.id = 'blur';
+	}
+}
 function hasPartialSubstance(node) {
 	if (node.nodeName == '#comment') {
 		return false;
