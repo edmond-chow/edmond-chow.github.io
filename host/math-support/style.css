@@ -155,6 +155,9 @@
 		padding: 0px 0px 16px 0px;
 		aspect-ratio: auto 16 / 9;
 	}
+	post[with-graphics] > sub-post > post-content > img.first-visible-child:last-of-type[pre-deferred-src] {
+		opacity: 0;
+	}
 	major.tiny > sub-major post[with-graphics] > sub-post > post-content > img.first-visible-child:last-of-type {
 		padding: 0px 0px 12px 0px;
 	}
