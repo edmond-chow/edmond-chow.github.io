@@ -2,10 +2,10 @@ let isMathSupportLoaded = false;
 function switchBlurredState() {
 	if (document.body.id == 'blur') {
 		document.body.id = '';
-		document.body.cookie = 'non-blur=true';
+		document.cookie = 'non-blur=true';
 	} else {
 		document.body.id = 'blur';
-		document.body.cookie = 'non-blur=false';
+		document.cookie = 'non-blur=false';
 	}
 }
 function hasPartialSubstance(node) {
@@ -53,7 +53,7 @@ requestAnimationFrame(function delegate() {
 	if (isLoaded == true && isMathSupportLoaded == false) {
 		isMathSupportLoaded = true;
 		/* switchBlurredState() */ {
-			if (document.body.cookie != undefined && document.body.cookie.indexOf('non-blur=true') != -1) {
+			if (document.cookie.indexOf('non-blur=true') != -1) {
 				document.body.id = '';
 			}
 		}
