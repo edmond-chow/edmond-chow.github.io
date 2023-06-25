@@ -53,7 +53,7 @@ requestAnimationFrame(function delegate() {
 	if (isLoaded == true && isMathSupportLoaded == false) {
 		isMathSupportLoaded = true;
 		/* switchBlurredState() */ {
-			if (document.body.cookie.indexOf('non-blur=true') != -1) {
+			if (document.body.cookie != undefined && document.body.cookie.indexOf('non-blur=true') != -1) {
 				document.body.id = '';
 			}
 		}
