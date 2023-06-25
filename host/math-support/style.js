@@ -2,8 +2,10 @@ let isMathSupportLoaded = false;
 function switchBlurredState() {
 	if (document.body.id == 'blur') {
 		document.body.id = '';
+		document.body.cookie = 'non-blur=true';
 	} else {
 		document.body.id = 'blur';
+		document.body.cookie = 'non-blur=false';
 	}
 }
 function hasPartialSubstance(node) {
@@ -50,6 +52,11 @@ requestAnimationFrame(function delegate() {
 	/* [ structured-tag ] */
 	if (isLoaded == true && isMathSupportLoaded == false) {
 		isMathSupportLoaded = true;
+		/* switchBlurredState() */ {
+			if (document.body.cookie.indexOf('non-blur=true') != -1) {
+				document.body.id = '';
+			}
+		}
 		/* post */ {
 			/* events for the 'post > sub-post > post-leader > post-leader-advance > button.visibility's */ {
 				/* onVisibleClick */
