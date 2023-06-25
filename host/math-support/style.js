@@ -39,6 +39,9 @@ function inScrollable(node) {
 	}
 	return parentNode != document.body ? isInside(node, parentNode) : inClient(node);
 }
+function inView(node) {
+	return inScrollable(node) && inClient(node);
+}
 requestAnimationFrame(function delegate() {
 	requestAnimationFrame(delegate);
 	if (document.readyState != 'complete') {
@@ -266,7 +269,7 @@ requestAnimationFrame(function delegate() {
 			/* '[deferred-src]' for the 'img's */ {
 				let imgNode = forAll('img[deferred-src]:not([frozen])');
 				for (let i = 0; i < imgNode.length; i++) {
-					if (inScrollable(imgNode[i])) {
+					if (inView(imgNode[i])) {
 						imgNode[i].setAttribute('src', imgNode[i].getAttribute('deferred-src'));
 						imgNode[i].removeAttribute('deferred-src');
 						let capturedImgNode = imgNode[i];
@@ -288,7 +291,7 @@ requestAnimationFrame(function delegate() {
 			/* '[pre-deferred-src]' for the 'img's */ {
 				let imgNode = forAll('img[pre-deferred-src]:not([frozen])');
 				for (let i = 0; i < imgNode.length; i++) {
-					if (!inScrollable(imgNode[i])) {
+					if (!inView(imgNode[i])) {
 						imgNode[i].setAttribute('deferred-src', imgNode[i].getAttribute('pre-deferred-src'));
 						imgNode[i].removeAttribute('pre-deferred-src');
 					}
@@ -299,7 +302,7 @@ requestAnimationFrame(function delegate() {
 			/* '[deferred-src]' for the 'iframe's */ {
 				let iframeNode = forAll('iframe[deferred-src]:not([frozen])');
 				for (let i = 0; i < iframeNode.length; i++) {
-					if (inScrollable(iframeNode[i])) {
+					if (inView(iframeNode[i])) {
 						iframeNode[i].request = new XMLHttpRequest();
 						let capturedIframeNode = iframeNode[i];
 						iframeNode[i].request.addEventListener('load', function onLoad() {
@@ -318,7 +321,7 @@ requestAnimationFrame(function delegate() {
 			/* '[referred]' for the 'iframe's */ {
 				let iframeNode = forAll('iframe[referred]:not([frozen])');
 				for (let i = 0; i < iframeNode.length; i++) {
-					if (!inScrollable(iframeNode[i])) {
+					if (!inView(iframeNode[i])) {
 						iframeNode[i].setAttribute('deferred-src', iframeNode[i].getAttribute('src'));
 						iframeNode[i].removeAttribute('referred');
 						iframeNode[i].removeAttribute('src');
