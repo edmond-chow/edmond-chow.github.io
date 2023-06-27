@@ -62,13 +62,15 @@ window.inView = function inView(node) {
 	return inScrollable(node) && inClient(node);
 }
 Object.defineProperty(window, 'inView', { configurable: false, writable: false });
-document.addEventListener('structuredTag', function structuredTag() {
+document.addEventListener('structuredTag', async function structuredTag() {
+	capture();
 	/* switchBlurredState() */ {
 		if (getCookie('non-blur') == 'true') {
 			switchBlurredState();
 		}
 	}
-	/* post */ {
+	await suspend();
+	/* post[with-collapsed, with-notice] */ {
 		/* events for the 'post > sub-post > post-leader > post-leader-advance > button.visibility's */ {
 			/* onVisibleClick */
 			let postNode = forAll('post[with-collapsed]');
@@ -200,8 +202,6 @@ document.addEventListener('structuredTag', function structuredTag() {
 				postLeaderSectionNode.insertBefore(postLeaderDateNode, postLeaderSectionNode.get('post-leader-order').nextSibling);
 			}
 		}
-	}
-	/* post[with-notice] */ {
 		/* '[with-notice]' for the 'post's */ {
 			insertSurround('post > sub-post > post-content > notice', 'sub-notice');
 			insertSurround('post > sub-post > post-content > notice > sub-notice', 'notice-content');
@@ -209,6 +209,7 @@ document.addEventListener('structuredTag', function structuredTag() {
 	}
 });
 document.addEventListener('formedStyle', function formedStyle() {
+	capture();
 	/* post[with-graphics, with-notice, with-inline-frame] */ {
 		let postNode = forAllTag('post');
 		/* '[with-graphics, with-notice, with-inline-frame]' for the 'post's */ {
@@ -284,6 +285,7 @@ document.addEventListener('formedStyle', function formedStyle() {
 			}
 		}
 	}
+	await suspend();
 	/* img */ {
 		/* '[deferred-src]' for the 'img's */ {
 			let imgNode = forAll('img[deferred-src]:not([frozen])');
@@ -317,6 +319,7 @@ document.addEventListener('formedStyle', function formedStyle() {
 			}
 		}
 	}
+	await suspend();
 	/* iframe */ {
 		/* '[deferred-src]' for the 'iframe's */ {
 			let iframeNode = forAll('iframe[deferred-src]:not([frozen])');
