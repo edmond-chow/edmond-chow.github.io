@@ -93,7 +93,7 @@ document.addEventListener('structuredTag', function structuredTag() {
 				buttonNode.classList.add('down');
 				buttonNode.textContent = '展開';
 				let capturedPostNode = postNode[i];
-				buttonNode.lastOnVisibleClickRelease?.call();
+				let onVisibleClickDelegate = [];
 				function onVisibleClick() {
 					if (!capturedPostNode.has(':scope > sub-post > post-leader > post-leader-advance') || !capturedPostNode.has(':scope > sub-post > post-content')) {
 						return;
@@ -136,14 +136,16 @@ document.addEventListener('structuredTag', function structuredTag() {
 					}
 					buttonNode.classList.add('disabled');
 				}
-				document.addEventListener('structuredTag', function lastOnVisibleClickRelease() {
-					buttonNode.removeEventListener('click', onVisibleClick);
-					document.removeEventListener('structuredTag', lastOnVisibleClickRelease);
-				});
+				onVisibleClickDelegate.push(onVisibleClick);
 				buttonNode.addEventListener('click', onVisibleClick);
 			}
+			document.addEventListener('structuredTag', function lastOnVisibleClickRelease() {
+				for (let i = 0; i < onVisibleClickDelegate.length; i++) {
+					buttonNode.removeEventListener('click', onVisibleClickDelegate[i]);
+				}
+				document.removeEventListener('structuredTag', lastOnVisibleClickRelease);
+			});
 			/* onResized */
-			window.lastOnResizedRelease?.call();
 			function onResized() {
 				let postNode = forAll('post[with-collapsed]');
 				for (let i = 0; i < postNode.length; i++) {
