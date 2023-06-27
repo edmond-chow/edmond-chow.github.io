@@ -208,7 +208,7 @@ document.addEventListener('structuredTag', async function structuredTag() {
 		}
 	}
 });
-document.addEventListener('formedStyle', function formedStyle() {
+document.addEventListener('formedStyle', async function formedStyle() {
 	capture();
 	/* post[with-graphics, with-notice, with-inline-frame] */ {
 		let postNode = forAllTag('post');
