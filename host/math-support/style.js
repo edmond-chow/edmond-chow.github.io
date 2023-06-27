@@ -1,13 +1,28 @@
-const switchBlurredState = function switchBlurredState() {
+window.setCookie = function setCookie(property, value) {
+	document.cookie = property + '=' + value;
+};
+Object.defineProperty(window, 'setCookie', { configurable: false, writable: false });
+window.getCookie = function getCookie(property) {
+	let cookies = document.cookie.split('; ');
+	for (let i = 0; i < cookies.length; i++) {
+		if (cookies[i].substring(0, property.length) == property) {
+			return cookies[i].substring(property.length + 1, cookies[i].length);
+		}
+	}
+	return '';
+};
+Object.defineProperty(window, 'getCookie', { configurable: false, writable: false });
+window.switchBlurredState = function switchBlurredState() {
 	if (document.body.id == 'blur') {
 		document.body.id = '';
-		document.cookie = 'non-blur=true';
+		setCookie('non-blur', 'true');
 	} else {
 		document.body.id = 'blur';
-		document.cookie = 'non-blur=false';
+		setCookie('non-blur', 'false');
 	}
-}
-const hasPartialSubstance = function hasPartialSubstance(node) {
+};
+Object.defineProperty(window, 'switchBlurredState', { configurable: false, writable: false });
+window.hasPartialSubstance = function hasPartialSubstance(node) {
 	if (node.nodeName == '#comment') {
 		return false;
 	} else if (node.nodeName == '#text' && removeSpace(node.wholeText) == '') {
@@ -18,13 +33,15 @@ const hasPartialSubstance = function hasPartialSubstance(node) {
 		return false;
 	}
 	return true;
-}
-const isScrollable = function isScrollable(node) {
+};
+Object.defineProperty(window, 'hasPartialSubstance', { configurable: false, writable: false });
+window.isScrollable = function isScrollable(node) {
 	let scrollableX = node.scrollWidth > node.clientWidth;
 	let scrollableY = node.scrollHeight > node.clientHeight;
 	return scrollableX || scrollableY;
-}
-const inScrollable = function inScrollable(node) {
+};
+Object.defineProperty(window, 'isScrollable', { configurable: false, writable: false });
+window.inScrollable = function inScrollable(node) {
 	function isInside(node, parentNode) {
 		let rect = node.getBoundingClientRect();
 		let parentRect = parentNode.getBoundingClientRect();
@@ -39,14 +56,16 @@ const inScrollable = function inScrollable(node) {
 		parentNode = parentNode.parentElement;
 	}
 	return parentNode != document.body ? isInside(node, parentNode) : inClient(node);
-}
-const inView = function inView(node) {
+};
+Object.defineProperty(window, 'inScrollable', { configurable: false, writable: false });
+window.inView = function inView(node) {
 	return inScrollable(node) && inClient(node);
 }
+Object.defineProperty(window, 'inView', { configurable: false, writable: false });
 document.addEventListener('structuredTag', function structuredTag() {
 	/* switchBlurredState() */ {
-		if (document.cookie.indexOf('non-blur=true') != -1) {
-			document.body.id = '';
+		if (getCookie('non-blur') == 'true') {
+			switchBlurredState();
 		}
 	}
 	/* post */ {
