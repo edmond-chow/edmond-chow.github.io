@@ -63,13 +63,13 @@ window.inView = function inView(node) {
 }
 Object.defineProperty(window, 'inView', { configurable: false, writable: false });
 document.addEventListener('structuredTag', async function structuredTag() {
-	capture();
+	captureSpan();
 	/* switchBlurredState() */ {
 		if (getCookie('non-blur') == 'true') {
 			switchBlurredState();
 		}
 	}
-	await suspend();
+	await mustSuspend();
 	/* post[date-string, with-collapsed, with-notice] */ {
 		/* integrating the 'post-leader-date's by including the '[date-string]'s */ {
 			let postNode = forAll('post[date-string]');
@@ -211,7 +211,7 @@ document.addEventListener('structuredTag', async function structuredTag() {
 	}
 });
 document.addEventListener('formedStyle', async function formedStyle() {
-	capture();
+	captureSpan();
 	/* post[with-graphics, with-notice, with-inline-frame] */ {
 		let postNode = forAllTag('post');
 		/* '[with-graphics, with-notice, with-inline-frame]' for the 'post's */ {
@@ -289,7 +289,7 @@ document.addEventListener('formedStyle', async function formedStyle() {
 			}
 		}
 	}
-	await suspend();
+	await mustSuspend();
 	/* img */ {
 		/* '[deferred-src]' for the 'img's */ {
 			let imgNode = forAll('img[deferred-src]:not([frozen])');
@@ -324,7 +324,7 @@ document.addEventListener('formedStyle', async function formedStyle() {
 			}
 		}
 	}
-	await suspend();
+	await mustSuspend();
 	/* iframe */ {
 		/* '[deferred-src]' for the 'iframe's */ {
 			let iframeNode = forAll('iframe[deferred-src]:not([frozen])');
