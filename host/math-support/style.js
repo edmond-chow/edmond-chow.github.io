@@ -70,10 +70,21 @@ document.addEventListener('structuredTag', async function structuredTag() {
 		}
 	}
 	await suspend();
-	/* post[with-collapsed, with-notice] */ {
+	/* post[date-string, with-collapsed, with-notice] */ {
+		/* integrating the 'post-leader-date's by including the '[date-string]'s */ {
+			let postNode = forAll('post[date-string]');
+			for (let i = 0; i < postNode.length; i++) {
+				let postLeaderDateNode = document.createElement('post-leader-date');
+				postLeaderDateNode.textContent = postNode[i].getAttribute('date-string');
+				let postLeaderSectionNode = postNode[i].get(':scope > sub-post > post-leader > post-leader-section');
+				postLeaderSectionNode.insertBefore(postLeaderDateNode, postLeaderSectionNode.get('post-leader-order').nextSibling);
+			}
+		}
+		await suspend();
 		/* events for the 'post > sub-post > post-leader > post-leader-advance > button.visibility's */ {
 			/* onVisibleClick */
 			let postNode = forAll('post[with-collapsed]');
+			let onVisibleClickDelegate = [];
 			for (let i = 0; i < postNode.length; i++) {
 				if (!postNode[i].has(':scope > sub-post > post-leader > post-leader-advance')) {
 					continue;
@@ -95,7 +106,6 @@ document.addEventListener('structuredTag', async function structuredTag() {
 				buttonNode.classList.add('down');
 				buttonNode.textContent = '展開';
 				let capturedPostNode = postNode[i];
-				let onVisibleClickDelegate = [];
 				function onVisibleClick() {
 					if (!capturedPostNode.has(':scope > sub-post > post-leader > post-leader-advance') || !capturedPostNode.has(':scope > sub-post > post-content')) {
 						return;
@@ -193,15 +203,7 @@ document.addEventListener('structuredTag', async function structuredTag() {
 			});
 			window.addEventListener('resize', onResized);
 		}
-		/* integrating the 'post-leader-date's by including the '[date-string]'s */ {
-			let postNode = forAll('post[date-string]');
-			for (let i = 0; i < postNode.length; i++) {
-				let postLeaderDateNode = document.createElement('post-leader-date');
-				postLeaderDateNode.textContent = postNode[i].getAttribute('date-string');
-				let postLeaderSectionNode = postNode[i].get(':scope > sub-post > post-leader > post-leader-section');
-				postLeaderSectionNode.insertBefore(postLeaderDateNode, postLeaderSectionNode.get('post-leader-order').nextSibling);
-			}
-		}
+		await suspend();
 		/* '[with-notice]' for the 'post's */ {
 			insertSurround('post > sub-post > post-content > notice', 'sub-notice');
 			insertSurround('post > sub-post > post-content > notice > sub-notice', 'notice-content');
@@ -274,6 +276,7 @@ document.addEventListener('formedStyle', async function formedStyle() {
 					}
 				}
 				operate(postNode[i], 'with-graphics', ':scope > sub-post > post-content > img:first-of-type:last-of-type');
+				await suspend();
 				operate(postNode[i], 'with-notice', ':scope > sub-post > post-content > notice', function(node) {
 					let noticeNode = node.get(':scope > sub-post > post-content > notice');
 					if (noticeNode.has(':scope > sub-notice > notice-content')) {
@@ -281,6 +284,7 @@ document.addEventListener('formedStyle', async function formedStyle() {
 						noticeContentNode.classList.add('no-space');
 					}
 				});
+				await suspend();
 				operate(postNode[i], 'with-inline-frame', ':scope > sub-post > post-content > iframe:first-of-type:last-of-type');
 			}
 		}
@@ -309,6 +313,7 @@ document.addEventListener('formedStyle', async function formedStyle() {
 				}
 			}
 		}
+		await suspend();
 		/* '[pre-deferred-src]' for the 'img's */ {
 			let imgNode = forAll('img[pre-deferred-src]:not([frozen])');
 			for (let i = 0; i < imgNode.length; i++) {
@@ -340,7 +345,8 @@ document.addEventListener('formedStyle', async function formedStyle() {
 				}
 			}
 		}
-	/* '[referred]' for the 'iframe's */ {
+		await suspend();
+		/* '[referred]' for the 'iframe's */ {
 			let iframeNode = forAll('iframe[referred]:not([frozen])');
 			for (let i = 0; i < iframeNode.length; i++) {
 				if (!inView(iframeNode[i])) {
