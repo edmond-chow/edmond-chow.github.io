@@ -35,33 +35,6 @@ window.hasPartialSubstance = function hasPartialSubstance(node) {
 	return true;
 };
 Object.defineProperty(window, 'hasPartialSubstance', { configurable: false, writable: false });
-window.isScrollable = function isScrollable(node) {
-	let scrollableX = node.scrollWidth > node.clientWidth;
-	let scrollableY = node.scrollHeight > node.clientHeight;
-	return scrollableX || scrollableY;
-};
-Object.defineProperty(window, 'isScrollable', { configurable: false, writable: false });
-window.inScrollable = function inScrollable(node) {
-	function isInside(node, parentNode) {
-		let rect = node.getBoundingClientRect();
-		let parentRect = parentNode.getBoundingClientRect();
-		let left = rect.x < parentRect.x + parentRect.width;
-		let top = rect.y < parentRect.y + parentRect.height;
-		let right = rect.x + rect.width > parentRect.x;
-		let bottom = rect.y + rect.height > parentRect.y;
-		return (left && right) && (top && bottom);
-	}
-	let parentNode = node.parentElement;
-	while (parentNode != document.body && !isScrollable(parentNode)) {
-		parentNode = parentNode.parentElement;
-	}
-	return parentNode != document.body ? isInside(node, parentNode) : inClient(node);
-};
-Object.defineProperty(window, 'inScrollable', { configurable: false, writable: false });
-window.inView = function inView(node) {
-	return inScrollable(node) && inClient(node);
-}
-Object.defineProperty(window, 'inView', { configurable: false, writable: false });
 document.addEventListener('structuredTag', async function structuredTag() {
 	captureSpan();
 	/* switchBlurredState() */ {
@@ -294,7 +267,7 @@ document.addEventListener('formedStyle', async function formedStyle() {
 		/* '[deferred-src]' for the 'img's */ {
 			let imgNode = forAll('img[deferred-src]:not([frozen])');
 			for (let i = 0; i < imgNode.length; i++) {
-				if (inView(imgNode[i])) {
+				if (inScrollable(imgNode[i])) {
 					imgNode[i].setAttribute('src', imgNode[i].getAttribute('deferred-src'));
 					imgNode[i].removeAttribute('deferred-src');
 					let capturedImgNode = imgNode[i];
@@ -317,7 +290,7 @@ document.addEventListener('formedStyle', async function formedStyle() {
 		/* '[pre-deferred-src]' for the 'img's */ {
 			let imgNode = forAll('img[pre-deferred-src]:not([frozen])');
 			for (let i = 0; i < imgNode.length; i++) {
-				if (!inView(imgNode[i])) {
+				if (!inScrollable(imgNode[i])) {
 					imgNode[i].setAttribute('deferred-src', imgNode[i].getAttribute('pre-deferred-src'));
 					imgNode[i].removeAttribute('pre-deferred-src');
 				}
@@ -329,7 +302,7 @@ document.addEventListener('formedStyle', async function formedStyle() {
 		/* '[deferred-src]' for the 'iframe's */ {
 			let iframeNode = forAll('iframe[deferred-src]:not([frozen])');
 			for (let i = 0; i < iframeNode.length; i++) {
-				if (inView(iframeNode[i])) {
+				if (inScrollable(iframeNode[i])) {
 					let url = new URL(iframeNode[i].getAttribute('deferred-src'), document.baseURI);
 					if (document.location.origin == url.origin) {
 						let request = new XMLHttpRequest();
@@ -352,7 +325,7 @@ document.addEventListener('formedStyle', async function formedStyle() {
 		/* '[referred]' for the 'iframe's */ {
 			let iframeNode = forAll('iframe[referred]:not([frozen])');
 			for (let i = 0; i < iframeNode.length; i++) {
-				if (!inView(iframeNode[i])) {
+				if (!inScrollable(iframeNode[i])) {
 					iframeNode[i].setAttribute('deferred-src', iframeNode[i].getAttribute('src'));
 					iframeNode[i].removeAttribute('referred');
 					iframeNode[i].removeAttribute('src');
