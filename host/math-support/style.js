@@ -330,16 +330,19 @@ document.addEventListener('formedStyle', async function formedStyle() {
 			let iframeNode = forAll('iframe[deferred-src]:not([frozen])');
 			for (let i = 0; i < iframeNode.length; i++) {
 				if (inView(iframeNode[i])) {
-					let request = new XMLHttpRequest();
-					let capturedIframeNode = iframeNode[i];
-					request.addEventListener('load', function onLoad() {
-						if (request.status >= 400 && request.status <= 599) {
-							capturedIframeNode.setAttribute('referred', '');
-						}
-						request.removeEventListener('load', onLoad);
-					});
-					request.open('GET', iframeNode[i].getAttribute('deferred-src'), true);
-					request.send();
+					let url = new URL(iframeNode[i].getAttribute('deferred-src'), document.baseURI);
+					if (document.location.origin == url.origin) {
+						let request = new XMLHttpRequest();
+						let capturedIframeNode = iframeNode[i];
+						request.addEventListener('load', function onLoad() {
+							if (request.status >= 400 && request.status <= 599) {
+								capturedIframeNode.setAttribute('referred', '');
+							}
+							request.removeEventListener('load', onLoad);
+						});
+						request.open('GET', url.href, true);
+						request.send();
+					}
 					iframeNode[i].setAttribute('src', iframeNode[i].getAttribute('deferred-src'));
 					iframeNode[i].removeAttribute('deferred-src');
 				}
