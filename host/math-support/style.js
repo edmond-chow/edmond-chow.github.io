@@ -301,12 +301,12 @@ document.addEventListener('formedStyle', async function formedStyle() {
 					function onError() {
 						capturedImgNode.setAttribute('pre-deferred-src', capturedImgNode.getAttribute('src'));
 						capturedImgNode.removeAttribute('src');
-						capturedImgNode.removeEventListener('load', onLoad);
 						capturedImgNode.removeEventListener('error', onError);
+						capturedImgNode.removeEventListener('load', onLoad);
 					}
 					function onLoad() {
-						capturedImgNode.removeEventListener('load', onLoad);
 						capturedImgNode.removeEventListener('error', onError);
+						capturedImgNode.removeEventListener('load', onLoad);
 					}
 					imgNode[i].addEventListener('error', onError);
 					imgNode[i].addEventListener('load', onLoad);
