@@ -330,16 +330,16 @@ document.addEventListener('formedStyle', async function formedStyle() {
 			let iframeNode = forAll('iframe[deferred-src]:not([frozen])');
 			for (let i = 0; i < iframeNode.length; i++) {
 				if (inView(iframeNode[i])) {
-					iframeNode[i].request = new XMLHttpRequest();
+					let request = new XMLHttpRequest();
 					let capturedIframeNode = iframeNode[i];
-					iframeNode[i].request.addEventListener('load', function onLoad() {
-						if (capturedIframeNode.request.status >= 400 && capturedIframeNode.request.status <= 599) {
+					request.addEventListener('load', function onLoad() {
+						if (request.status >= 400 && request.status <= 599) {
 							capturedIframeNode.setAttribute('referred', '');
 						}
-						capturedIframeNode.request.removeEventListener('load', onLoad);
+						request.removeEventListener('load', onLoad);
 					});
-					iframeNode[i].request.open('GET', iframeNode[i].getAttribute('deferred-src'), true);
-					iframeNode[i].request.send();
+					request.open('GET', iframeNode[i].getAttribute('deferred-src'), true);
+					request.send();
 					iframeNode[i].setAttribute('src', iframeNode[i].getAttribute('deferred-src'));
 					iframeNode[i].removeAttribute('deferred-src');
 				}
