@@ -1,8 +1,10 @@
 [
 	function setCookie(property, value) {
+		arguments.constrainedWithAndThrow(String, String);
 		document.cookie = property + '=' + value;
 	},
 	function getCookie(property) {
+		arguments.constrainedWithAndThrow(String);
 		let cookies = document.cookie.split('; ');
 		for (let i = 0; i < cookies.length; i++) {
 			if (cookies[i].substring(0, property.length) == property) {
@@ -12,6 +14,7 @@
 		return '';
 	},
 	function switchBlurredState() {
+		arguments.constrainedWithAndThrow();
 		if (document.body.id == 'blur') {
 			document.body.id = '';
 			setCookie('non-blur', 'true');
@@ -21,6 +24,7 @@
 		}
 	},
 	function hasPartialSubstance(node) {
+		arguments.constrainedWithAndThrow(Element);
 		if (node.nodeName == '#comment') {
 			return false;
 		} else if (node.nodeName == '#text' && node.wholeText.removeSpace() == '') {
