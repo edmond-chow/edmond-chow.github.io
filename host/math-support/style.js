@@ -23,8 +23,8 @@
 			setCookie('non-blur', 'false');
 		}
 	},
-	function hasPartialSubstance(node) {
-		arguments.constrainedWithAndThrow(Element);
+	function isInstance(node) {
+		arguments.constrainedWithAndThrow(Node);
 		if (node.nodeName == '#comment') {
 			return false;
 		} else if (node.nodeName == '#text' && node.wholeText.removeSpace() == '') {
@@ -209,7 +209,7 @@ document.addEventListener('formedStyle', async function formedStyle() {
 							let condition = function(node) {
 								let previousNode = node.get(selector).previousSibling;
 								while (previousNode != null) {
-									if (hasPartialSubstance(previousNode)) {
+									if (isInstance(previousNode)) {
 										return false;
 									}
 									previousNode = previousNode.previousSibling;
@@ -227,7 +227,7 @@ document.addEventListener('formedStyle', async function formedStyle() {
 							let condition = function(node) {
 								let nextNode = node.get(selector).nextSibling;
 								while (nextNode != null) {
-									if (hasPartialSubstance(nextNode)) {
+									if (isInstance(nextNode)) {
 										return false;
 									}
 									nextNode = nextNode.nextSibling;
