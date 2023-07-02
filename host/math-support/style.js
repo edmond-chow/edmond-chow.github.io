@@ -1,40 +1,38 @@
-window.setCookie = function setCookie(property, value) {
-	document.cookie = property + '=' + value;
-};
-Object.defineProperty(window, 'setCookie', { configurable: false, writable: false });
-window.getCookie = function getCookie(property) {
-	let cookies = document.cookie.split('; ');
-	for (let i = 0; i < cookies.length; i++) {
-		if (cookies[i].substring(0, property.length) == property) {
-			return cookies[i].substring(property.length + 1, cookies[i].length);
+[
+	function setCookie(property, value) {
+		document.cookie = property + '=' + value;
+	},
+	function getCookie(property) {
+		let cookies = document.cookie.split('; ');
+		for (let i = 0; i < cookies.length; i++) {
+			if (cookies[i].substring(0, property.length) == property) {
+				return cookies[i].substring(property.length + 1, cookies[i].length);
+			}
 		}
+		return '';
+	},
+	function switchBlurredState() {
+		if (document.body.id == 'blur') {
+			document.body.id = '';
+			setCookie('non-blur', 'true');
+		} else {
+			document.body.id = 'blur';
+			setCookie('non-blur', 'false');
+		}
+	},
+	function hasPartialSubstance(node) {
+		if (node.nodeName == '#comment') {
+			return false;
+		} else if (node.nodeName == '#text' && node.wholeText.removeSpace() == '') {
+			return false;
+		} else if (node instanceof Element && node.nodeName == 'br'.toUpperCase()) {
+			return false;
+		} else if (node instanceof Element && window.getComputedStyle(node).display == 'none') {
+			return false;
+		}
+		return true;
 	}
-	return '';
-};
-Object.defineProperty(window, 'getCookie', { configurable: false, writable: false });
-window.switchBlurredState = function switchBlurredState() {
-	if (document.body.id == 'blur') {
-		document.body.id = '';
-		setCookie('non-blur', 'true');
-	} else {
-		document.body.id = 'blur';
-		setCookie('non-blur', 'false');
-	}
-};
-Object.defineProperty(window, 'switchBlurredState', { configurable: false, writable: false });
-window.hasPartialSubstance = function hasPartialSubstance(node) {
-	if (node.nodeName == '#comment') {
-		return false;
-	} else if (node.nodeName == '#text' && removeSpace(node.wholeText) == '') {
-		return false;
-	} else if (node instanceof Element && node.nodeName == 'br'.toUpperCase()) {
-		return false;
-	} else if (node instanceof Element && window.getComputedStyle(node).display == 'none') {
-		return false;
-	}
-	return true;
-};
-Object.defineProperty(window, 'hasPartialSubstance', { configurable: false, writable: false });
+].bindTo(window);
 document.addEventListener('structuredTag', async function structuredTag() {
 	captureSpan();
 	/* switchBlurredState() */ {
