@@ -139,6 +139,11 @@
 }
 @layer math-support-features-with-constrained-container {
 	/* post[with-collapsed] */
+	@supports selector(::-webkit-scrollbar) {
+		post[with-collapsed] > sub-post > post-content.no-scrollbar::-webkit-scrollbar-thumb {
+			background-color: transparent;
+		}
+	}
 	post[with-collapsed] > sub-post > post-content > img {
 		overflow: hidden;
 		width: 70%;
