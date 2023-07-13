@@ -202,7 +202,7 @@
 				for (let i = 0; i < postNode.length; i++) {
 					function operate(node, attribute, selector, bind) {
 						function is(node, condition) {
-							if (node.hasAttribute('with-collapsed') || node.has(':scope > sub-post > post-content > post')) {
+							if (node.hasAttribute('as-is') || node.hasAttribute('with-collapsed') || node.has(':scope > sub-post > post-content > post')) {
 								return false;
 							}
 							return condition(node);
