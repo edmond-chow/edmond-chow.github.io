@@ -308,19 +308,19 @@
 		@layer /* default */ {
 			/* background-image with 'basis-layer, backdrop-container > blurred-filter' */
 			body basis-layer, body#blur major > sub-major > post > sub-post > backdrop-container > blurred-filter {
-				background-image: url('analysis.jpg');
+				background-image: var(--background-image, url('analysis.jpg'));
 			}
 		}
 		@layer /* beautiful-math-style */ {
 			/* background-image with 'basis-layer, backdrop-container > blurred-filter' */
 			body.beautiful-math-style basis-layer, body#blur.beautiful-math-style major > sub-major > post > sub-post > backdrop-container > blurred-filter {
-				background-image: url('beautiful-math.jpg');
+				background-image: var(--background-image, url('beautiful-math.jpg'));
 			}
 		}
 		@layer /* chung-style */ {
 			/* background-image with 'basis-layer, backdrop-container > blurred-filter' */
 			body.chung-style basis-layer, body#blur.chung-style major > sub-major > post > sub-post > backdrop-container > blurred-filter {
-				background-image: url('chung-galaxy.jpg');
+				background-image: var(--background-image, url('chung-galaxy.jpg'));
 			}
 		}
 	}
