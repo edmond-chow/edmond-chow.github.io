@@ -215,7 +215,7 @@
 			if (hasTitle(value)) {
 				return;
 			}
-			value.setAttribute('title', '');
+			value.setAttribute('title', '{Name}');
 		});
 		await suspend();
 		/* '[aria-label]' for the 'button, [role="button"]'s */
