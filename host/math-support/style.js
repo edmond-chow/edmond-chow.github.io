@@ -1,4 +1,29 @@
 [
+	function hasTitle(node) {
+		return node.hasAttribute('title');
+	},
+	function hasAlt(node) {
+		return node.hasAttribute('alt');
+	},
+	function hasAriaLabel(node) {
+		return node.hasAttribute('aria-label') && node.getAttribute('aria-label') != '';
+	},
+	function hasAriaLabelBy(node) {
+		if (!node.hasAttribute('aria-label-by')) {
+			return false;
+		}
+		let referenceNode = document.getElementById(value.getAttribute('aria-label-by'));
+		if (referenceNode == null) {
+			return false;
+		} else if (!hasTextOnly(referenceNode)) {
+			return false;
+		} else if (referenceNode.innerText.removeSpace() == '') {
+			return false;
+		}
+		return true;
+	}
+].bindTo(window);
+[
 	function setCookie(property, value) {
 		arguments.constrainedWithAndThrow(String, String);
 		document.cookie = property + '=' + value;
@@ -176,6 +201,51 @@
 		/* '[with-notice]' for the 'post's */
 		insertSurround('post > sub-post > post-content > notice', 'sub-notice');
 		insertSurround('post > sub-post > post-content > notice > sub-notice', 'notice-content');
+		await suspend();
+		/* '[alt]' for the 'img's */
+		forAllTag('img').forEach((value) => {
+			if (hasAlt(value) || hasAriaLabel(value) || hasAriaLabelBy(value)) {
+				return;
+			}
+			value.setAttribute('alt', '');
+		});
+		await suspend();
+		/* '[title]' for the 'iframe's */
+		forAllTag('iframe').forEach((value) => {
+			if (hasTitle(value)) {
+				return;
+			}
+			value.setAttribute('title', '');
+		});
+		await suspend();
+		/* '[aria-label]' for the 'button, [role="button"]'s */
+		forAll('button, [role="button"]').forEach((value) => {
+			if (!value.hasAttribute('aria-label')) {
+				if (hasTitle(value) || hasAriaLabel(value) || hasAriaLabelBy(value)) {
+					return;
+				}
+				if (hasTextOnly(value) && value.innerText.removeSpace() != '') {
+					value.setAttribute('aria-label', value.innerText);
+				} else {
+					value.setAttribute('aria-label', '{Name}');
+				}
+			}
+			if (!value.hasAttribute('type')) {
+				value.setAttribute('type', 'button');
+			}
+		});
+		await suspend();
+		/* '[aria-label]' for the 'a, [role="link"]'s */
+		forAll('a, [role="link"]').forEach((value) => {
+			if (!value.hasAttribute('href') || hasAriaLabel(value)) {
+				return;
+			}
+			if (hasTextOnly(value) && value.innerText.removeSpace() != '') {
+				value.setAttribute('aria-label', value.innerText);
+			} else {
+				value.setAttribute('aria-label', '{Name}');
+			}
+		});
 	});
 	document.addEventListener('formedStyle', async function formedStyle() {
 		captureSpan();
@@ -256,10 +326,12 @@
 			await suspend();
 			operate(postValue.postNode, 'with-inline-frame', ':scope > sub-post > post-content > iframe:first-of-type:last-of-type');
 		});		
-		await mustSuspend();
+		await suspend();
 		/* '[deferred-src]' for the 'img's */
 		forAll('img[deferred-src]:not([frozen])').forEach((value) => {
 			if (inScrollable(value)) {
+				let url = new URL(value.getAttribute('deferred-src'), document.baseURI);
+				value.setAttribute('alt', url.href.substring(url.href.lastIndexOf('/') + 1));
 				value.setAttribute('src', value.getAttribute('deferred-src'));
 				value.removeAttribute('deferred-src');
 				let capturedImgNode = value;
@@ -285,7 +357,7 @@
 				value.removeAttribute('pre-deferred-src');
 			}
 		});
-		await mustSuspend();
+		await suspend();
 		/* '[deferred-src]' for the 'iframe's */
 		forAll('iframe[deferred-src]:not([frozen])').forEach((value) => {
 			if (inScrollable(value)) {
