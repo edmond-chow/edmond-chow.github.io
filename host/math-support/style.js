@@ -15,7 +15,7 @@
 		return node.hasAttribute('aria-label') && node.getAttribute('aria-label') != '';
 	},
 	function makeAriaLabel(node) {
-		if (hasTextOnly(node) && value.innerText.removeSpace() != '') {
+		if (hasTextOnly(node) && node.innerText.removeSpace() != '') {
 			node.setAttribute('aria-label', node.innerText);
 		} else {
 			node.setAttribute('aria-label', '{Name}');
