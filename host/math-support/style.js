@@ -2,11 +2,24 @@
 	function hasTitle(node) {
 		return node.hasAttribute('title');
 	},
+	function makeTitle(node) {
+		node.setAttribute('title', '{Name}');
+	},
 	function hasAlt(node) {
 		return node.hasAttribute('alt');
 	},
+	function makeAlt(node) {
+		node.setAttribute('alt', '{Name}');
+	},
 	function hasAriaLabel(node) {
 		return node.hasAttribute('aria-label') && node.getAttribute('aria-label') != '';
+	},
+	function makeAriaLabel(node) {
+		if (hasTextOnly(node) && value.innerText.removeSpace() != '') {
+			node.setAttribute('aria-label', node.innerText);
+		} else {
+			node.setAttribute('aria-label', '{Name}');
+		}
 	},
 	function hasAriaLabelBy(node) {
 		if (!node.hasAttribute('aria-label-by')) {
@@ -204,31 +217,22 @@
 		await suspend();
 		/* '[alt]' for the 'img's */
 		forAllTag('img').forEach((value) => {
-			if (hasAlt(value) || hasAriaLabel(value) || hasAriaLabelBy(value)) {
-				return;
+			if (!hasAlt(value) && !hasAriaLabel(value) && !hasAriaLabelBy(value)) {
+				makeAlt(value);
 			}
-			value.setAttribute('alt', '');
 		});
 		await suspend();
 		/* '[title]' for the 'iframe's */
 		forAllTag('iframe').forEach((value) => {
-			if (hasTitle(value)) {
-				return;
+			if (!hasTitle(value)) {
+				makeTitle(value);
 			}
-			value.setAttribute('title', '{Name}');
 		});
 		await suspend();
 		/* '[aria-label]' for the 'button, [role="button"]'s */
 		forAll('button, [role="button"]').forEach((value) => {
-			if (!value.hasAttribute('aria-label')) {
-				if (hasTitle(value) || hasAriaLabel(value) || hasAriaLabelBy(value)) {
-					return;
-				}
-				if (hasTextOnly(value) && value.innerText.removeSpace() != '') {
-					value.setAttribute('aria-label', value.innerText);
-				} else {
-					value.setAttribute('aria-label', '{Name}');
-				}
+			if (!hasTitle(value) && !hasAriaLabel(value) && !hasAriaLabelBy(value)) {
+				makeAriaLabel(value);
 			}
 			if (!value.hasAttribute('type')) {
 				value.setAttribute('type', 'button');
@@ -237,13 +241,8 @@
 		await suspend();
 		/* '[aria-label]' for the 'a, [role="link"]'s */
 		forAll('a, [role="link"]').forEach((value) => {
-			if (!value.hasAttribute('href') || hasAriaLabel(value)) {
-				return;
-			}
-			if (hasTextOnly(value) && value.innerText.removeSpace() != '') {
-				value.setAttribute('aria-label', value.innerText);
-			} else {
-				value.setAttribute('aria-label', '{Name}');
+			if (value.hasAttribute('href') && !hasAriaLabel(value)) {
+				makeAriaLabel(value);
 			}
 		});
 	});
