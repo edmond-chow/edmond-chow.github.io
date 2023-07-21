@@ -255,55 +255,41 @@
 			return value.complete;
 		}).forEach(async(postValue) => {
 			let operate = (node, attribute, selector, bind) => {
-				let is = (node, condition) => {
+				let is = (node, determiner) => {
 					if (node.hasAttribute('as-is') || node.hasAttribute('with-collapsed') || node.has(':scope > sub-post > post-content > post')) {
 						return false;
 					}
-					return condition(node);
+					return determiner(node);
 				};
-				let hasCondition = (selector) => {
-					let condition = function (node) {
+				let getDeterminer = (selector) => {
+					return (node) => {
 						return node.has(selector);
-					}
-					return condition;
+					};
 				};
 				let visibilityChecking = (node, selector) => {
-					let previousCondition = (selector) => {
-						return (node) => {
-							let previousNode = node.get(selector).previousSibling;
-							while (previousNode != null) {
-								if (isInstance(previousNode)) {
-									return false;
+					let matched = (siblingProperty, classSelector) => {
+						let determiner = (selector) => {
+							return (node) => {
+								let siblingNode = node.get(selector)[siblingProperty];
+								while (siblingNode != null) {
+									if (isInstance(siblingNode)) {
+										return false;
+									}
+									siblingNode = siblingNode[siblingProperty];
 								}
-								previousNode = previousNode.previousSibling;
-							}
-							return true;
+								return true;
+							};
 						};
+						if (is(node, determiner(selector))) {
+							node.get(selector).classList.add(classSelector);
+						} else {
+							node.get(selector).classList.remove(classSelector);
+						}
 					};
-					if (is(node, previousCondition(selector))) {
-						node.get(selector).classList.add('first-visible-child');
-					} else {
-						node.get(selector).classList.remove('first-visible-child');
-					}
-					let nextCondition = (selector) => {
-						return (node) => {
-							let nextNode = node.get(selector).nextSibling;
-							while (nextNode != null) {
-								if (isInstance(nextNode)) {
-									return false;
-								}
-								nextNode = nextNode.nextSibling;
-							}
-							return true;
-						};
-					};
-					if (is(node, nextCondition(selector))) {
-						node.get(selector).classList.add('last-visible-child');
-					} else {
-						node.get(selector).classList.remove('last-visible-child');
-					}
+					matched('previousSibling', 'first-visible-child');
+					matched('nextSibling', 'last-visible-child');
 				};
-				if (is(node, hasCondition(selector))) {
+				if (is(node, getDeterminer(selector))) {
 					node.setAttribute(attribute, '');
 					visibilityChecking(node, selector);
 					bind?.call(null, node);
@@ -313,7 +299,7 @@
 			};
 			operate(postValue.postNode, 'with-graphics', ':scope > sub-post > post-content > img:first-of-type:last-of-type');
 			await suspend();
-			operate(postValue.postNode, 'with-notice', ':scope > sub-post > post-content > notice', function (node) {
+			operate(postValue.postNode, 'with-notice', ':scope > sub-post > post-content > notice', (node) => {
 				let noticeNode = node.get(':scope > sub-post > post-content > notice');
 				if (noticeNode.has(':scope > sub-notice > notice-content')) {
 					let noticeContentNode = noticeNode.get(':scope > sub-notice > notice-content');
@@ -331,16 +317,15 @@
 				value.setAttribute('alt', url.href.substring(url.href.lastIndexOf('/') + 1));
 				value.setAttribute('src', value.getAttribute('deferred-src'));
 				value.removeAttribute('deferred-src');
-				let capturedImgNode = value;
 				function onError() {
-					capturedImgNode.setAttribute('pre-deferred-src', capturedImgNode.getAttribute('src'));
-					capturedImgNode.removeAttribute('src');
-					capturedImgNode.removeEventListener('error', onError);
-					capturedImgNode.removeEventListener('load', onLoad);
+					this.setAttribute('pre-deferred-src', this.getAttribute('src'));
+					this.removeAttribute('src');
+					this.removeEventListener('error', onError);
+					this.removeEventListener('load', onLoad);
 				}
 				function onLoad() {
-					capturedImgNode.removeEventListener('error', onError);
-					capturedImgNode.removeEventListener('load', onLoad);
+					this.removeEventListener('error', onError);
+					this.removeEventListener('load', onLoad);
 				}
 				value.addEventListener('error', onError);
 				value.addEventListener('load', onLoad);
@@ -361,12 +346,11 @@
 				let url = new URL(value.getAttribute('deferred-src'), document.baseURI);
 				if (document.location.origin == url.origin) {
 					let request = new XMLHttpRequest();
-					let capturedIframeNode = value;
 					request.addEventListener('load', function onLoad() {
-						if (request.status >= 400 && request.status <= 599) {
-							capturedIframeNode.setAttribute('referred', '');
+						if (this.status >= 400 && this.status <= 599) {
+							value.setAttribute('referred', '');
 						}
-						request.removeEventListener('load', onLoad);
+						this.removeEventListener('load', onLoad);
 					});
 					request.open('GET', url.href, true);
 					request.send();
