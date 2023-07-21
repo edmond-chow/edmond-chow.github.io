@@ -126,40 +126,40 @@
 			buttonNode.classList.add('down');
 			buttonNode.textContent = '展開';
 			async function onVisibleClick() {
-				if (!new Post(postValue.postNode).complete || buttonNode.parentElement != postValue.postLeaderAdvanceNode) {
+				if (!new Post(postValue.postNode).complete || this.parentElement != postValue.postLeaderAdvanceNode) {
 					return;
 				}
-				function freezer(action) {
+				let freezer = (action) => {
 					Array.from(postValue.postContentNode.children).forEach((value) => {
 						if (value.tagName.toUpperCase() == 'img'.toUpperCase() || value.tagName.toUpperCase() == 'iframe'.toUpperCase()) {
 							action(value);
 						}
 					});
-				}
+				};
 				freezer((node) => {
 					node.setAttribute('frozen', '');
 				});
-				if (buttonNode.id == 'visibled') {
-					buttonNode.id = '';
-					buttonNode.classList.remove('up');
-					buttonNode.classList.add('down');
-					buttonNode.textContent = '展開';
+				if (this.id == 'visibled') {
+					this.id = '';
+					this.classList.remove('up');
+					this.classList.add('down');
+					this.textContent = '展開';
 					postValue.postContentNode.style.aspectRatio = '';
 					postValue.postContentNode.classList.remove('no-scrollbar');
 				} else {
-					buttonNode.id = 'visibled';
-					buttonNode.classList.add('up');
-					buttonNode.classList.remove('down');
-					buttonNode.textContent = '縮小';
+					this.id = 'visibled';
+					this.classList.add('up');
+					this.classList.remove('down');
+					this.textContent = '縮小';
 					postValue.postContentNode.style.aspectRatio = postValue.postContentNode.offsetWidth.toString() + ' / ' + postValue.postContentNode.scrollHeight.toString();
 					postValue.postContentNode.classList.add('no-scrollbar');
 				}
-				buttonNode.classList.add('disabled');
+				this.classList.add('disabled');
 				await deffer(1000);
 				freezer((node) => {
 					node.removeAttribute('frozen');
 				});
-				buttonNode.classList.remove('disabled');
+				this.classList.remove('disabled');
 			}
 			onVisibleClickEvent.push({ node: buttonNode, delegate: onVisibleClick });
 			buttonNode.addEventListener('click', onVisibleClick);
@@ -173,7 +173,7 @@
 		/* an 'onResized' event for the 'post > sub-post > post-leader > post-leader-advance > button.visibility's */
 		async function onResized() {
 			resizedCount += 1;
-			function Perform(action) {
+			let Perform = (action) => {
 				forAll('post[with-collapsed]').map((value) => {
 					return new Post(value);
 				}).filter((value) => {
@@ -181,28 +181,28 @@
 				}).forEach((postValue) => {
 					if (postValue.postLeaderAdvanceNode.has(':scope > button.advance.visibility')) {
 						let buttonNode = postValue.postLeaderAdvanceNode.get(':scope > button.advance.visibility');
-						action(buttonNode, postValue.postContentNode);
+						action.call(buttonNode, postValue.postContentNode);
 					}
 				});
-			}
-			Perform((buttonNode, postContentNode) => {
-				if (buttonNode.id == 'visibled') {
+			};
+			Perform(function action(postContentNode) {
+				if (this.id == 'visibled') {
 					postContentNode.style.aspectRatio = 'auto';
 				}
 				postContentNode.classList.add('resized');
-				buttonNode.classList.add('pseudo-disabled');
+				this.classList.add('pseudo-disabled');
 			});
 			await deffer(250);
 			resizedCount -= 1;
 			if (resizedCount > 0) {
 				return;
 			}
-			Perform((buttonNode, postContentNode) => {
-				if (buttonNode.id == 'visibled') {
+			Perform(function action(postContentNode) {
+				if (this.id == 'visibled') {
 					postContentNode.style.aspectRatio = postContentNode.offsetWidth.toString() + ' / ' + postContentNode.scrollHeight.toString();
 				}
 				postContentNode.classList.remove('resized');
-				buttonNode.classList.remove('pseudo-disabled');
+				this.classList.remove('pseudo-disabled');
 			});
 		}
 		document.addEventListener('structuredTag', function lastOnResizedRelease() {
@@ -254,22 +254,22 @@
 		}).filter((value) => {
 			return value.complete;
 		}).forEach(async(postValue) => {
-			function operate(node, attribute, selector, bind) {
-				function is(node, condition) {
+			let operate = (node, attribute, selector, bind) => {
+				let is = (node, condition) => {
 					if (node.hasAttribute('as-is') || node.hasAttribute('with-collapsed') || node.has(':scope > sub-post > post-content > post')) {
 						return false;
 					}
 					return condition(node);
-				}
-				function hasCondition(selector) {
+				};
+				let hasCondition = (selector) => {
 					let condition = function (node) {
 						return node.has(selector);
 					}
 					return condition;
-				}
-				function visibilityChecking(node, selector) {
-					function previousCondition(selector) {
-						let condition = function (node) {
+				};
+				let visibilityChecking = (node, selector) => {
+					let previousCondition = (selector) => {
+						return (node) => {
 							let previousNode = node.get(selector).previousSibling;
 							while (previousNode != null) {
 								if (isInstance(previousNode)) {
@@ -278,16 +278,15 @@
 								previousNode = previousNode.previousSibling;
 							}
 							return true;
-						}
-						return condition;
-					}
+						};
+					};
 					if (is(node, previousCondition(selector))) {
 						node.get(selector).classList.add('first-visible-child');
 					} else {
 						node.get(selector).classList.remove('first-visible-child');
 					}
-					function nextCondition(selector) {
-						let condition = function (node) {
+					let nextCondition = (selector) => {
+						return (node) => {
 							let nextNode = node.get(selector).nextSibling;
 							while (nextNode != null) {
 								if (isInstance(nextNode)) {
@@ -296,15 +295,14 @@
 								nextNode = nextNode.nextSibling;
 							}
 							return true;
-						}
-						return condition;
-					}
+						};
+					};
 					if (is(node, nextCondition(selector))) {
 						node.get(selector).classList.add('last-visible-child');
 					} else {
 						node.get(selector).classList.remove('last-visible-child');
 					}
-				}
+				};
 				if (is(node, hasCondition(selector))) {
 					node.setAttribute(attribute, '');
 					visibilityChecking(node, selector);
@@ -312,7 +310,7 @@
 				} else {
 					node.removeAttribute(attribute);
 				}
-			}
+			};
 			operate(postValue.postNode, 'with-graphics', ':scope > sub-post > post-content > img:first-of-type:last-of-type');
 			await suspend();
 			operate(postValue.postNode, 'with-notice', ':scope > sub-post > post-content > notice', function (node) {
