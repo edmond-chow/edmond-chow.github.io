@@ -79,8 +79,8 @@
 ].bindTo(window);
 /* { async } */ {
 	function deffer(timeout) {
-		return new Promise(function executor(resolve) {
-			setTimeout(function handler() {
+		return new Promise((resolve) => {
+			setTimeout(() => {
 				resolve();
 			}, timeout);
 		});
@@ -253,7 +253,7 @@
 			return new Post(value);
 		}).filter((value) => {
 			return value.complete;
-		}).forEach(async(postValue) => {
+		}).forEach(async (postValue) => {
 			let operate = (node, attribute, selector, bind) => {
 				let is = (node, determiner) => {
 					if (node.hasAttribute('as-is') || node.hasAttribute('with-collapsed') || node.has(':scope > sub-post > post-content > post')) {
