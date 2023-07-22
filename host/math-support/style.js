@@ -1,92 +1,96 @@
-[
-	function hasTitle(node) {
-		return node.hasAttribute('title');
-	},
-	function makeTitle(node) {
-		node.setAttribute('title', '{Name}');
-	},
-	function hasAlt(node) {
-		return node.hasAttribute('alt');
-	},
-	function makeAlt(node) {
-		node.setAttribute('alt', '{Name}');
-	},
-	function hasAriaLabel(node) {
-		return node.hasAttribute('aria-label') && node.getAttribute('aria-label') != '';
-	},
-	function makeAriaLabel(node) {
-		if (hasTextOnly(node) && node.innerText.removeSpace() != '') {
-			node.setAttribute('aria-label', node.innerText);
-		} else {
-			node.setAttribute('aria-label', '{Name}');
+(() => {
+	/* { control-flow } */
+	[
+		function deffer(timeout) {
+			return new Promise((resolve) => {
+				setTimeout(() => {
+					resolve();
+				}, timeout);
+			});
 		}
-	},
-	function hasAriaLabelBy(node) {
-		if (!node.hasAttribute('aria-label-by')) {
-			return false;
-		}
-		let referenceNode = document.getElementById(value.getAttribute('aria-label-by'));
-		if (referenceNode == null) {
-			return false;
-		} else if (!hasTextOnly(referenceNode)) {
-			return false;
-		} else if (referenceNode.innerText.removeSpace() == '') {
-			return false;
-		}
-		return true;
-	}
-].bindTo(window);
-[
-	function setCookie(property, value) {
-		arguments.constrainedWithAndThrow(String, String);
-		document.cookie = property + '=' + value;
-	},
-	function getCookie(property) {
-		arguments.constrainedWithAndThrow(String);
-		let cookie = '';
-		document.cookie.split('; ').every((value) => {
-			if (value.substring(0, property.length) == property) {
-				cookie = value.substring(property.length + 1, value.length);
+	].bindTo(window);
+	/* { accessibility } */
+	[
+		function hasTitle(node) {
+			return node.hasAttribute('title');
+		},
+		function makeTitle(node) {
+			node.setAttribute('title', '{Name}');
+		},
+		function hasAlt(node) {
+			return node.hasAttribute('alt');
+		},
+		function makeAlt(node) {
+			node.setAttribute('alt', '{Name}');
+		},
+		function hasAriaLabel(node) {
+			return node.hasAttribute('aria-label') && node.getAttribute('aria-label') != '';
+		},
+		function makeAriaLabel(node) {
+			if (hasTextOnly(node) && node.innerText.removeSpace() != '') {
+				node.setAttribute('aria-label', node.innerText);
+			} else {
+				node.setAttribute('aria-label', '{Name}');
+			}
+		},
+		function hasAriaLabelBy(node) {
+			if (!node.hasAttribute('aria-label-by')) {
+				return false;
+			}
+			let referenceNode = document.getElementById(value.getAttribute('aria-label-by'));
+			if (referenceNode == null) {
+				return false;
+			} else if (!hasTextOnly(referenceNode)) {
+				return false;
+			} else if (referenceNode.innerText.removeSpace() == '') {
 				return false;
 			}
 			return true;
-		});
-		return cookie;
-	},
-	function switchBlurredState() {
-		arguments.constrainedWithAndThrow();
-		if (document.body.id == 'blur') {
-			document.body.id = '';
-			setCookie('non-blur', 'true');
-		} else {
-			document.body.id = 'blur';
-			setCookie('non-blur', 'false');
 		}
-	},
-	function isInstance(node) {
-		arguments.constrainedWithAndThrow(Node);
-		if (node.nodeName == '#comment') {
-			return false;
-		} else if (node.nodeName == '#text' && node.wholeText.removeSpace() == '') {
-			return false;
-		} else if (node instanceof Element && node.nodeName == 'br'.toUpperCase()) {
-			return false;
-		} else if (node instanceof Element && window.getComputedStyle(node).display == 'none') {
-			return false;
+	].bindTo(window);
+	/* { functionality } */
+	[
+		function setCookie(property, value) {
+			arguments.constrainedWithAndThrow(String, String);
+			document.cookie = property + '=' + value;
+		},
+		function getCookie(property) {
+			arguments.constrainedWithAndThrow(String);
+			let cookie = '';
+			document.cookie.split('; ').every((value) => {
+				if (value.substring(0, property.length) == property) {
+					cookie = value.substring(property.length + 1, value.length);
+					return false;
+				}
+				return true;
+			});
+			return cookie;
+		},
+		function switchBlurredState() {
+			arguments.constrainedWithAndThrow();
+			if (document.body.id == 'blur') {
+				document.body.id = '';
+				setCookie('non-blur', 'true');
+			} else {
+				document.body.id = 'blur';
+				setCookie('non-blur', 'false');
+			}
+		},
+		function isInstance(node) {
+			arguments.constrainedWithAndThrow(Node);
+			if (node.nodeName == '#comment') {
+				return false;
+			} else if (node.nodeName == '#text' && node.wholeText.removeSpace() == '') {
+				return false;
+			} else if (node instanceof Element && node.nodeName == 'br'.toUpperCase()) {
+				return false;
+			} else if (node instanceof Element && window.getComputedStyle(node).display == 'none') {
+				return false;
+			}
+			return true;
 		}
-		return true;
-	}
-].bindTo(window);
-/* { async } */ {
-	function deffer(timeout) {
-		return new Promise((resolve) => {
-			setTimeout(() => {
-				resolve();
-			}, timeout);
-		});
-	}
-}
-/* { hidden } */ {
+	].bindTo(window);
+	/* { binder } */
 	let resizedCount = 0;
 	document.addEventListener('structuredTag', async function structuredTag() {
 		captureSpan();
@@ -308,7 +312,7 @@
 			});
 			await suspend();
 			operate(postValue.postNode, 'with-inline-frame', ':scope > sub-post > post-content > iframe:first-of-type:last-of-type');
-		});		
+		});
 		await suspend();
 		/* '[deferred-src]' for the 'img's */
 		forAll('img[deferred-src]:not([frozen])').forEach((value) => {
@@ -369,4 +373,4 @@
 			}
 		});
 	});
-}
+})();
