@@ -1,11 +1,28 @@
 (() => {
 	/* { control-flow } */
+	let loop = [];
+	setInterval(() => {
+		loop = loop.filter((value) => {
+			return value.callback != null;
+		});
+		loop.forEach((value) => {
+			if (value.rest > 0) {
+				value.rest -= 5;
+			} else {
+				value.callback.call(null);
+				value.callback = null;
+			}
+		});
+	}, 5);
 	[
 		function deffer(timeout) {
 			return new Promise((resolve) => {
-				setTimeout(() => {
-					resolve();
-				}, timeout);
+				loop.push({
+					rest: timeout,
+					callback: () => {
+						resolve();
+					}
+				});
 			});
 		}
 	].bindTo(window);
