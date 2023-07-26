@@ -108,7 +108,9 @@
 				postLeaderDateNode.textContent = postValue.postNode.getAttribute('date-string');
 				postValue.postLeaderSectionNode.insertBefore(postLeaderDateNode, postValue.postLeaderOrderNode.nextSibling);
 			} else {
-				postValue.postLeaderSectionNode.get(':scope > post-leader-date').remove();
+				postValue.postLeaderSectionNode.getAll(':scope > post-leader-date').forEach((value) => {
+					value.remove();
+				});
 			}
 		});
 		await suspend();
@@ -119,6 +121,12 @@
 		}).filter((value) => {
 			return value.complete;
 		}).forEach((postValue) => {
+			if (!postValue.postNode.hasAttribute('with-collapsed')) {
+				postValue.postLeaderAdvanceNode.getAll(':scope > button.advance.visibility').forEach((value) => {
+					value.remove();
+				});
+				return;
+			}
 			let buttonNode = (() => {
 				if (postValue.postLeaderAdvanceNode.has(':scope > button.advance.visibility')) {
 					return postValue.postLeaderAdvanceNode.get(':scope > button.advance.visibility');
