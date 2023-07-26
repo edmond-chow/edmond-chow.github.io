@@ -89,7 +89,7 @@
 			@layer /* structured-container */ {
 				/* top */
 				top > a:first-of-type {
-					background-image: url('calculator.ico');
+					background-image: url('blackboard.png');
 				}
 				/* post */
 				post > sub-post > post-leader > post-leader-advance {
