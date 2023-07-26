@@ -100,11 +100,16 @@
 		}
 		await mustSuspend();
 		/* integrating the 'post-leader-date's by including the '[date-string]'s */
-		forAll('post[date-string]').forEach((value) => {
-			let postLeaderDateNode = document.createElement('post-leader-date');
-			postLeaderDateNode.textContent = value.getAttribute('date-string');
-			let postLeaderSectionNode = value.get(':scope > sub-post > post-leader > post-leader-section');
-			postLeaderSectionNode.insertBefore(postLeaderDateNode, postLeaderSectionNode.get('post-leader-order').nextSibling);
+		forAllTag('post').map((value) => {
+			return new Post(value);
+		}).forEach((postValue) => {
+			if (postValue.postNode.hasAttribute('date-string')) {
+				let postLeaderDateNode = document.createElement('post-leader-date');
+				postLeaderDateNode.textContent = postValue.postNode.getAttribute('date-string');
+				postValue.postLeaderSectionNode.insertBefore(postLeaderDateNode, postValue.postLeaderOrderNode.nextSibling);
+			} else {
+				postValue.postLeaderSectionNode.get(':scope > post-leader-date').remove();
+			}
 		});
 		await suspend();
 		/* 'onVisibleClick' events for the 'post > sub-post > post-leader > post-leader-advance > button.visibility's */
