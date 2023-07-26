@@ -169,10 +169,15 @@
 					this.classList.remove('down');
 					this.textContent = '縮小';
 					postValue.postContentNode.style.aspectRatio = postValue.postContentNode.offsetWidth.toString() + ' / ' + postValue.postContentNode.scrollHeight.toString();
-					postValue.postContentNode.classList.add('no-scrollbar');
+					postValue.postContentNode.classList.remove('no-scrollbar');
 				}
 				this.classList.add('disabled');
 				await deffer(1000);
+				if (this.id == 'visibled') {
+					postValue.postContentNode.classList.add('no-scrollbar');
+				} else {
+					postValue.postContentNode.classList.remove('no-scrollbar');
+				}
 				freezer((node) => {
 					node.removeAttribute('frozen');
 				});
