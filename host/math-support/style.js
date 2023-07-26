@@ -116,7 +116,7 @@
 		await suspend();
 		/* 'onVisibleClick' events for the 'post > sub-post > post-leader > post-leader-advance > button.visibility's */
 		let onVisibleClickEvent = [];
-		forAll('post[with-collapsed]').map((value) => {
+		forAll('post').map((value) => {
 			return new Post(value);
 		}).filter((value) => {
 			return value.complete;
