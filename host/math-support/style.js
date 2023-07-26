@@ -156,32 +156,32 @@
 				freezer((node) => {
 					node.setAttribute('frozen', '');
 				});
+				this.classList.add('disabled');
 				if (this.id == 'visibled') {
-					this.id = '';
 					this.classList.remove('up');
 					this.classList.add('down');
 					this.textContent = '展開';
 					postValue.postContentNode.style.aspectRatio = '';
 					postValue.postContentNode.classList.remove('no-scrollbar');
 				} else {
-					this.id = 'visibled';
 					this.classList.add('up');
 					this.classList.remove('down');
 					this.textContent = '縮小';
 					postValue.postContentNode.style.aspectRatio = postValue.postContentNode.offsetWidth.toString() + ' / ' + postValue.postContentNode.scrollHeight.toString();
 					postValue.postContentNode.classList.remove('no-scrollbar');
 				}
-				this.classList.add('disabled');
 				await deffer(1000);
-				if (this.id == 'visibled') {
-					postValue.postContentNode.classList.add('no-scrollbar');
-				} else {
-					postValue.postContentNode.classList.remove('no-scrollbar');
-				}
 				freezer((node) => {
 					node.removeAttribute('frozen');
 				});
 				this.classList.remove('disabled');
+				if (this.id == 'visibled') {
+					postValue.postContentNode.classList.remove('no-scrollbar');
+					this.id = '';
+				} else {
+					postValue.postContentNode.classList.add('no-scrollbar');
+					this.id = 'visibled';
+				}
 			}
 			onVisibleClickEvent.push({ node: buttonNode, delegate: onVisibleClick });
 			buttonNode.addEventListener('click', onVisibleClick);
