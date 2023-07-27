@@ -6,19 +6,17 @@
 			return value.callback != null;
 		});
 		loop.forEach((value) => {
-			if (value.rest > 0) {
-				value.rest -= 5;
-			} else {
+			if (value.deferred < performance.now()) {
 				value.callback.call(null);
 				value.callback = null;
 			}
 		});
 	}, 5);
 	[
-		function deffer(timeout) {
+		function defer(timeout) {
 			return new Promise((resolve) => {
 				loop.push({
-					rest: timeout,
+					deferred: performance.now() + timeout,
 					callback: () => {
 						resolve();
 					}
@@ -187,7 +185,7 @@
 					postValue.postContentNode.style.aspectRatio = postValue.postContentNode.offsetWidth.toString() + ' / ' + postValue.postContentNode.scrollHeight.toString();
 					postValue.postContentNode.classList.remove('no-scrollbar');
 				}
-				await deffer(1000);
+				await defer(1000);
 				freezer((node) => {
 					node.removeAttribute('frozen');
 				});
@@ -231,7 +229,7 @@
 				postContentNode.classList.add('resized');
 				this.classList.add('pseudo-disabled');
 			});
-			await deffer(250);
+			await defer(250);
 			resizedCount -= 1;
 			if (resizedCount > 0) {
 				return;
