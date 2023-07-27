@@ -1,29 +1,4 @@
 (() => {
-	/* { control-flow } */
-	let loop = [];
-	setInterval(() => {
-		loop = loop.filter((value) => {
-			return value.callback != null;
-		});
-		loop.forEach((value) => {
-			if (value.deferred < performance.now()) {
-				value.callback.call(null);
-				value.callback = null;
-			}
-		});
-	}, 5);
-	[
-		function defer(timeout) {
-			return new Promise((resolve) => {
-				loop.push({
-					deferred: performance.now() + timeout,
-					callback: () => {
-						resolve();
-					}
-				});
-			});
-		}
-	].bindTo(window);
 	/* { accessibility } */
 	[
 		function hasTitle(node) {
