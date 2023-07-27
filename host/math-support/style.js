@@ -81,7 +81,6 @@
 		}
 	].bindTo(window);
 	/* { binder } */
-	let scrolledInto = false;
 	let resizedCount = 0;
 	document.addEventListener('structuredTag', async function structuredTag() {
 		captureSpan();
@@ -322,6 +321,9 @@
 			await suspend();
 			operate(postValue.postNode, 'with-inline-frame', ':scope > sub-post > post-content > iframe:first-of-type:last-of-type');
 		});
+		if (scrolledInto() == false) {
+			return;
+		}
 		await suspend();
 		/* '[deferred-src]' for the 'img's */
 		forAll('img[deferred-src]:not([frozen])').forEach((value) => {
@@ -381,10 +383,5 @@
 				value.removeAttribute('src');
 			}
 		});
-		await suspend();
-		if (scrolledInto == false) {
-			rescroll();
-			scrolledInto = true;
-		}
 	});
 })();
