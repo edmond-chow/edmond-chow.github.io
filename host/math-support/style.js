@@ -81,6 +81,7 @@
 		}
 	].bindTo(window);
 	/* { binder } */
+	let scrolledInto = false;
 	let resizedCount = 0;
 	document.addEventListener('structuredTag', async function structuredTag() {
 		captureSpan();
@@ -380,5 +381,10 @@
 				value.removeAttribute('src');
 			}
 		});
+		await suspend();
+		if (scrolledInto == false) {
+			rescroll();
+			scrolledInto = true;
+		}
 	});
 })();
