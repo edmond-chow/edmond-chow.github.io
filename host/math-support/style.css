@@ -156,6 +156,7 @@
 					width: 70%;
 					margin: 0px 0px 6px 0px;
 					aspect-ratio: 1275 / 1754;
+					-webkit-user-drag: none;
 				}
 				post[with-collapsed] > sub-post > post-content > img:last-of-type {
 					margin-bottom: 0px;
@@ -166,6 +167,7 @@
 					width: 100%;
 					padding: 0px 0px 16px 0px;
 					aspect-ratio: auto 16 / 9;
+					-webkit-user-drag: none;
 				}
 				post[with-graphics] > sub-post > post-content > img.first-visible-child:last-of-type[pre-deferred-src] {
 					opacity: 0;
