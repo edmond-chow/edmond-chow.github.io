@@ -83,7 +83,7 @@
 	/* { binder } */
 	let resizedCount = 0;
 	let rescrollState = 0;
-	let rescrollCount = 0;
+	let deferredImgNode = [];
 	let lastHash = '';
 	document.addEventListener('structuredTag', async function structuredTag() {
 		captureSpan();
@@ -326,43 +326,46 @@
 		});
 		await mustSuspend();
 		/* a stack machine for a scrolling coroutine */
+		let operate = (selector, scrollable, action) => {
+			forAll(selector).filter((value) => {
+				return scrollable ? inScrollable(value) : !inScrollable(value);
+			}).forEach(action);
+		};
 		if (rescrollState == 0 && scrolledInto()) {
-			let pushRescrollCount = () => {
-				rescrollCount += 1;
-			};
-			let popRescrollCount = () => {
-				rescrollCount -= 1;
-				if (rescrollCount == 0) {
-					rescrollState = 2;
-				}
-			};
-			pushRescrollCount();
 			/* initial state of '[deferred-src]' for the 'img's */
-			forAll('img[deferred-src]:not([frozen])').forEach((value) => {
-				if (inScrollable(value)) {
-					pushRescrollCount();
-					let url = new URL(value.getAttribute('deferred-src'), document.baseURI);
-					value.setAttribute('alt', url.href.substring(url.href.lastIndexOf('/') + 1));
-					value.setAttribute('src', value.getAttribute('deferred-src'));
-					value.removeAttribute('deferred-src');
-					function onError() {
-						this.setAttribute('pre-deferred-src', this.getAttribute('src'));
-						this.removeAttribute('src');
-						this.removeEventListener('error', onError);
-						this.removeEventListener('load', onLoad);
-						popRescrollCount();
-					}
-					function onLoad() {
-						this.removeEventListener('error', onError);
-						this.removeEventListener('load', onLoad);
-						popRescrollCount();
-					}
-					value.addEventListener('error', onError);
-					value.addEventListener('load', onLoad);
+			operate('img[deferred-src]:not([frozen])', true, (value) => {
+				deferredImgNode.push(value);
+				let url = new URL(value.getAttribute('deferred-src'), document.baseURI);
+				value.setAttribute('alt', url.href.substring(url.href.lastIndexOf('/') + 1));
+				value.setAttribute('src', value.getAttribute('deferred-src'));
+				value.removeAttribute('deferred-src');
+				function onError() {
+					this.setAttribute('pre-deferred-src', this.getAttribute('src'));
+					this.removeAttribute('src');
+					this.removeEventListener('error', onError);
+					this.removeEventListener('load', onLoad);
+					deferredImgNode = deferredImgNode.filter((value) => {
+						return value != this;
+					});
 				}
+				function onLoad() {
+					this.removeEventListener('error', onError);
+					this.removeEventListener('load', onLoad);
+					deferredImgNode = deferredImgNode.filter((value) => {
+						return value != this;
+					});
+				}
+				value.addEventListener('error', onError);
+				value.addEventListener('load', onLoad);
 			});
 			rescrollState = 1;
-			popRescrollCount();
+		} else if (rescrollState == 1) {
+			deferredImgNode = deferredImgNode.filter((value) => {
+				return value.naturalWidth == 0;
+			});
+			if (deferredImgNode.length == 0) {
+				rescrollState = 2;
+			}
 		} else if (rescrollState == 2) {
 			rescroll();
 			lastHash = document.location.hash;
@@ -371,62 +374,54 @@
 			rescrollState = 0;
 		} else if (rescrollState == 3 && scrolledInto()) {
 			/* '[deferred-src]' for the 'img's */
-			forAll('img[deferred-src]:not([frozen])').forEach((value) => {
-				if (inScrollable(value)) {
-					let url = new URL(value.getAttribute('deferred-src'), document.baseURI);
-					value.setAttribute('alt', url.href.substring(url.href.lastIndexOf('/') + 1));
-					value.setAttribute('src', value.getAttribute('deferred-src'));
-					value.removeAttribute('deferred-src');
-					function onError() {
-						this.setAttribute('pre-deferred-src', this.getAttribute('src'));
-						this.removeAttribute('src');
-						this.removeEventListener('error', onError);
-						this.removeEventListener('load', onLoad);
-					}
-					function onLoad() {
-						this.removeEventListener('error', onError);
-						this.removeEventListener('load', onLoad);
-					}
-					value.addEventListener('error', onError);
-					value.addEventListener('load', onLoad);
+			operate('img[deferred-src]:not([frozen])', true, (value) => {
+				let url = new URL(value.getAttribute('deferred-src'), document.baseURI);
+				value.setAttribute('alt', url.href.substring(url.href.lastIndexOf('/') + 1));
+				value.setAttribute('src', value.getAttribute('deferred-src'));
+				value.removeAttribute('deferred-src');
+				function onError() {
+					this.setAttribute('pre-deferred-src', this.getAttribute('src'));
+					this.removeAttribute('src');
+					this.removeEventListener('error', onError);
+					this.removeEventListener('load', onLoad);
 				}
+				function onLoad() {
+					this.removeEventListener('error', onError);
+					this.removeEventListener('load', onLoad);
+				}
+				value.addEventListener('error', onError);
+				value.addEventListener('load', onLoad);
 			});
 			await suspend();
 			/* '[pre-deferred-src]' for the 'img's */
-			forAll('img[pre-deferred-src]:not([frozen])').forEach((value) => {
-				if (!inScrollable(value)) {
-					value.setAttribute('deferred-src', value.getAttribute('pre-deferred-src'));
-					value.removeAttribute('pre-deferred-src');
-				}
+			operate('img[pre-deferred-src]:not([frozen])', false, (value) => {
+				value.setAttribute('deferred-src', value.getAttribute('pre-deferred-src'));
+				value.removeAttribute('pre-deferred-src');
 			});
 			await suspend();
 			/* '[deferred-src]' for the 'iframe's */
-			forAll('iframe[deferred-src]:not([frozen])').forEach((value) => {
-				if (inScrollable(value)) {
-					let url = new URL(value.getAttribute('deferred-src'), document.baseURI);
-					if (document.location.origin == url.origin) {
-						let request = new XMLHttpRequest();
-						request.addEventListener('load', function onLoad() {
-							if (this.status >= 400 && this.status <= 599) {
-								value.setAttribute('referred', '');
-							}
-							this.removeEventListener('load', onLoad);
-						});
-						request.open('GET', url.href, true);
-						request.send();
-					}
-					value.setAttribute('src', value.getAttribute('deferred-src'));
-					value.removeAttribute('deferred-src');
+			operate('iframe[deferred-src]:not([frozen])', true, (value) => {
+				let url = new URL(value.getAttribute('deferred-src'), document.baseURI);
+				if (document.location.origin == url.origin) {
+					let request = new XMLHttpRequest();
+					request.addEventListener('load', function onLoad() {
+						if (this.status >= 400 && this.status <= 599) {
+							value.setAttribute('referred', '');
+						}
+						this.removeEventListener('load', onLoad);
+					});
+					request.open('GET', url.href, true);
+					request.send();
 				}
+				value.setAttribute('src', value.getAttribute('deferred-src'));
+				value.removeAttribute('deferred-src');
 			});
 			await suspend();
 			/* '[referred]' for the 'iframe's */
-			forAll('iframe[referred]:not([frozen])').forEach((value) => {
-				if (!inScrollable(value)) {
-					value.setAttribute('deferred-src', value.getAttribute('src'));
-					value.removeAttribute('referred');
-					value.removeAttribute('src');
-				}
+			operate('iframe[referred]:not([frozen])', false, (value) => {
+				value.setAttribute('deferred-src', value.getAttribute('src'));
+				value.removeAttribute('referred');
+				value.removeAttribute('src');
 			});
 		}
 	});
