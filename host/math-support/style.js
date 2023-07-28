@@ -325,11 +325,7 @@
 		});
 		await mustSuspend();
 		/* a stack machine for a scrolling coroutine */
-		if (rescrollState == 0) {
-			if (scrolledInto()) {
-				rescrollState = 1;
-			}
-		} else if (rescrollState == 1) {
+		if (rescrollState == 0 && scrolledInto()) {
 			/* initial state of '[deferred-src]' for the 'img's */
 			forAll('img[deferred-src]:not([frozen])').forEach((value) => {
 				if (inScrollable(value)) {
@@ -337,7 +333,7 @@
 					let release = () => {
 						rescrollCount -= 1;
 						if (rescrollCount == 0) {
-							rescrollState = 3;
+							rescrollState = 2;
 						}
 					};
 					let url = new URL(value.getAttribute('deferred-src'), document.baseURI);
@@ -360,12 +356,11 @@
 					value.addEventListener('load', onLoad);
 				}
 			});
-			rescrollState == 2;
+			rescrollState == 1;
 		} else if (rescrollState == 2) {
-		} else if (rescrollState == 3) {
 			rescroll();
-			rescrollState = -1;
-		} else {
+			rescrollState = 3;
+		} else if (rescrollState == 3 && scrolledInto()) {
 			/* '[deferred-src]' for the 'img's */
 			forAll('img[deferred-src]:not([frozen])').forEach((value) => {
 				if (inScrollable(value)) {
