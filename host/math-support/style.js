@@ -327,16 +327,20 @@
 		await mustSuspend();
 		/* a stack machine for a scrolling coroutine */
 		if (rescrollState == 0 && scrolledInto()) {
+			let pushRescrollCount = () => {
+				rescrollCount += 1;
+			};
+			let popRescrollCount = () => {
+				rescrollCount -= 1;
+				if (rescrollCount == 0) {
+					rescrollState = 2;
+				}
+			};
+			pushRescrollCount();
 			/* initial state of '[deferred-src]' for the 'img's */
 			forAll('img[deferred-src]:not([frozen])').forEach((value) => {
 				if (inScrollable(value)) {
-					rescrollCount += 1;
-					let release = () => {
-						rescrollCount -= 1;
-						if (rescrollCount == 0) {
-							rescrollState = 2;
-						}
-					};
+					pushRescrollCount();
 					let url = new URL(value.getAttribute('deferred-src'), document.baseURI);
 					value.setAttribute('alt', url.href.substring(url.href.lastIndexOf('/') + 1));
 					value.setAttribute('src', value.getAttribute('deferred-src'));
@@ -346,18 +350,19 @@
 						this.removeAttribute('src');
 						this.removeEventListener('error', onError);
 						this.removeEventListener('load', onLoad);
-						release();
+						popRescrollCount();
 					}
 					function onLoad() {
 						this.removeEventListener('error', onError);
 						this.removeEventListener('load', onLoad);
-						release();
+						popRescrollCount();
 					}
 					value.addEventListener('error', onError);
 					value.addEventListener('load', onLoad);
 				}
 			});
 			rescrollState = 1;
+			popRescrollCount();
 		} else if (rescrollState == 2) {
 			rescroll();
 			lastHash = document.location.hash;
