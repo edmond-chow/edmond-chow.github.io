@@ -82,6 +82,8 @@
 	].bindTo(window);
 	/* { binder } */
 	let resizedCount = 0;
+	let rescrollState = 0;
+	let rescrollCount = 0;
 	document.addEventListener('structuredTag', async function structuredTag() {
 		captureSpan();
 		/* switchBlurredState() */
@@ -321,67 +323,107 @@
 			await suspend();
 			operate(postValue.postNode, 'with-inline-frame', ':scope > sub-post > post-content > iframe:first-of-type:last-of-type');
 		});
-		if (scrolledInto() == false) {
-			return;
-		}
-		await suspend();
-		/* '[deferred-src]' for the 'img's */
-		forAll('img[deferred-src]:not([frozen])').forEach((value) => {
-			if (inScrollable(value)) {
-				let url = new URL(value.getAttribute('deferred-src'), document.baseURI);
-				value.setAttribute('alt', url.href.substring(url.href.lastIndexOf('/') + 1));
-				value.setAttribute('src', value.getAttribute('deferred-src'));
-				value.removeAttribute('deferred-src');
-				function onError() {
-					this.setAttribute('pre-deferred-src', this.getAttribute('src'));
-					this.removeAttribute('src');
-					this.removeEventListener('error', onError);
-					this.removeEventListener('load', onLoad);
-				}
-				function onLoad() {
-					this.removeEventListener('error', onError);
-					this.removeEventListener('load', onLoad);
-				}
-				value.addEventListener('error', onError);
-				value.addEventListener('load', onLoad);
+		await mustSuspend();
+		/* a stack machine for a scrolling coroutine */
+		if (rescrollState == 0) {
+			if (scrolledInto()) {
+				rescrollState = 1;
 			}
-		});
-		await suspend();
-		/* '[pre-deferred-src]' for the 'img's */
-		forAll('img[pre-deferred-src]:not([frozen])').forEach((value) => {
-			if (!inScrollable(value)) {
-				value.setAttribute('deferred-src', value.getAttribute('pre-deferred-src'));
-				value.removeAttribute('pre-deferred-src');
-			}
-		});
-		await suspend();
-		/* '[deferred-src]' for the 'iframe's */
-		forAll('iframe[deferred-src]:not([frozen])').forEach((value) => {
-			if (inScrollable(value)) {
-				let url = new URL(value.getAttribute('deferred-src'), document.baseURI);
-				if (document.location.origin == url.origin) {
-					let request = new XMLHttpRequest();
-					request.addEventListener('load', function onLoad() {
-						if (this.status >= 400 && this.status <= 599) {
-							value.setAttribute('referred', '');
+		} else if (rescrollState == 1) {
+			/* initial state of '[deferred-src]' for the 'img's */
+			forAll('img[deferred-src]:not([frozen])').forEach((value) => {
+				if (inScrollable(value)) {
+					rescrollCount += 1;
+					let release = () => {
+						rescrollCount -= 1;
+						if (rescrollCount == 0) {
+							rescrollState = 3;
 						}
+					};
+					let url = new URL(value.getAttribute('deferred-src'), document.baseURI);
+					value.setAttribute('alt', url.href.substring(url.href.lastIndexOf('/') + 1));
+					value.setAttribute('src', value.getAttribute('deferred-src'));
+					value.removeAttribute('deferred-src');
+					function onError() {
+						this.setAttribute('pre-deferred-src', this.getAttribute('src'));
+						this.removeAttribute('src');
+						this.removeEventListener('error', onError);
 						this.removeEventListener('load', onLoad);
-					});
-					request.open('GET', url.href, true);
-					request.send();
+						release();
+					}
+					function onLoad() {
+						this.removeEventListener('error', onError);
+						this.removeEventListener('load', onLoad);
+						release();
+					}
+					value.addEventListener('error', onError);
+					value.addEventListener('load', onLoad);
 				}
-				value.setAttribute('src', value.getAttribute('deferred-src'));
-				value.removeAttribute('deferred-src');
-			}
-		});
-		await suspend();
-		/* '[referred]' for the 'iframe's */
-		forAll('iframe[referred]:not([frozen])').forEach((value) => {
-			if (!inScrollable(value)) {
-				value.setAttribute('deferred-src', value.getAttribute('src'));
-				value.removeAttribute('referred');
-				value.removeAttribute('src');
-			}
-		});
+			});
+			rescrollState == 2;
+		} else if (rescrollState == 2) {
+		} else if (rescrollState == 3) {
+			rescroll();
+			rescrollState = -1;
+		} else {
+			/* '[deferred-src]' for the 'img's */
+			forAll('img[deferred-src]:not([frozen])').forEach((value) => {
+				if (inScrollable(value)) {
+					let url = new URL(value.getAttribute('deferred-src'), document.baseURI);
+					value.setAttribute('alt', url.href.substring(url.href.lastIndexOf('/') + 1));
+					value.setAttribute('src', value.getAttribute('deferred-src'));
+					value.removeAttribute('deferred-src');
+					function onError() {
+						this.setAttribute('pre-deferred-src', this.getAttribute('src'));
+						this.removeAttribute('src');
+						this.removeEventListener('error', onError);
+						this.removeEventListener('load', onLoad);
+					}
+					function onLoad() {
+						this.removeEventListener('error', onError);
+						this.removeEventListener('load', onLoad);
+					}
+					value.addEventListener('error', onError);
+					value.addEventListener('load', onLoad);
+				}
+			});
+			await suspend();
+			/* '[pre-deferred-src]' for the 'img's */
+			forAll('img[pre-deferred-src]:not([frozen])').forEach((value) => {
+				if (!inScrollable(value)) {
+					value.setAttribute('deferred-src', value.getAttribute('pre-deferred-src'));
+					value.removeAttribute('pre-deferred-src');
+				}
+			});
+			await suspend();
+			/* '[deferred-src]' for the 'iframe's */
+			forAll('iframe[deferred-src]:not([frozen])').forEach((value) => {
+				if (inScrollable(value)) {
+					let url = new URL(value.getAttribute('deferred-src'), document.baseURI);
+					if (document.location.origin == url.origin) {
+						let request = new XMLHttpRequest();
+						request.addEventListener('load', function onLoad() {
+							if (this.status >= 400 && this.status <= 599) {
+								value.setAttribute('referred', '');
+							}
+							this.removeEventListener('load', onLoad);
+						});
+						request.open('GET', url.href, true);
+						request.send();
+					}
+					value.setAttribute('src', value.getAttribute('deferred-src'));
+					value.removeAttribute('deferred-src');
+				}
+			});
+			await suspend();
+			/* '[referred]' for the 'iframe's */
+			forAll('iframe[referred]:not([frozen])').forEach((value) => {
+				if (!inScrollable(value)) {
+					value.setAttribute('deferred-src', value.getAttribute('src'));
+					value.removeAttribute('referred');
+					value.removeAttribute('src');
+				}
+			});
+		}
 	});
 })();
