@@ -84,6 +84,7 @@
 	let resizedCount = 0;
 	let rescrollState = 0;
 	let rescrollCount = 0;
+	let lastHash = '';
 	document.addEventListener('structuredTag', async function structuredTag() {
 		captureSpan();
 		/* switchBlurredState() */
@@ -356,10 +357,13 @@
 					value.addEventListener('load', onLoad);
 				}
 			});
-			rescrollState == 1;
+			rescrollState = 1;
 		} else if (rescrollState == 2) {
 			rescroll();
+			lastHash = document.location.hash;
 			rescrollState = 3;
+		} else if (rescrollState == 3 && lastHash != document.location.hash) {
+			rescrollState = 0;
 		} else if (rescrollState == 3 && scrolledInto()) {
 			/* '[deferred-src]' for the 'img's */
 			forAll('img[deferred-src]:not([frozen])').forEach((value) => {
