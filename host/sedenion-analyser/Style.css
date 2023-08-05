@@ -219,7 +219,7 @@
 	}
 	body > console > buffer > line > span {
 		display: inline;
-		white-space-collapse: preserve;
+		white-space: pre-wrap;
 	}
 	body > console > buffer > line > span[foreground="black"] {
 		color: rgb(0, 0, 0);
