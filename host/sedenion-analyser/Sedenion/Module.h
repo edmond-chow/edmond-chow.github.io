@@ -1,4 +1,4 @@
-#include "../Exception/[Export]/Exception.h"
+#include <emscripten.h>
 #include <string>
 #include <regex>
 #include <sstream>
@@ -77,7 +77,7 @@ void ToNumbers(const std::wstring& Value, std::size_t Size, double* Numbers, con
 	std::wsmatch Match;
 	std::regex_search(TheValue, Match, std::wregex(GetInitTermRegexString(Size, Terms)));
 	TheValue = std::regex_replace(TheValue, std::wregex(GetInitTermRegexString(Size, Terms)), Match.str() + L"1");
-	if (!TestForValid(TheValue, Size, Terms)) { throw_with_branches(); }
-	if (TheValue.length() == 0) { throw_with_branches(); }
+	if (!TestForValid(TheValue, Size, Terms)) { emscripten_run_script("console.error('[std::exception]', 'The branch should ensure not instantiated at compile time.')"); }
+	if (TheValue.length() == 0) { emscripten_run_script("console.error('[std::exception]', 'The branch should ensure not instantiated at compile time.')"); }
 	SetForValue(TheValue, Size, Numbers, Terms);
 };

@@ -1,4 +1,4 @@
-#include "../Exception/[Export]/Exception.h"
+#include <emscripten.h>
 #include <algorithm>
 #include <numeric>
 constexpr bool is_factor(std::size_t n) noexcept
@@ -23,7 +23,7 @@ public:
 		if (!is_factor(size))
 		{
 			delete[] this->data;
-			throw_with_invalid_argument();
+			emscripten_run_script("console.error('[std::invalid_argument]', '\"size\" must be a number which is 2 to the power of a natural number.')");
 		}
 		std::copy(data, data + size, this->data);
 	};
@@ -33,7 +33,7 @@ public:
 		if (!is_factor(init.size()))
 		{
 			delete[] data;
-			throw_with_invalid_argument();
+			emscripten_run_script("console.error('[std::invalid_argument]', '\"size\" must be a number which is 2 to the power of a natural number.')");
 		}
 		std::copy(init.begin(), init.end(), data);
 	};

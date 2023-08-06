@@ -1,4 +1,4 @@
-#include "../Exception/[Export]/Exception.h"
+#include <emscripten.h>
 #include <string>
 #include <regex>
 #include <sstream>
@@ -118,8 +118,8 @@ void ToNumbers(const std::wstring& Value, const std::array<double*, N>& Numbers,
 	std::wsmatch Match;
 	std::regex_search(TheValue, Match, std::wregex(GetInitTermRegexString(Terms)));
 	TheValue = std::regex_replace(TheValue, std::wregex(GetInitTermRegexString(Terms)), Match.str() + L"1");
-	if (!TestForValid(TheValue, Terms)) { throw_with_branches(); }
-	if (TheValue.length() == 0) { throw_with_branches(); }
+	if (!TestForValid(TheValue, Terms)) { emscripten_run_script("console.error('[std::exception]', 'The branch should ensure not instantiated at compile time.')"); }
+	if (TheValue.length() == 0) { emscripten_run_script("console.error('[std::exception]', 'The branch should ensure not instantiated at compile time.')"); }
 	SetForValue(TheValue, Numbers, Terms);
 };
 template <typename Args, std::size_t... I> requires (std::tuple_size_v<Args> == 2 * sizeof...(I))

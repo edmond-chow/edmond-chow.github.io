@@ -997,8 +997,6 @@ function dbg(text) {
 // end include: runtime_debug.js
 // === Body ===
 
-function throw_with_branches_impl() { console.error('[std::exception]', 'The branch should ensure not instantiated at compile time.'); }
-function throw_with_invalid_argument_impl() { console.error('[std::invalid_argument]', '"size" must be a number which is 2 to the power of a natural number.'); }
 function __asyncjs__readWrapper() { return Asyncify.handleAsync(async () => { iostream.registerReaded(await iostream.read()); }); }
 function __asyncjs__pressAnyKeyWrapper() { return Asyncify.handleAsync(async () => { await iostream.pressAnyKey(); }); }
 function __asyncjs__suspendWrapper() { return Asyncify.handleAsync(async () => { await suspend(); }); }
@@ -2212,14 +2210,11 @@ var wasmImports = {
   invoke_vi: invoke_vi,
   invoke_vii: invoke_vii,
   invoke_viii: invoke_viii,
-  strftime_l: _strftime_l,
-  throw_with_branches_impl: throw_with_branches_impl,
-  throw_with_invalid_argument_impl: throw_with_invalid_argument_impl
+  strftime_l: _strftime_l
 };
 Asyncify.instrumentWasmImports(wasmImports);
 var asm = createWasm();
 var ___wasm_call_ctors = createExportWrapper('__wasm_call_ctors');
-var ___original_main = Module['___original_main'] = createExportWrapper('__original_main');
 var _main = Module['_main'] = createExportWrapper('main');
 var _malloc = createExportWrapper('malloc');
 var _free = createExportWrapper('free');
@@ -2275,8 +2270,8 @@ var _asyncify_start_unwind = createExportWrapper('asyncify_start_unwind');
 var _asyncify_stop_unwind = createExportWrapper('asyncify_stop_unwind');
 var _asyncify_start_rewind = createExportWrapper('asyncify_start_rewind');
 var _asyncify_stop_rewind = createExportWrapper('asyncify_stop_rewind');
-var ___start_em_js = Module['___start_em_js'] = 116156;
-var ___stop_em_js = Module['___stop_em_js'] = 116650;
+var ___start_em_js = Module['___start_em_js'] = 116444;
+var ___stop_em_js = Module['___stop_em_js'] = 116707;
 function invoke_vi(index,a1) {
   var sp = stackSave();
   try {

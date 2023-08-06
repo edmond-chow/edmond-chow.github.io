@@ -159,9 +159,10 @@ namespace CmplxConExt
 		return toWcsString(emscripten_run_script_string("iostream.resolveReaded()"));
 	};
 }
-EMSCRIPTEN_KEEPALIVE
 extern "C" int main()
 {
 	ComplexTestingConsole::Base::Main();
+	emscripten_run_script("iostream.clear()");
+	emscripten_run_script("iostream.writeLine('Program ended with return code EXIT_SUCCESS.')");
 	return EXIT_SUCCESS;
 };
