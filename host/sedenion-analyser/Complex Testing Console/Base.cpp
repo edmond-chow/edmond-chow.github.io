@@ -1,9 +1,11 @@
-﻿#include <string>
+﻿#include <csetjmp>
+#include <string>
 #include "Module.h"
 #include "Module2.h"
 #include "Module3.h"
 #include "SedenionMod.h"
 #include "Base Extension.h"
+thread_local jmp_buf stack_pointer;
 using namespace CmplxConExt;
 namespace ComplexTestingConsole
 {
@@ -31,7 +33,6 @@ namespace ComplexTestingConsole
 		/// Console Line Materials
 		///
 		static std::wstring Exception(const std::wstring& type, const std::wstring& what);
-		static std::wstring Exception();
 		static std::wstring Selection(const std::wstring& str);
 		static std::wstring Selection();
 		static std::wstring Input(const std::wstring& str);
@@ -129,7 +130,6 @@ namespace ComplexTestingConsole
 		writeLine(L"");
 		return L"";
 	};
-	std::wstring Base::Exception() { return Exception(L"", L""); };
 	std::wstring Base::Selection(const std::wstring& str)
 	{
 		setForegroundColor(ConsoleColor::DarkCyan);
@@ -184,3 +184,7 @@ namespace ComplexTestingConsole
 		writeLine(L"");
 	};
 }
+void throw_now(std::wstring&& type, std::wstring&& what) {
+	ComplexTestingConsole::Base::Exception(type, what);
+	std::longjmp(stack_pointer, 1);
+};

@@ -1,9 +1,11 @@
 ﻿#pragma once
+#include <csetjmp>
 #include <array>
 #include <string>
 #include <stdexcept>
 #include <functional>
 #include <limits>
+extern thread_local jmp_buf stack_pointer;
 template <typename string_type>
 std::int64_t stoi64_t(const string_type& str)
 {
@@ -50,8 +52,6 @@ namespace ComplexTestingConsole
 		///
 		/// Console Line Materials
 		///
-		static std::wstring Exception(const std::wstring& type, const std::wstring& what);
-		static std::wstring Exception();
 		static std::wstring Selection(const std::wstring& str);
 		static std::wstring Selection();
 		static std::wstring Input(const std::wstring& str);

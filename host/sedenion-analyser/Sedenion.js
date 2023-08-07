@@ -2205,6 +2205,7 @@ var wasmImports = {
   fd_close: _fd_close,
   fd_seek: _fd_seek,
   fd_write: _fd_write,
+  invoke_i: invoke_i,
   invoke_ii: invoke_ii,
   invoke_iii: invoke_iii,
   invoke_vi: invoke_vi,
@@ -2244,6 +2245,7 @@ var dynCall_iiddd = Module['dynCall_iiddd'] = createExportWrapper('dynCall_iiddd
 var dynCall_iidddd = Module['dynCall_iidddd'] = createExportWrapper('dynCall_iidddd');
 var dynCall_iiddddddd = Module['dynCall_iiddddddd'] = createExportWrapper('dynCall_iiddddddd');
 var dynCall_iidddddddd = Module['dynCall_iidddddddd'] = createExportWrapper('dynCall_iidddddddd');
+var dynCall_i = Module['dynCall_i'] = createExportWrapper('dynCall_i');
 var dynCall_viij = Module['dynCall_viij'] = createExportWrapper('dynCall_viij');
 var dynCall_viiij = Module['dynCall_viiij'] = createExportWrapper('dynCall_viiij');
 var dynCall_viiijj = Module['dynCall_viiijj'] = createExportWrapper('dynCall_viiijj');
@@ -2270,8 +2272,8 @@ var _asyncify_start_unwind = createExportWrapper('asyncify_start_unwind');
 var _asyncify_stop_unwind = createExportWrapper('asyncify_stop_unwind');
 var _asyncify_start_rewind = createExportWrapper('asyncify_start_rewind');
 var _asyncify_stop_rewind = createExportWrapper('asyncify_stop_rewind');
-var ___start_em_js = Module['___start_em_js'] = 116444;
-var ___stop_em_js = Module['___stop_em_js'] = 116707;
+var ___start_em_js = Module['___start_em_js'] = 116876;
+var ___stop_em_js = Module['___stop_em_js'] = 117139;
 function invoke_vi(index,a1) {
   var sp = stackSave();
   try {
@@ -2309,6 +2311,17 @@ function invoke_vii(index,a1,a2) {
   var sp = stackSave();
   try {
     dynCall_vii(index,a1,a2);
+  } catch(e) {
+    stackRestore(sp);
+    if (e !== e+0) throw e;
+    _setThrew(1, 0);
+  }
+}
+
+function invoke_i(index) {
+  var sp = stackSave();
+  try {
+    return dynCall_i(index);
   } catch(e) {
     stackRestore(sp);
     if (e !== e+0) throw e;

@@ -126,18 +126,11 @@ namespace Mod2
 		Base::Selection(L"sin   cos   tan   csc   sec   cot   arcsin()   arccos()   arctan()   arccsc()   arcsec()   arccot()");
 		Base::Selection(L"sinh   cosh   tanh   csch   sech   coth   arcsinh()   arccosh()   arctanh()   arccsch()   arcsech()   arccoth()");
 		Base::Selection(Base::GetStartupLine());
+		setjmp(stack_pointer);
 		for (std::wstring Str; !Base::IsSwitchTo(Str); Str = Base::Input())
 		{
 			if (Str.empty()) { continue; }
-			jmp_buf stack;
-			bool jumped = false;
-			std::wstring type;
-			std::wstring what;
-			set_throw(&stack, &type, &what);
-			setjmp(stack);
-			if (jumped == false)
 			{
-				jumped = true;
 				op(Str, L"=", operator ==);
 				op(Str, L"+", operator +);
 				op(Str, L"-", operator -);
@@ -182,7 +175,6 @@ namespace Mod2
 				arctri(Str, L"arcsech", Quaternion::arcsech);
 				arctri(Str, L"arccoth", Quaternion::arccoth);
 			}
-			else { Base::Exception(type, what); }
 		}
 	};
 }

@@ -1,24 +1,9 @@
-﻿#include <csetjmp>
-#include <cmath>
+﻿#include <cmath>
 #include <numbers>
-#include <stdexcept>
 #include "Module.h"
 #include "Cayley Dickson Algebra.h"
 namespace Cmplx
 {
-	std::wstring* type_pointer = nullptr;
-	std::wstring* what_pointer = nullptr;
-	jmp_buf* stack_pointer = nullptr;
-	void throw_now(std::wstring&& type, std::wstring&& what) {
-		*type_pointer = type;
-		*what_pointer = what;
-		std::longjmp(*stack_pointer, EXIT_FAILURE);
-	};
-	void set_throw(jmp_buf* const stack, std::wstring* const type, std::wstring* const what) {
-		stack_pointer = stack;
-		type_pointer = type;
-		what_pointer = what;
-	};
 	namespace BaseType
 	{
 		enum struct index : std::int64_t
@@ -201,7 +186,6 @@ namespace Cmplx
 		};
 		Vector1D Vector1D::CType_Vector1D(const std::wstring& Value)
 		{
-			if (Value.empty()) { throw_now(L"std::invalid_argument", L"The string is empty."); }
 			Vector1D Object;
 			ToNumbers(Value, Object[index::e1], L"e1");
 			return Object;
@@ -644,7 +628,6 @@ namespace Cmplx
 		};
 		Complex Complex::CType_Complex(const std::wstring& Value)
 		{
-			if (Value.empty()) { throw_now(L"std::invalid_argument", L"The string is empty."); }
 			Complex Object;
 			ToNumbers(Value, Object[index::s], L"", Object[index::i], L"i");
 			return Object;

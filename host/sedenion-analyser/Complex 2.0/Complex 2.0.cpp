@@ -1,24 +1,9 @@
-﻿#include <csetjmp>
-#include <cmath>
+﻿#include <cmath>
 #include <numbers>
-#include <stdexcept>
 #include "Module.h"
 #include "Cayley Dickson Algebra.h"
 namespace Cmplx2
 {
-	std::wstring* type_pointer = nullptr;
-	std::wstring* what_pointer = nullptr;
-	jmp_buf* stack_pointer = nullptr;
-	void throw_now(std::wstring&& type, std::wstring&& what) {
-		*type_pointer = type;
-		*what_pointer = what;
-		std::longjmp(*stack_pointer, EXIT_FAILURE);
-	};
-	void set_throw(jmp_buf* const stack, std::wstring* const type, std::wstring* const what) {
-		stack_pointer = stack;
-		type_pointer = type;
-		what_pointer = what;
-	};
 	namespace BaseType
 	{
 		enum struct index : std::int64_t
@@ -219,7 +204,6 @@ namespace Cmplx2
 		};
 		Vector3D Vector3D::CType_Vector3D(const std::wstring& Value)
 		{
-			if (Value.empty()) { throw_now(L"std::invalid_argument", L"The string is empty."); }
 			Vector3D Object;
 			ToNumbers(Value, Object[index::e1], L"e1", Object[index::e2], L"e2", Object[index::e3], L"e3");
 			return Object;
@@ -672,7 +656,6 @@ namespace Cmplx2
 		};
 		Quaternion Quaternion::CType_Quaternion(const std::wstring& Value)
 		{
-			if (Value.empty()) { throw_now(L"std::invalid_argument", L"The string is empty."); }
 			Quaternion Object;
 			ToNumbers(Value, Object[index::s], L"", Object[index::i], L"i", Object[index::j], L"j", Object[index::k], L"k");
 			return Object;

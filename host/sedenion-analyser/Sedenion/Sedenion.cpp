@@ -1,7 +1,5 @@
-﻿#include <csetjmp>
-#include <cmath>
+﻿#include <cmath>
 #include <numbers>
-#include <stdexcept>
 #include "Module.h"
 #include "Cayley Dickson Algebra.h"
 std::size_t stos_t(const std::wstring& s)
@@ -11,19 +9,6 @@ std::size_t stos_t(const std::wstring& s)
 };
 namespace Seden
 {
-	std::wstring* type_pointer = nullptr;
-	std::wstring* what_pointer = nullptr;
-	jmp_buf* stack_pointer = nullptr;
-	void throw_now(std::wstring&& type, std::wstring&& what) {
-		*type_pointer = type;
-		*what_pointer = what;
-		std::longjmp(*stack_pointer, EXIT_FAILURE);
-	};
-	void set_throw(jmp_buf* const stack, std::wstring* const type, std::wstring* const what) {
-		stack_pointer = stack;
-		type_pointer = type;
-		what_pointer = what;
-	};
 	class Sedenion
 	{
 	private:
@@ -476,7 +461,6 @@ namespace Seden
 	};
 	Sedenion Sedenion::CType_Sedenion(const std::wstring& Value)
 	{
-		if (Value.empty()) { throw_now(L"std::invalid_argument", L"The string is empty."); }
 		std::size_t Dimension = 0;
 		std::wregex Regex(L"e\\d+(?=-|\\+|$)");
 		std::wstring TheString = Value;
