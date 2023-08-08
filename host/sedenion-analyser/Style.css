@@ -220,6 +220,8 @@
 	body > console > buffer > line > span {
 		display: inline;
 		white-space: pre-wrap;
+		word-break: break-all;
+		overflow-wrap: anywhere;
 	}
 	body > console > buffer > line > span[foreground="black"] {
 		color: rgb(0, 0, 0);
