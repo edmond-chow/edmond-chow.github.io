@@ -164,6 +164,12 @@
 				configurable: false
 			});
 			this.ConsoleNode.append(this.BufferNode);
+			Object.defineProperty(this, 'ControlNode', {
+				value: document.createElement('control'),
+				writable: false,
+				configurable: false
+			});
+			this.ConsoleNode.append(this.ControlNode);
 			Object.defineProperty(this, 'InputNode', {
 				value: document.createElement('input'),
 				writable: false,
@@ -180,13 +186,30 @@
 					this.ConsoleNode.removeAttribute('for-any-key');
 					this.InputNode.value = '';
 					this.InputNode.readOnly = true;
+					this.ButtonNode.disabled = true;
 				} else if (e.code == 'Enter') {
 					this.pushInput(this.InputNode.value);
 					this.InputNode.value = '';
 					this.InputNode.readOnly = true;
+					this.ButtonNode.disabled = true;
 				}
 			});
-			this.ConsoleNode.append(this.InputNode);
+			this.ControlNode.append(this.InputNode);
+			Object.defineProperty(this, 'ButtonNode', {
+				value: document.createElement('button'),
+				writable: false,
+				configurable: false
+			});
+			this.ButtonNode.addEventListener('click', () => {
+				if (this.InputNode.readOnly == true) {
+					return;
+				}
+				this.pushInput(this.InputNode.value);
+				this.InputNode.value = '';
+				this.InputNode.readOnly = true;
+				this.ButtonNode.disabled = true;
+			});
+			this.ControlNode.append(this.ButtonNode);
 			Object.defineProperty(this, 'LineNodes', {
 				configurable: false,
 				get: function getter() {
@@ -270,6 +293,7 @@
 			this.counted++;
 			while (this.readed >= this.istream.length || capturedCounted != this.readed) {
 				this.InputNode.readOnly = false;
+				this.ButtonNode.disabled = false;
 				await defer(5);
 			}
 			let output = this.istream[this.readed++];
@@ -294,6 +318,7 @@
 			arguments.constrainedWithAndThrow();
 			this.ConsoleNode.setAttribute('for-any-key', '');
 			this.InputNode.readOnly = false;
+			this.ButtonNode.disabled = false;
 			while (this.ConsoleNode.hasAttribute('for-any-key')) {
 				await defer(5);
 			}
