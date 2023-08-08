@@ -2272,8 +2272,8 @@ var _asyncify_start_unwind = createExportWrapper('asyncify_start_unwind');
 var _asyncify_stop_unwind = createExportWrapper('asyncify_stop_unwind');
 var _asyncify_start_rewind = createExportWrapper('asyncify_start_rewind');
 var _asyncify_stop_rewind = createExportWrapper('asyncify_stop_rewind');
-var ___start_em_js = Module['___start_em_js'] = 116876;
-var ___stop_em_js = Module['___stop_em_js'] = 117139;
+var ___start_em_js = Module['___start_em_js'] = 117420;
+var ___stop_em_js = Module['___stop_em_js'] = 117683;
 function invoke_vi(index,a1) {
   var sp = stackSave();
   try {

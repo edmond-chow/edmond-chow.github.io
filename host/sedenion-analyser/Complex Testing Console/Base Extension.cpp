@@ -161,8 +161,15 @@ namespace CmplxConExt
 }
 extern "C" int main()
 {
-	ComplexTestingConsole::Base::Main();
-	emscripten_run_script("iostream.clear()");
-	emscripten_run_script("iostream.writeLine('Program ended with return code EXIT_SUCCESS.')");
+	while (true)
+	{
+		ComplexTestingConsole::Base::Main();
+		CmplxConExt::clear();
+		CmplxConExt::writeLine(L"The program ended with a return code EXIT_SUCCESS successfully.");
+		CmplxConExt::writeLine(L"");
+		CmplxConExt::writeLine(L"   Press any key to continue with restart the program . . .   ");
+		CmplxConExt::pressAnyKey();
+		ComplexTestingConsole::Base::IsSwitchTo(L"Octonion Testing Console");	
+	}
 	return EXIT_SUCCESS;
 };
