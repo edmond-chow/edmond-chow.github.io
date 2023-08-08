@@ -170,6 +170,41 @@
 				configurable: false
 			});
 			this.ConsoleNode.append(this.ControlNode);
+			Object.defineProperty(this, 'CanType', {
+				get: () => {
+					return !this.InputNode.readOnly;
+				},
+				set: (value) => {
+					this.InputNode.readOnly = !value;
+					this.ButtonNode.disabled = !value;
+				},
+				configurable: false,
+				enumerable: false
+			});
+			Object.defineProperty(this, 'ForAnyKeyType', {
+				value: () => {
+					if (this.CanType == true) {
+						this.ConsoleNode.removeAttribute('for-any-key');
+						this.InputNode.value = '';
+						this.CanType = false;
+					}
+				},
+				writable: false,
+				configurable: false,
+				enumerable: false
+			});
+			Object.defineProperty(this, 'ReadLineType', {
+				value: () => {
+					if (this.CanType == true) {
+						this.pushInput(this.InputNode.value);
+						this.InputNode.value = '';
+						this.CanType = false;
+					}
+				},
+				writable: false,
+				configurable: false,
+				enumerable: false
+			});
 			Object.defineProperty(this, 'InputNode', {
 				value: document.createElement('input'),
 				writable: false,
@@ -177,21 +212,11 @@
 			});
 			this.InputNode.type = 'text';
 			this.InputNode.placeholder = 'type in something for interacting with the console . . . . .';
-			this.InputNode.readOnly = true;
 			this.InputNode.addEventListener('keydown', (e) => {
-				if (this.InputNode.readOnly == true) {
-					return;
-				}
 				if (this.ConsoleNode.hasAttribute('for-any-key')) {
-					this.ConsoleNode.removeAttribute('for-any-key');
-					this.InputNode.value = '';
-					this.InputNode.readOnly = true;
-					this.ButtonNode.disabled = true;
+					this.ForAnyKeyType();
 				} else if (e.code == 'Enter') {
-					this.pushInput(this.InputNode.value);
-					this.InputNode.value = '';
-					this.InputNode.readOnly = true;
-					this.ButtonNode.disabled = true;
+					this.ReadLineType();
 				}
 			});
 			this.ControlNode.append(this.InputNode);
@@ -201,15 +226,14 @@
 				configurable: false
 			});
 			this.ButtonNode.addEventListener('click', () => {
-				if (this.InputNode.readOnly == true) {
-					return;
+				if (this.ConsoleNode.hasAttribute('for-any-key')) {
+					this.ForAnyKeyType();
+				} else {
+					this.ReadLineType();
 				}
-				this.pushInput(this.InputNode.value);
-				this.InputNode.value = '';
-				this.InputNode.readOnly = true;
-				this.ButtonNode.disabled = true;
 			});
 			this.ControlNode.append(this.ButtonNode);
+			this.CanType = false;
 			Object.defineProperty(this, 'LineNodes', {
 				configurable: false,
 				get: function getter() {
@@ -292,8 +316,7 @@
 			let capturedCounted = this.counted;
 			this.counted++;
 			while (this.readed >= this.istream.length || capturedCounted != this.readed) {
-				this.InputNode.readOnly = false;
-				this.ButtonNode.disabled = false;
+				this.CanType = true;
 				await defer(5);
 			}
 			let output = this.istream[this.readed++];
@@ -317,8 +340,7 @@
 		async function pressAnyKey() {
 			arguments.constrainedWithAndThrow();
 			this.ConsoleNode.setAttribute('for-any-key', '');
-			this.InputNode.readOnly = false;
-			this.ButtonNode.disabled = false;
+			this.CanType = true;
 			while (this.ConsoleNode.hasAttribute('for-any-key')) {
 				await defer(5);
 			}
