@@ -1,13 +1,11 @@
+#include <cmath>
+#include <iomanip>
 #include <string>
 #include <regex>
 #include <sstream>
 #include <tuple>
 #include <array>
 #include <functional>
-
-#include <iostream>
-
-
 extern void throw_now(std::wstring&& type, std::wstring&& what);
 template <typename CharT, typename Traits, typename Allocator, typename RegexTraits, typename FuncT>
 std::basic_string<CharT, Traits, Allocator> regex_search_and_replace(const std::basic_string<CharT, Traits, Allocator>& String, const std::basic_regex<CharT, RegexTraits>& Regex, FuncT Function) {
@@ -50,20 +48,24 @@ std::basic_string<CharT, Traits, Allocator> regex_search_and_replace(const std::
 	}
 	return Output;
 };
+inline std::wstring double_to_wstring(double Number) {
+	std::wstringstream TheString;
+	TheString << std::defaultfloat << std::setprecision(17) << Number;
+	return TheString.str();
+};
 template <std::size_t I = 0, std::size_t N> requires (I <= N)
 std::wstring ToString(std::wstringstream& TheString, const std::array<double, N>& Numbers, const std::array<std::wstring, N>& Terms)
 {
 	if constexpr (I == N)
 	{
-		std::wstring RetString;
-		std::getline(TheString, RetString);
+		std::wstring RetString = TheString.str();
 		RetString = std::regex_replace(RetString, std::wregex(L"^$"), L"0");
 		RetString = std::regex_replace(RetString, std::wregex(L"^\\+"), L"");
 		return RetString;
 	}
 	else
 	{
-		std::wstring Replace = std::to_wstring(std::get<I>(Numbers));
+		std::wstring Replace = double_to_wstring(std::get<I>(Numbers));
 		if (std::get<I>(Numbers) > 0)
 		{
 			if (std::get<I>(Terms).length() > 0) { Replace = std::regex_replace(Replace, std::wregex(L"^1$"), L""); }
@@ -98,12 +100,7 @@ std::wstring ToString(Args&&... args) requires (sizeof...(Args) % 2 == 0)
 template <std::size_t I = 0, std::size_t N> requires (I <= N)
 std::wstring GetInitTermRegexString(std::wstringstream& TheString, const std::array<std::wstring, N>& Terms)
 {
-	if constexpr (I == N)
-	{
-		std::wstring RetString;
-		std::getline(TheString, RetString);
-		return std::regex_replace(RetString, std::wregex(L"\\)\\|$"), L"))");
-	}
+	if constexpr (I == N) { return std::regex_replace(TheString.str(), std::wregex(L"\\)\\|$"), L"))"); }
 	else
 	{
 		if (std::get<I>(Terms).length() > 0) { TheString << L"(?=" << std::get<I>(Terms) << L")|"; }
