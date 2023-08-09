@@ -158,6 +158,7 @@
 			});
 			this.ConsoleNode.setAttribute('foreground', 'dark-white');
 			this.ConsoleNode.setAttribute('background', 'black');
+			this.ConsoleNode.setAttribute('scheme', 'campbell');
 			Object.defineProperty(this, 'BufferNode', {
 				value: document.createElement('buffer'),
 				writable: false,

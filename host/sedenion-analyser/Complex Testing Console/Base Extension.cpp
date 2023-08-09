@@ -163,7 +163,6 @@ extern "C" int main()
 {
 	while (true)
 	{
-		emscripten_run_script("console.log('loop')");
 		ComplexTestingConsole::Base::Main();
 		CmplxConExt::writeLine(L"The program ended with a return code EXIT_SUCCESS successfully.");
 		CmplxConExt::writeLine(L"");
