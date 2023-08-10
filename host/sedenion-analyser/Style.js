@@ -157,7 +157,7 @@
 				configurable: false
 			});
 			this.ConsoleNode.setAttribute('foreground', 'dark-white');
-			this.ConsoleNode.setAttribute('background', 'black');
+			this.ConsoleNode.setAttribute('background', 'default');
 			this.ConsoleNode.setAttribute('scheme', 'campbell');
 			Object.defineProperty(this, 'BufferNode', {
 				value: document.createElement('buffer'),
@@ -271,6 +271,26 @@
 			});
 		}
 	].bindTo(window);
+	Object.defineProperty(Console, 'Themes', {
+		value: [
+			'campbell',
+			'campbell-powershell',
+			'solarized-dark',
+			'solarized',
+			'solarized-light',
+			'tango-dark',
+			'tango',
+			'tango-light',
+			'gnome',
+			'linux',
+			'xterm',
+			'rxvt',
+			'vintage'
+		],
+		writable: true,
+		configurable: false
+	});
+	Object.freeze(Console.Themes);
 	[
 		function getForegroundColor() {
 			arguments.constrainedWithAndThrow();
@@ -292,7 +312,7 @@
 			arguments.constrainedWithAndThrow(String);
 			content.split('\n').forEach((value, index) => {
 				if (this.LineNodes.length == 0 || index > 0) {
-					let shouldScroll = this.BufferNode.scrollTop == this.BufferNode.scrollHeight - this.BufferNode.clientHeight;
+					let shouldScroll =  Math.round(this.BufferNode.scrollTop) == this.BufferNode.scrollHeight - this.BufferNode.clientHeight;
 					this.BufferNode.append(document.createElement('line'));
 					if (shouldScroll) {
 						this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);

@@ -178,7 +178,6 @@
 @layer /* themes */ {
 	console {
 		--background: rgb(0, 0, 0);
-		--selection-backdrop: rgb(192, 192, 192);
 		--black: rgb(0, 0, 0);
 		--dark-blue: rgb(0, 0, 128);
 		--dark-green: rgb(0, 128, 0);
@@ -198,8 +197,6 @@
 	}
 	console[scheme="campbell"] {
 		--background: #0C0C0C;
-		--foreground: #CCCCCC;
-		--selection-backdrop: #FFFFFF;
 		--black: #0C0C0C;
 		--dark-blue: #0037DA;
 		--dark-green: #13A10E;
@@ -219,8 +216,6 @@
 	}
 	console[scheme="campbell-powershell"] {
 		--background: #012456;
-		--foreground: #CCCCCC;
-		--selection-backdrop: #FFFFFF;
 		--black: #0C0C0C;
 		--dark-blue: #0037DA;
 		--dark-green: #13A10E;
@@ -238,52 +233,27 @@
 		--yellow: #F9F1A5;
 		--white: #F2F2F2;
 	}
-	console[scheme="one-half-dark"] {
-		--background: #282C34;
-		--foreground: #DCDFE4;
-		--selection-backdrop: #FFFFFF;
-		--black: #282C34;
-		--dark-blue: #61AFEF;
-		--dark-green: #98C379;
-		--dark-cyan: #56B6C2;
-		--dark-red: #E06C75;
-		--dark-magenta: #C678DD;
-		--dark-yellow: #E5C07B;
-		--gray: #DCDFE4;
-		--dark-gray: #5A6374;
-		--blue: #61AFEF;
-		--green: #98C379;
-		--cyan: #56B6C2;
-		--red: #E06C75;
-		--magenta: #C678DD;
-		--yellow: #E5C07B;
-		--white: #DCDFE4;
-	}
-	console[scheme="one-half-light"] {
-		--background: #FAFAFA;
-		--foreground: #383A42;
-		--selection-backdrop: #FFFFFF;
-		--black: #383A42;
-		--dark-blue: #0184BC;
-		--dark-green: #50A14F;
-		--dark-cyan: #0997B3;
-		--dark-red: #E45649;
-		--dark-magenta: #A626A4;
-		--dark-yellow: #C18301;
-		--gray: #FAFAFA;
-		--dark-gray: #4F525D;
-		--blue: #61AFEF;
-		--green: #98C379;
-		--cyan: #56B5C1;
-		--red: #DF6C75;
-		--magenta: #C577DD;
-		--yellow: #E4C07A;
-		--white: #FFFFFF;
-	}
 	console[scheme="solarized-dark"] {
 		--background: #002B36;
-		--foreground: #839496;
-		--selection-backdrop: #FFFFFF;
+		--black: #002B36;
+		--dark-blue: #268BD2;
+		--dark-green: #859900;
+		--dark-cyan: #2AA198;
+		--dark-red: #DC322F;
+		--dark-magenta: #D33682;
+		--dark-yellow: #B58900;
+		--gray: #EEE8D5;
+		--dark-gray: #073642;
+		--blue: #839496;
+		--green: #586E75;
+		--cyan: #93A1A1;
+		--red: #CB4B16;
+		--magenta: #6C71C4;
+		--yellow: #657B83;
+		--white: #FDF6E3;
+	}
+	console[scheme="solarized"] {
+		--background: #380C2A;
 		--black: #002B36;
 		--dark-blue: #268BD2;
 		--dark-green: #859900;
@@ -303,8 +273,6 @@
 	}
 	console[scheme="solarized-light"] {
 		--background: #FDF6E3;
-		--foreground: #657B83;
-		--selection-backdrop: #FFFFFF;
 		--black: #002B36;
 		--dark-blue: #268BD2;
 		--dark-green: #859900;
@@ -323,10 +291,27 @@
 		--white: #FDF6E3;
 	}
 	console[scheme="tango-dark"] {
-		--background: #000000;
-		--foreground: #D3D7CF;
-		--selection-backdrop: #FFFFFF;
-		--black: #000000;
+		--background: #2E3436;
+		--black: #2E3436;
+		--dark-blue: #3465A4;
+		--dark-green: #4E9A06;
+		--dark-cyan: #06989A;
+		--dark-red: #CC0000;
+		--dark-magenta: #75507B;
+		--dark-yellow: #C4A000;
+		--gray: #D3D7CF;
+		--dark-gray: #555753;
+		--blue: #729FCF;
+		--green: #8AE234;
+		--cyan: #34E2E2;
+		--red: #EF2929;
+		--magenta: #AD7FA8;
+		--yellow: #FCE94F;
+		--white: #EEEEEC;
+	}
+	console[scheme="tango"] {
+		--background: #380C2A;
+		--black: #2E3436;
 		--dark-blue: #3465A4;
 		--dark-green: #4E9A06;
 		--dark-cyan: #06989A;
@@ -344,10 +329,8 @@
 		--white: #EEEEEC;
 	}
 	console[scheme="tango-light"] {
-		--background: #FFFFFF;
-		--foreground: #555753;
-		--selection-backdrop: #FFFFFF;
-		--black: #000000;
+		--background: #EEEEEC;
+		--black: #2E3436;
 		--dark-blue: #3465A4;
 		--dark-green: #4E9A06;
 		--dark-cyan: #06989A;
@@ -364,10 +347,84 @@
 		--yellow: #FCE94F;
 		--white: #EEEEEC;
 	}
+	console[scheme="gnome"] {
+		--background: #380C2A;
+		--black: #171421;
+		--dark-blue: #12488B;
+		--dark-green: #26A269;
+		--dark-cyan: #2AA1B3;
+		--dark-red: #C01C28;
+		--dark-magenta: #A347BA;
+		--dark-yellow: #A2734C;
+		--gray: #D0CFCC;
+		--dark-gray: #5E5C64;
+		--blue: #2A7BDE;
+		--green: #33D17A;
+		--cyan: #33C7DE;
+		--red: #F66151;
+		--magenta: #C061CB;
+		--yellow: #E9AD0C;
+		--white: #FFFFFF;
+	}
+	console[scheme="linux"] {
+		--background: #380C2A;
+		--black: #000000;
+		--dark-blue: #0000AA;
+		--dark-green: #00AA00;
+		--dark-cyan: #00AAAA;
+		--dark-red: #AA0000;
+		--dark-magenta: #AA00AA;
+		--dark-yellow: #AA5500;
+		--gray: #AAAAAA;
+		--dark-gray: #555555;
+		--blue: #5555FF;
+		--green: #55FF55;
+		--cyan: #55FFFF;
+		--red: #FF5555;
+		--magenta: #FF55FF;
+		--yellow: #FFFF55;
+		--white: #FFFFFF;
+	}
+	console[scheme="xterm"] {
+		--background: #380C2A;
+		--black: #000000;
+		--dark-blue: #0000EE;
+		--dark-green: #00CD00;
+		--dark-cyan: #00CDCD;
+		--dark-red: #CD0000;
+		--dark-magenta: #CD00CD;
+		--dark-yellow: #CDCD00;
+		--gray: #E5E5E5;
+		--dark-gray: #7F7F7F;
+		--blue: #5C5CFF;
+		--green: #00FF00;
+		--cyan: #00FFFF;
+		--red: #FF0000;
+		--magenta: #FF00FF;
+		--yellow: #FFFF00;
+		--white: #FFFFFF;
+	}
+	console[scheme="rxvt"] {
+		--background: #380C2A;
+		--black: #000000;
+		--dark-blue: #0000CD;
+		--dark-green: #00CD00;
+		--dark-cyan: #00CDCD;
+		--dark-red: #CD0000;
+		--dark-magenta: #CD00CD;
+		--dark-yellow: #CDCD00;
+		--gray: #FAEBD7;
+		--dark-gray: #404040;
+		--blue: #0000FF;
+		--green: #00FF00;
+		--cyan: #00FFFF;
+		--red: #FF0000;
+		--magenta: #FF00FF;
+		--yellow: #FFFF00;
+		--white: #FFFFFF;
+	}
 	console[scheme="vintage"] {
-		--background: #000000;
-		--foreground: #C0C0C0;
-		--selection-backdrop: #FFFFFF;
+		--background: #380C2A;
 		--black: #000000;
 		--dark-blue: #000080;
 		--dark-green: #008000;
@@ -401,6 +458,7 @@
 		text-align: left;
 		font-size: 16px;
 		font-family: 'Menlo', 'consolas', 'monospace';
+		font-weight: bold;
     	line-height: 21px;
 		display: inline-block;
 		padding: 8px;
@@ -455,6 +513,7 @@
 		display: block;
 		font-size: 16px;
 		font-family: 'Menlo', 'consolas', 'monospace';
+		font-weight: bold;
 		line-height: 21px;
 		min-height: 21px;
 		color: rgb(192, 192, 192);
@@ -512,6 +571,9 @@
 	}
 	console > buffer > line > span[foreground="white"] {
 		color: var(--white);
+	}
+	console > buffer > line > span[background="default"] {
+		background-color: transparent;
 	}
 	console > buffer > line > span[background="black"] {
 		background-color: var(--black);
