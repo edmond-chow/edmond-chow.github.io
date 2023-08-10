@@ -505,7 +505,7 @@
 	console > buffer {
 		overflow-y: auto;
 		display: block;
-		padding: 8px;
+		padding: 0px 8px;
 		flex-grow: 1;
 	}
 	console > buffer > line {
