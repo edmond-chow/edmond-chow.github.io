@@ -287,16 +287,25 @@
 			'rxvt',
 			'vintage'
 		],
-		writable: true,
+		writable: false,
 		configurable: false
 	});
 	Object.freeze(Console.Themes);
+	Object.defineProperty(Console.prototype, 'scheme', {
+		configurable: false,
+		get: function getter() {
+			return this.ConsoleNode.getAttribute('scheme');
+		},
+		set: function setter(scheme) {
+			this.ConsoleNode.setAttribute('scheme', scheme);
+		}
+	});
 	[
 		function getForegroundColor() {
 			arguments.constrainedWithAndThrow();
 			return this.ConsoleNode.getAttribute('foreground');
 		},
-		function getForegroundColor() {
+		function getBackgroundColor() {
 			arguments.constrainedWithAndThrow();
 			return this.ConsoleNode.getAttribute('background');
 		},
@@ -304,7 +313,7 @@
 			arguments.constrainedWithAndThrow(String);
 			return this.ConsoleNode.setAttribute('foreground', color);
 		},
-		function setForegroundColor(color) {
+		function setBackgroundColor(color) {
 			arguments.constrainedWithAndThrow(String);
 			return this.ConsoleNode.setAttribute('background', color);
 		},
