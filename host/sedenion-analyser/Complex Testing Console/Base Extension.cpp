@@ -17,7 +17,7 @@ namespace CmplxConExt
 		await iostream.pressAnyKey();
 	});
 	EM_ASYNC_JS(void, suspendWrapper, (), {
-		await suspend();
+		await defer(5);
 	});
 	inline std::string toMbsString(const std::wstring& string)
 	{

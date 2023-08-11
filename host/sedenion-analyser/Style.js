@@ -65,10 +65,6 @@
 	})();
 	/* { control-flow } */
 	(() => {
-		let captured = 0;
-		let getAccumulated = () => {
-			return performance.now() - captured < 500 ? performance.now() - captured : 500;
-		};
 		let loop = [];
 		setInterval(() => {
 			loop = loop.filter((value) => {
@@ -82,35 +78,8 @@
 			});
 		}, 5);
 		[
-			function getCaptured() {
-				return captured;
-			},
-			function captureSpan() {
-				arguments.constrainedWithAndThrow();
-				captured = performance.now();
-			},
-			function suspend() {
-				arguments.constrainedWithAndThrow();
-				if (getAccumulated() <= 25) {
-					return new Promise((resolve) => {
-						resolve();
-					});
-				}
-				return mustSuspend();
-			},
-			function mustSuspend() {
-				arguments.constrainedWithAndThrow();
-				return new Promise((resolve) => {
-					loop.push({
-						deferred: performance.now() + getAccumulated(),
-						callback: () => {
-							captureSpan();
-							resolve();
-						}
-					});
-				});
-			},
 			function defer(timeout) {
+				arguments.constrainedWithAndThrow(Number);
 				return new Promise((resolve) => {
 					loop.push({
 						deferred: performance.now() + timeout,
@@ -122,7 +91,7 @@
 			}
 		].bindTo(window);
 	})();
-	await mustSuspend();
+	await defer(5);
 	/* constructor() */
 	function LineNodeWrapper(node) {
 		Object.defineProperty(this, 'Self', {
@@ -163,6 +132,17 @@
 				value: document.createElement('buffer'),
 				writable: false,
 				configurable: false
+			});
+			this.BufferNode.classList.add('lock');
+			this.BufferNode.addEventListener('scroll', () => {
+				this.BufferNode.classList.remove('lock');
+			});
+			this.BufferNode.addEventListener('scrollend', () => {
+				if (Math.round(this.BufferNode.scrollTop) == this.BufferNode.scrollHeight - this.BufferNode.clientHeight) {
+					this.BufferNode.classList.add('lock');
+				} else {
+					this.BufferNode.classList.remove('lock');
+				}
 			});
 			this.ConsoleNode.append(this.BufferNode);
 			Object.defineProperty(this, 'ControlNode', {
@@ -321,10 +301,11 @@
 			arguments.constrainedWithAndThrow(String);
 			content.split('\n').forEach((value, index) => {
 				if (this.LineNodes.length == 0 || index > 0) {
-					let shouldScroll =  Math.round(this.BufferNode.scrollTop) == this.BufferNode.scrollHeight - this.BufferNode.clientHeight;
 					this.BufferNode.append(document.createElement('line'));
-					if (shouldScroll) {
-						this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
+					if (this.BufferNode.classList.contains('lock')) {
+						requestAnimationFrame(() => {
+							this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
+						});
 					}
 				}
 				if (this.LastLineNode.SpanNodes.length == 0 || this.LastLineNode.LastSpanNode.getAttribute('foreground') != this.ConsoleNode.getAttribute('foreground') || this.LastLineNode.LastSpanNode.getAttribute('background') != this.ConsoleNode.getAttribute('background')) {
@@ -424,7 +405,7 @@
 		}
 	};
 	while (true) {
-		await mustSuspend();
+		await defer(5);
 		delegate();
 	}
 })();
