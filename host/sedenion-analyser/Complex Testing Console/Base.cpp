@@ -122,8 +122,7 @@ namespace ComplexTestingConsole
 		write(type);
 		write(L"] ");
 		setForegroundColor(ConsoleColor::Cyan);
-		write(what);
-		writeLine(L"");
+		writeLine(what);
 		setForegroundColor(ConsoleColor::White);
 		writeLine(L"   Press any key to continue . . .   ");
 		pressAnyKey();
@@ -135,8 +134,7 @@ namespace ComplexTestingConsole
 		setForegroundColor(ConsoleColor::DarkCyan);
 		write(L" %   ");
 		setForegroundColor(ConsoleColor::Blue);
-		write(str);
-		writeLine(L"");
+		writeLine(str);
 		return str;
 	};
 	std::wstring Base::Selection() { return Selection(L""); };
@@ -158,8 +156,7 @@ namespace ComplexTestingConsole
 		setForegroundColor(ConsoleColor::DarkRed);
 		write(main);
 		setForegroundColor(ConsoleColor::Red);
-		write(str);
-		writeLine(L"");
+		writeLine(str);
 		return str;
 	};
 	std::wstring Base::Output(const std::wstring& str) { return Output(L"", str); };
@@ -171,8 +168,7 @@ namespace ComplexTestingConsole
 		setForegroundColor(ConsoleColor::Cyan);
 		write(head);
 		setForegroundColor(ConsoleColor::Gray);
-		write(str);
-		writeLine(L"");
+		writeLine(str);
 		return str;
 	};
 	std::wstring Base::Comment(const std::wstring& str) { return Comment(L"", str); };
@@ -184,7 +180,8 @@ namespace ComplexTestingConsole
 		writeLine(L"");
 	};
 }
-void throw_now(std::wstring&& type, std::wstring&& what) {
+void throw_now(std::wstring&& type, std::wstring&& what)
+{
 	ComplexTestingConsole::Base::Exception(type, what);
 	std::longjmp(stack_pointer, 1);
 };

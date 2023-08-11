@@ -368,6 +368,10 @@
 		function bindTo(node) {
 			arguments.constrainedWithAndThrow(Element);
 			node.append(this.ConsoleNode);
+		},
+		function interpret(html) {
+			arguments.constrainedWithAndThrow(String);
+			this.BufferNode.innerHTML += html;
 		}
 	].bindTo(Console.prototype);
 	/* { functionality } */
