@@ -251,6 +251,55 @@
 			});
 		}
 	].bindTo(window);
+	[
+		function removeSpace() {
+			arguments.constrainedWithAndThrow();
+			return this.replace(/\t/g, '').replace(/\r/g, '').replace(/\n/g, '').replace(/\f/g, '')
+				.replace(/\u0020/g, '')
+				.replace(/\u00A0/g, '')
+				.replace(/\u1680/g, '')
+				.replace(/\u180E/g, '')
+				.replace(/\u2000/g, '')
+				.replace(/\u2001/g, '')
+				.replace(/\u2002/g, '')
+				.replace(/\u2003/g, '')
+				.replace(/\u2004/g, '')
+				.replace(/\u2005/g, '')
+				.replace(/\u2006/g, '')
+				.replace(/\u2007/g, '')
+				.replace(/\u2008/g, '')
+				.replace(/\u2009/g, '')
+				.replace(/\u200A/g, '')
+				.replace(/\u200B/g, '')
+				.replace(/\u202F/g, '')
+				.replace(/\u205F/g, '')
+				.replace(/\u3000/g, '')
+				.replace(/\uFEFF/g, '');
+		}
+	].bindTo(String.prototype);
+	Object.defineProperty(Console, 'ConsoleColorList', {
+		value: [
+			'black',
+			'dark-blue',
+			'dark-green',
+			'dark-cyan',
+			'dark-red',
+			'dark-magenta',
+			'dark-yellow',
+			'gray',
+			'dark-gray',
+			'blue',
+			'green',
+			'cyan',
+			'red',
+			'magenta',
+			'yellow',
+			'white',
+		],
+		writable: false,
+		configurable: false
+	});
+	Object.freeze(Console.ConsoleColorList);
 	Object.defineProperty(Console, 'Themes', {
 		value: [
 			'campbell',
@@ -308,19 +357,60 @@
 						});
 					}
 				}
-				if (this.LastLineNode.SpanNodes.length == 0 || this.LastLineNode.LastSpanNode.getAttribute('foreground') != this.ConsoleNode.getAttribute('foreground') || this.LastLineNode.LastSpanNode.getAttribute('background') != this.ConsoleNode.getAttribute('background')) {
-					let SpanNode = document.createElement('span');
-					SpanNode.setAttribute('foreground', this.ConsoleNode.getAttribute('foreground'));
-					SpanNode.setAttribute('background', this.ConsoleNode.getAttribute('background'));
-					this.LastLineNode.Self.append(SpanNode);
+				if (value.removeSpace() != '') {
+					let colorStateChanged = () => {
+						return this.LastLineNode.LastSpanNode.getAttribute('foreground') != this.ConsoleNode.getAttribute('foreground') || this.LastLineNode.LastSpanNode.getAttribute('background') != this.ConsoleNode.getAttribute('background');
+					};
+					if (this.LastLineNode.SpanNodes.length == 0 || colorStateChanged()) {
+						let SpanNode = document.createElement('span');
+						this.LastLineNode.Self.append(SpanNode);
+					}
+					if (this.LastLineNode.LastSpanNode.textContent == '' || colorStateChanged()) {
+						this.LastLineNode.LastSpanNode.setAttribute('foreground', this.ConsoleNode.getAttribute('foreground'));
+						this.LastLineNode.LastSpanNode.setAttribute('background', this.ConsoleNode.getAttribute('background'));
+					}
+					this.LastLineNode.LastSpanNode.textContent += value;
 				}
-				this.LastLineNode.LastSpanNode.textContent += value;
 			});
+		},
+		function writeWithColorCodes(content) {
+			arguments.constrainedWithAndThrow(String);
+			let foreground = this.LastLineNode.LastSpanNode.getAttribute('foreground');
+			let background = this.LastLineNode.LastSpanNode.getAttribute('background');
+			content.split('\n').forEach((value, index) => {
+				if (this.LineNodes.length == 0 || index > 0) {
+					this.BufferNode.append(document.createElement('line'));
+					if (this.BufferNode.classList.contains('lock')) {
+						requestAnimationFrame(() => {
+							this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
+						});
+					}
+				}
+				if (value.removeSpace() != '') {
+					content.split('\\').forEach((value, index) => {
+						if (index % 2 == 1) {
+							if (value.substring(0, 11) == 'foreground:') {
+								foreground = value.substring(11, value.length);
+							} else if (value.substring(0, 11) == 'background:') {
+								background = value.substring(11, value.length);
+							}
+							let SpanNode = document.createElement('span');
+							SpanNode.setAttribute('foreground', foreground);
+							SpanNode.setAttribute('background', background);
+							this.LastLineNode.Self.append(SpanNode);
+						} else {
+							this.LastLineNode.LastSpanNode.textContent += value;
+						}
+					});
+				}
+			});
+			this.ConsoleNode.setAttribute('foreground', foreground);
+			this.ConsoleNode.setAttribute('background', background);
 		},
 		function writeLine(content) {
 			arguments.constrainedWithAndThrow(String);
 			this.write(content);
-			this.write("\n");
+			this.write('\n');
 		},
 		async function read() {
 			arguments.constrainedWithAndThrow();
