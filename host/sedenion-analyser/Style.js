@@ -344,8 +344,9 @@
 		},
 		function clear() {
 			arguments.constrainedWithAndThrow();
-			this.LineNodes.forEach((value) => {
+			this.LineNodes.forEach(async (value) => {
 				value.Self.remove();
+				await defer(5);
 			});
 		},
 		async function pressAnyKey() {
@@ -368,10 +369,6 @@
 		function bindTo(node) {
 			arguments.constrainedWithAndThrow(Element);
 			node.append(this.ConsoleNode);
-		},
-		function interpret(html) {
-			arguments.constrainedWithAndThrow(String);
-			this.BufferNode.innerHTML += html;
 		}
 	].bindTo(Console.prototype);
 	/* { functionality } */
