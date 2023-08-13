@@ -525,6 +525,9 @@
 		word-break: break-all;
 		overflow-wrap: anywhere;
 	}
+	console > buffer > line > span[foreground="default"] {
+		color: transparent;
+	}
 	console > buffer > line > span[foreground="black"] {
 		color: var(--black);
 	}

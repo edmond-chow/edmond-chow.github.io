@@ -125,7 +125,7 @@
 				writable: false,
 				configurable: false
 			});
-			this.ConsoleNode.setAttribute('foreground', 'dark-white');
+			this.ConsoleNode.setAttribute('foreground', 'dark-gray');
 			this.ConsoleNode.setAttribute('background', 'default');
 			this.ConsoleNode.setAttribute('scheme', 'campbell');
 			Object.defineProperty(this, 'BufferNode', {
@@ -135,13 +135,21 @@
 			});
 			this.BufferNode.classList.add('lock');
 			this.BufferNode.addEventListener('scroll', () => {
-				this.BufferNode.classList.remove('lock');
+				if (this.scrollCount > 0) {
+					--this.scrollCount;
+				} else if (this.scrollCount == 0) {
+					this.BufferNode.classList.remove('lock');
+				}
 			});
 			this.BufferNode.addEventListener('scrollend', () => {
-				if (Math.round(this.BufferNode.scrollTop) == this.BufferNode.scrollHeight - this.BufferNode.clientHeight) {
-					this.BufferNode.classList.add('lock');
-				} else {
-					this.BufferNode.classList.remove('lock');
+				if (this.scrollendCount > 0) {
+					--this.scrollendCount;
+				} else if (this.scrollendCount == 0) {
+					if (Math.round(this.BufferNode.scrollTop) == this.BufferNode.scrollHeight - this.BufferNode.clientHeight) {
+						this.BufferNode.classList.add('lock');
+					} else {
+						this.BufferNode.classList.remove('lock');
+					}
 				}
 			});
 			this.ConsoleNode.append(this.BufferNode);
@@ -249,6 +257,18 @@
 				configurable: false,
 				enumerable: false
 			});
+			Object.defineProperty(this, 'scrollCount', {
+				value: 0,
+				writable: true,
+				configurable: false,
+				enumerable: false
+			});
+			Object.defineProperty(this, 'scrollendCount', {
+				value: 0,
+				writable: true,
+				configurable: false,
+				enumerable: false
+			});
 		}
 	].bindTo(window);
 	[
@@ -277,8 +297,9 @@
 				.replace(/\uFEFF/g, '');
 		}
 	].bindTo(String.prototype);
-	Object.defineProperty(Console, 'ConsoleColorList', {
+	Object.defineProperty(Console, 'Colors', {
 		value: [
+			'default',
 			'black',
 			'dark-blue',
 			'dark-green',
@@ -299,7 +320,7 @@
 		writable: false,
 		configurable: false
 	});
-	Object.freeze(Console.ConsoleColorList);
+	Object.freeze(Console.Colors);
 	Object.defineProperty(Console, 'Themes', {
 		value: [
 			'campbell',
@@ -354,6 +375,8 @@
 					if (this.BufferNode.classList.contains('lock')) {
 						requestAnimationFrame(() => {
 							this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
+							++this.scrollCount;
+							++this.scrollendCount;
 						});
 					}
 				}
@@ -373,32 +396,51 @@
 				}
 			});
 		},
+		function writeLine(content) {
+			arguments.constrainedWithAndThrow(String);
+			this.write(content);
+			this.write('\n');
+		},
 		function writeWithColorCodes(content) {
 			arguments.constrainedWithAndThrow(String);
-			let foreground = this.LastLineNode.LastSpanNode.getAttribute('foreground');
-			let background = this.LastLineNode.LastSpanNode.getAttribute('background');
+			let foreground = this.ConsoleNode.getAttribute('foreground');
+			let background = this.ConsoleNode.getAttribute('background');
 			content.split('\n').forEach((value, index) => {
 				if (this.LineNodes.length == 0 || index > 0) {
 					this.BufferNode.append(document.createElement('line'));
 					if (this.BufferNode.classList.contains('lock')) {
 						requestAnimationFrame(() => {
 							this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
+							++this.scrollCount;
+							++this.scrollendCount;
 						});
 					}
 				}
 				if (value.removeSpace() != '') {
-					content.split('\\').forEach((value, index) => {
+					value.split('\\').forEach((value, index) => {
 						if (index % 2 == 1) {
 							if (value.substring(0, 11) == 'foreground:') {
 								foreground = value.substring(11, value.length);
 							} else if (value.substring(0, 11) == 'background:') {
 								background = value.substring(11, value.length);
+							} else if (value.substring(0, 6) == 'title:') {
+								setTitle(value.substring(6, value.length));
 							}
 							let SpanNode = document.createElement('span');
 							SpanNode.setAttribute('foreground', foreground);
 							SpanNode.setAttribute('background', background);
+							if (this.LastLineNode.LastSpanNode.textContent.removeSpace() == '') {
+								SpanNode.textContent = this.LastLineNode.LastSpanNode.textContent;
+								this.LastLineNode.LastSpanNode.remove();
+							}
 							this.LastLineNode.Self.append(SpanNode);
 						} else {
+							if (this.LastLineNode.SpanNodes.length == 0) {
+								let SpanNode = document.createElement('span');
+								SpanNode.setAttribute('foreground', foreground);
+								SpanNode.setAttribute('background', background);
+								this.LastLineNode.Self.append(SpanNode);
+							}
 							this.LastLineNode.LastSpanNode.textContent += value;
 						}
 					});
@@ -406,11 +448,6 @@
 			});
 			this.ConsoleNode.setAttribute('foreground', foreground);
 			this.ConsoleNode.setAttribute('background', background);
-		},
-		function writeLine(content) {
-			arguments.constrainedWithAndThrow(String);
-			this.write(content);
-			this.write('\n');
 		},
 		async function read() {
 			arguments.constrainedWithAndThrow();

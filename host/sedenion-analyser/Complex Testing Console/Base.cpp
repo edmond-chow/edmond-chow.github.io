@@ -117,33 +117,30 @@ namespace ComplexTestingConsole
 	std::wstring Base::Exception(const std::wstring& type, const std::wstring& what)
 	{
 		setForegroundColor(ConsoleColor::DarkCyan);
-		writeLine(L"");
-		write(L"   [");
-		write(type);
-		write(L"] ");
+		wcout << endl << L"   [" << type << L"] ";
 		setForegroundColor(ConsoleColor::Cyan);
-		writeLine(what);
+		wcout << what << endl;
 		setForegroundColor(ConsoleColor::White);
-		writeLine(L"   Press any key to continue . . .   ");
+		wcout << L"   Press any key to continue . . .   " << endl;
 		pressAnyKey();
-		writeLine(L"");
+		wcout << endl;
 		return L"";
 	};
 	std::wstring Base::Selection(const std::wstring& str)
 	{
 		setForegroundColor(ConsoleColor::DarkCyan);
-		write(L" %   ");
+		wcout << L" %   ";
 		setForegroundColor(ConsoleColor::Blue);
-		writeLine(str);
+		wcout << str << endl;
 		return str;
 	};
 	std::wstring Base::Selection() { return Selection(L""); };
 	std::wstring Base::Input(const std::wstring& str)
 	{
 		setForegroundColor(ConsoleColor::Yellow);
-		write(L" >   ");
+		wcout << L" >   ";
 		setForegroundColor(ConsoleColor::DarkGreen);
-		write(str);
+		wcout << str;
 		setForegroundColor(ConsoleColor::Green);
 		read();
 		return resolveReaded();
@@ -152,11 +149,11 @@ namespace ComplexTestingConsole
 	std::wstring Base::Output(const std::wstring& main, const std::wstring& str)
 	{
 		setForegroundColor(ConsoleColor::Magenta);
-		write(L" #   ");
+		wcout << L" #   ";
 		setForegroundColor(ConsoleColor::DarkRed);
-		write(main);
+		wcout << main;
 		setForegroundColor(ConsoleColor::Red);
-		writeLine(str);
+		wcout << str << endl;
 		return str;
 	};
 	std::wstring Base::Output(const std::wstring& str) { return Output(L"", str); };
@@ -164,11 +161,11 @@ namespace ComplexTestingConsole
 	std::wstring Base::Comment(const std::wstring& head, const std::wstring& str)
 	{
 		setForegroundColor(ConsoleColor::White);
-		write(L" /   ");
+		wcout << L" /   ";
 		setForegroundColor(ConsoleColor::Cyan);
-		write(head);
+		wcout << head;
 		setForegroundColor(ConsoleColor::Gray);
-		writeLine(str);
+		wcout << str << endl;
 		return str;
 	};
 	std::wstring Base::Comment(const std::wstring& str) { return Comment(L"", str); };
@@ -177,7 +174,7 @@ namespace ComplexTestingConsole
 	{
 		clear();
 		setTitle(title);
-		writeLine(L"");
+		wcout << endl;
 	};
 }
 void throw_now(std::wstring&& type, std::wstring&& what)

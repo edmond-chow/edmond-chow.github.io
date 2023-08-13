@@ -7,6 +7,7 @@
 #include <emscripten/bind.h>
 #include <cstdlib>
 #include <string>
+#include <sstream>
 #include "Base.h"
 namespace CmplxConExt
 {
@@ -17,7 +18,7 @@ namespace CmplxConExt
 		await iostream.pressAnyKey();
 	});
 	EM_ASYNC_JS(void, suspendWrapper, (), {
-		await defer(5);
+		await defer(50);
 	});
 	inline std::string toMbsString(const std::wstring& string)
 	{
@@ -37,6 +38,55 @@ namespace CmplxConExt
 		delete[] temporary;
 		return converted;
 	};
+	struct wcout_t : std::wstringstream
+	{
+	public:
+		static constexpr const std::size_t max_count = 100;
+	private:
+		std::size_t count;
+	public:
+		wcout_t() : count(0) {};
+		std::size_t add()
+		{
+			return count < max_count ? ++count : count;
+		};
+		std::size_t reset()
+		{
+			return count = 0;
+		};
+	};
+	wcout_t wcout;
+	wcout_t& endl(wcout_t& wcout)
+	{
+		wcout << L"\\n";
+		return wcout;
+	};
+	inline void output_now(wcout_t& wcout)
+	{
+		wcout.reset();
+		std::string call = "iostream.writeWithColorCodes('" + toMbsString(wcout.str()) + "')";
+		emscripten_run_script(call.c_str()); 
+		wcout.str(L"");
+	};
+	void output(wcout_t& wcout)
+	{
+		if (wcout.add() == wcout_t::max_count)
+		{
+			suspendWrapper();
+			output_now(wcout);
+		}
+	};
+	template <typename T>
+	wcout_t& operator <<(wcout_t& wcout, T o)
+	{
+		dynamic_cast<std::wstringstream&>(wcout) << o;
+		output(wcout);
+		return wcout;
+	};
+	inline wcout_t& operator <<(wcout_t& wcout, wcout_t&(*endl)(wcout_t& wcout))
+	{
+		return endl(wcout);
+	};
 	enum class ConsoleColor : std::uint8_t
 	{
 		Black = 0,
@@ -55,7 +105,11 @@ namespace CmplxConExt
 		Magenta = 13,
 		Yellow = 14,
 		White = 15,
+		Default = 16
 	};
+	static ConsoleColor ForegroundColor = ConsoleColor::DarkGray;
+	static ConsoleColor BackgroundColor = ConsoleColor::Black;
+	static std::wstring Title = L"";
 	static const char* ConsoleColorList[] {
 		"black",
 		"dark-blue",
@@ -73,102 +127,83 @@ namespace CmplxConExt
 		"magenta",
 		"yellow",
 		"white",
+		"default"
 	};
-	inline ConsoleColor toConsoleColor(const char* output) {
-		for (std::size_t i = 0; i < std::extent_v<decltype(ConsoleColorList)>; ++i) {
-			if (std::strcmp(output, ConsoleColorList[i]) == 0) {
+	inline ConsoleColor toConsoleColor(const char* output)
+	{
+		for (std::size_t i = 0; i < std::extent_v<decltype(ConsoleColorList)>; ++i)
+		{
+			if (std::strcmp(output, ConsoleColorList[i]) == 0)
+			{
 				return static_cast<ConsoleColor>(i);
 			}
 		}
-		return static_cast<ConsoleColor>(0);
+		return ConsoleColor::Default;
 	};
-	inline const char* toStringLiteral(ConsoleColor input) {
+	inline const char* toStringLiteral(ConsoleColor input)
+	{
 		return ConsoleColorList[static_cast<std::size_t>(input) % std::extent_v<decltype(ConsoleColorList)>];
 	};
 	ConsoleColor getForegroundColor()
 	{
-		return toConsoleColor(emscripten_run_script_string("iostream.getForegroundColor()"));
+		return ForegroundColor;
 	};
 	ConsoleColor getBackgroundColor()
 	{
-		return toConsoleColor(emscripten_run_script_string("iostream.getBackgroundColor()"));
+		return BackgroundColor;
 	};
 	std::wstring getTitle()
 	{
-		return toWcsString(emscripten_run_script_string("getTitle()"));
+		return Title;
 	};
 	void setForegroundColor(ConsoleColor color)
 	{
-		std::string call = "iostream.setForegroundColor(\"" + std::string(toStringLiteral(color)) + "\")";
-		emscripten_run_script(call.c_str());
+		ForegroundColor = color;
+		wcout << L"\\\\foreground:" << toStringLiteral(color) << L"\\\\";
 	};
 	void setBackgroundColor(ConsoleColor color)
 	{
-		std::string call = "iostream.setBackgroundColor(\"" + std::string(toStringLiteral(color)) + "\")";
-		emscripten_run_script(call.c_str());
+		BackgroundColor = color;
+		wcout << L"\\\\background:" << toStringLiteral(color) << L"\\\\";
 	};
 	void setTitle(const std::wstring& title)
 	{
-		std::string call = "setTitle(\"" + toMbsString(title) + "\")";
-		emscripten_run_script(call.c_str());
+		Title = title;
+		wcout << L"\\\\title:" << title << L"\\\\";
 	};
 	void clear()
 	{
+		output_now(wcout);
 		emscripten_run_script("iostream.clear()");
 	};
 	void pressAnyKey()
 	{
+		output_now(wcout);
 		pressAnyKeyWrapper();
 	};
-	void write(const std::string& content) {
-		suspendWrapper();
-		std::string call = "iostream.write(\"" + content + "\")";
-		emscripten_run_script(call.c_str());
-	};
-	void write(const std::wstring& content) {
-		suspendWrapper();
-		std::string call = "iostream.write(\"" + toMbsString(content) + "\")";
-		emscripten_run_script(call.c_str());
-	};
-	void write(const char* content) {
-		write(std::string(content));
-	};
-	void write(const wchar_t* content) {
-		write(std::wstring(content));
-	};
-	void writeLine(const std::string& content) {
-		suspendWrapper();
-		std::string call = "iostream.writeLine(\"" + content + "\")";
-		emscripten_run_script(call.c_str());
-	};
-	void writeLine(const std::wstring& content) {
-		suspendWrapper();
-		std::string call = "iostream.writeLine(\"" + toMbsString(content) + "\")";
-		emscripten_run_script(call.c_str());
-	};
-	void writeLine(const char* content) {
-		writeLine(std::string(content));
-	};
-	void writeLine(const wchar_t* content) {
-		writeLine(std::wstring(content));
-	};
-	void read() {
+	void read()
+	{
+		output_now(wcout);
 		readWrapper();
 	};
-	std::wstring resolveReaded() {
+	std::wstring resolveReaded()
+	{
 		return toWcsString(emscripten_run_script_string("iostream.resolveReaded()"));
 	};
 }
 extern "C" int main()
 {
+	using namespace ComplexTestingConsole;
+	using namespace CmplxConExt;
+	ForegroundColor = toConsoleColor(emscripten_run_script_string("iostream.getForegroundColor()"));
+	BackgroundColor = toConsoleColor(emscripten_run_script_string("iostream.getBackgroundColor()"));
+	Title = toWcsString(emscripten_run_script_string("getTitle()"));
 	while (true)
 	{
-		ComplexTestingConsole::Base::Main();
-		CmplxConExt::writeLine(L"The program ended with a return code EXIT_SUCCESS successfully.");
-		CmplxConExt::writeLine(L"");
-		CmplxConExt::writeLine(L"   >> Press any key to continue with restart the program . . .   ");
-		CmplxConExt::pressAnyKey();
-		ComplexTestingConsole::Base::IsSwitchTo(L"[Octonion Testing Console]");	
+		Base::Main();
+		wcout << endl << L"The program ended with a return code EXIT_SUCCESS successfully." << endl << endl << L"   >> Press any key to continue with restart the program . . .   " << endl;
+		pressAnyKey();
+		Base::IsSwitchTo(L"[Octonion Testing Console]");	
 	}
 	return EXIT_SUCCESS;
 };

@@ -5,8 +5,28 @@
 /*               */
 /* ============= */
 #include <string>
+#include <sstream>
 namespace CmplxConExt
 {
+	struct wcout_t : std::wstringstream
+	{
+	private:
+		std::size_t count;
+	};
+	extern wcout_t wcout;
+	wcout_t& endl(wcout_t& wcout);
+	void output(wcout_t& wcout);
+	template <typename T>
+	wcout_t& operator <<(wcout_t& wcout, T o)
+	{
+		dynamic_cast<std::wstringstream&>(wcout) << o;
+		output(wcout);
+		return wcout;
+	};
+	inline wcout_t& operator <<(wcout_t& wcout, wcout_t&(*endl)(wcout_t& wcout))
+	{
+		return endl(wcout);
+	};
 	enum class ConsoleColor : std::uint8_t
 	{
 		Black = 0,
@@ -34,14 +54,6 @@ namespace CmplxConExt
 	void setTitle(const std::wstring& title);
 	void clear();
 	void pressAnyKey();
-	void write(const std::string& content);
-	void write(const std::wstring& content);
-	void write(const char* content);
-	void write(const wchar_t* content);
-	void writeLine(const std::string& content);
-	void writeLine(const std::wstring& content);
-	void writeLine(const char* content);
-	void writeLine(const wchar_t* content);
 	void read();
 	std::wstring resolveReaded();
 }
