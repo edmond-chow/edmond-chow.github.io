@@ -78,6 +78,13 @@
 			});
 		}, 5);
 		[
+			function send(callback, timeout) {
+				arguments.constrainedWithAndThrow(Function, Number);
+				loop.push({
+					deferred: performance.now() + timeout,
+					callback: callback
+				});
+			},
 			function defer(timeout) {
 				arguments.constrainedWithAndThrow(Number);
 				return new Promise((resolve) => {
@@ -132,25 +139,6 @@
 				value: document.createElement('buffer'),
 				writable: false,
 				configurable: false
-			});
-			this.BufferNode.classList.add('lock');
-			this.BufferNode.addEventListener('scroll', () => {
-				if (this.scrollCount > 0) {
-					--this.scrollCount;
-				} else if (this.scrollCount == 0) {
-					this.BufferNode.classList.remove('lock');
-				}
-			});
-			this.BufferNode.addEventListener('scrollend', () => {
-				if (this.scrollendCount > 0) {
-					--this.scrollendCount;
-				} else if (this.scrollendCount == 0) {
-					if (Math.round(this.BufferNode.scrollTop) == this.BufferNode.scrollHeight - this.BufferNode.clientHeight) {
-						this.BufferNode.classList.add('lock');
-					} else {
-						this.BufferNode.classList.remove('lock');
-					}
-				}
 			});
 			this.ConsoleNode.append(this.BufferNode);
 			Object.defineProperty(this, 'ControlNode', {
@@ -252,18 +240,6 @@
 				enumerable: false
 			});
 			Object.defineProperty(this, 'counted', {
-				value: 0,
-				writable: true,
-				configurable: false,
-				enumerable: false
-			});
-			Object.defineProperty(this, 'scrollCount', {
-				value: 0,
-				writable: true,
-				configurable: false,
-				enumerable: false
-			});
-			Object.defineProperty(this, 'scrollendCount', {
 				value: 0,
 				writable: true,
 				configurable: false,
@@ -371,14 +347,12 @@
 			arguments.constrainedWithAndThrow(String);
 			content.split('\n').forEach((value, index) => {
 				if (this.LineNodes.length == 0 || index > 0) {
-					this.BufferNode.append(document.createElement('line'));
-					if (this.BufferNode.classList.contains('lock')) {
-						requestAnimationFrame(() => {
+					if (Math.round(this.BufferNode.scrollTop) == this.BufferNode.scrollHeight - this.BufferNode.clientHeight) {
+						send(() => {
 							this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
-							++this.scrollCount;
-							++this.scrollendCount;
-						});
+						}, 5);
 					}
+					this.BufferNode.append(document.createElement('line'));
 				}
 				if (value.removeSpace() != '') {
 					let colorStateChanged = () => {
@@ -391,6 +365,11 @@
 					if (this.LastLineNode.LastSpanNode.textContent == '' || colorStateChanged()) {
 						this.LastLineNode.LastSpanNode.setAttribute('foreground', this.ConsoleNode.getAttribute('foreground'));
 						this.LastLineNode.LastSpanNode.setAttribute('background', this.ConsoleNode.getAttribute('background'));
+					}
+					if (Math.round(this.BufferNode.scrollTop) == this.BufferNode.scrollHeight - this.BufferNode.clientHeight) {
+						send(() => {
+							this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
+						}, 5);
 					}
 					this.LastLineNode.LastSpanNode.textContent += value;
 				}
@@ -407,14 +386,12 @@
 			let background = this.ConsoleNode.getAttribute('background');
 			content.split('\n').forEach((value, index) => {
 				if (this.LineNodes.length == 0 || index > 0) {
-					this.BufferNode.append(document.createElement('line'));
-					if (this.BufferNode.classList.contains('lock')) {
-						requestAnimationFrame(() => {
+					if (Math.round(this.BufferNode.scrollTop) == this.BufferNode.scrollHeight - this.BufferNode.clientHeight) {
+						send(() => {
 							this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
-							++this.scrollCount;
-							++this.scrollendCount;
-						});
+						}, 5);
 					}
+					this.BufferNode.append(document.createElement('line'));
 				}
 				if (value.removeSpace() != '') {
 					value.split('\\').forEach((value, index) => {
@@ -440,6 +417,11 @@
 								SpanNode.setAttribute('foreground', foreground);
 								SpanNode.setAttribute('background', background);
 								this.LastLineNode.Self.append(SpanNode);
+							}
+							if (Math.round(this.BufferNode.scrollTop) == this.BufferNode.scrollHeight - this.BufferNode.clientHeight) {
+								send(() => {
+									this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
+								}, 5);
 							}
 							this.LastLineNode.LastSpanNode.textContent += value;
 						}
