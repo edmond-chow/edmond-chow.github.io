@@ -1,10 +1,8 @@
 ﻿#pragma once
-#include <csetjmp>
 #include <string>
 #include <stdexcept>
 namespace Seden
 {
-	void set_throw(jmp_buf* const stack, std::wstring* const type, std::wstring* const what);
 	class Sedenion
 	{
 	public:

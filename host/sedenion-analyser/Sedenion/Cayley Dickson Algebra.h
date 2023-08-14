@@ -1,5 +1,5 @@
 #include <algorithm>
-#include <numeric>
+#include <stdexcept>
 extern void throw_now(std::wstring&& type, std::wstring&& what);
 constexpr bool is_factor(std::size_t n) noexcept
 {

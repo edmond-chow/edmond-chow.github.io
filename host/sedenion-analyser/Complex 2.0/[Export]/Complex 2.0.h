@@ -1,10 +1,8 @@
 ﻿#pragma once
-#include <csetjmp>
 #include <string>
 #include <stdexcept>
 namespace Cmplx2
 {
-	void set_throw(jmp_buf* const stack, std::wstring* const type, std::wstring* const what);
 	namespace BaseType
 	{
 		enum struct index : std::int64_t
