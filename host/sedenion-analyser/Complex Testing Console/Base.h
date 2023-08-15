@@ -5,12 +5,18 @@
 #include <string>
 #include <stdexcept>
 #include <functional>
+#include <regex>
 extern thread_local jmp_buf stack_pointer;
 extern void throw_now(std::wstring&& type, std::wstring&& what);
 inline std::int64_t wtoi64_t(const wchar_t* str)
 {
+	if (str[0] == L'\0') { throw std::invalid_argument("The string cannot not be converted as an integer."); }
 	const wchar_t* number = str;
-	if (str[0] == L'-' || str[0] == L'+') { ++number; }
+	if (str[0] == L'-' || str[0] == L'+')
+	{
+		if (str[1] == L'\0') { throw std::invalid_argument("The string cannot not be converted as an integer."); }
+		++number;
+	}
 	std::size_t number_size = 0;
 	const wchar_t* number_end = number;
 	while (*number_end != L'\0')
@@ -55,9 +61,10 @@ inline std::int64_t wtoi64_t(const wchar_t* str)
 	}
 	return output;
 };
-inline std::int64_t stoi64_t(std::wstring str)
+inline std::int64_t stoi64_t(const std::wstring& str)
 {
-	return wtoi64_t(str.c_str());
+	std::wstring result = std::regex_replace(str, std::wregex(L" "), L"");
+	return wtoi64_t(result.c_str());
 };
 template <typename T>
 inline std::wstring to_wstring(T t) { return T::CType_String(t); };

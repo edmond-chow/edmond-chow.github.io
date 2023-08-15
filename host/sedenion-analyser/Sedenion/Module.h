@@ -8,7 +8,8 @@
 #include <functional>
 extern void throw_now(std::wstring&& type, std::wstring&& what);
 template <typename CharT, typename Traits, typename Allocator, typename RegexTraits, typename FuncT>
-std::basic_string<CharT, Traits, Allocator> regex_search_and_replace(const std::basic_string<CharT, Traits, Allocator>& String, const std::basic_regex<CharT, RegexTraits>& Regex, FuncT Function) {
+std::basic_string<CharT, Traits, Allocator> regex_search_and_replace(const std::basic_string<CharT, Traits, Allocator>& String, const std::basic_regex<CharT, RegexTraits>& Regex, FuncT Function)
+{
 	using StringT = std::basic_string<CharT, Traits, Allocator>;
 	StringT Input = String;
 	StringT Output{};
@@ -20,18 +21,15 @@ std::basic_string<CharT, Traits, Allocator> regex_search_and_replace(const std::
 		while (Cursor <= Input.size())
 		{
 			std::regex_constants::match_flag_type Type = std::regex_constants::match_default;
-			if (NotBol == true) {
-				Type = Type | std::regex_constants::match_not_bol;
-			}
-			if (Cursor > 0) {
-				Type = Type | std::regex_constants::match_not_eol;
-			}
+			if (NotBol == true) { Type = Type | std::regex_constants::match_not_bol; }
+			if (Cursor > 0) { Type = Type | std::regex_constants::match_not_eol; }
 			std::match_results<typename StringT::const_iterator> Match;
 			StringT SubInput = Input.substr(0, Input.size() - Cursor);
-			if (std::regex_search(SubInput, Match, Regex, Type)) {
-				StringT Result = Match.str();
-				Output.append(Match.prefix().str()).append(Function(Result));
-				if (Result.empty() == false) {
+			if (std::regex_search(SubInput, Match, Regex, Type))
+			{
+				Output.append(Match.prefix().str()).append(Function(std::cref(Match)));
+				if (Match.str().empty() == false)
+				{
 					Input = Match.suffix().str();
 					NotBol = true;
 					matched = true;
@@ -40,7 +38,8 @@ std::basic_string<CharT, Traits, Allocator> regex_search_and_replace(const std::
 			}
 			++Cursor;
 		}
-		if (matched == false) {
+		if (matched == false)
+		{
 			Output.append(Input.substr(0, 1));
 			Input = Input.substr(1);
 			NotBol = true;
@@ -52,7 +51,7 @@ inline std::wstring double_to_wstring(double Number)
 {
 	std::wstringstream TheString;
 	TheString << std::defaultfloat << std::setprecision(17) << Number;
-	return std::regex_replace(TheString.str(), std::wregex(L"e-0[1-9]"), L"e-");
+	return std::regex_replace(TheString.str(), std::wregex(L"e-0(?=[1-9])"), L"e-");
 };
 inline std::wstring ToString(std::size_t Size, const double* Numbers, const std::wstring* Terms)
 {
@@ -121,8 +120,8 @@ inline void SetForValue(const std::wstring& TheValue, std::size_t Size, double* 
 inline void ToNumbers(const std::wstring& Value, std::size_t Size, double* Numbers, const std::wstring* Terms)
 {
 	std::wstring TheValue = std::regex_replace(Value, std::wregex(L" "), L"");
-	TheValue = regex_search_and_replace(TheValue, std::wregex(GetInitTermRegexString(Size, Terms)), [](std::wstring Match) -> std::wstring {
-		return Match + L"1";
+	TheValue = regex_search_and_replace(TheValue, std::wregex(GetInitTermRegexString(Size, Terms)), [](const std::wsmatch& Match) -> std::wstring {
+		return Match.str() + L"1";
 	});
 	if (!TestForValid(TheValue, Size, Terms)) { throw_now(L"std::invalid_argument", L"The string is invalid."); }
 	if (TheValue.length() == 0) { throw_now(L"std::invalid_argument", L"The string is empty."); }
