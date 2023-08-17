@@ -2,10 +2,12 @@
 #include <csetjmp>
 #include <cstdint>
 #include <array>
+#include <iomanip>
 #include <string>
+#include <regex>
+#include <sstream>
 #include <stdexcept>
 #include <functional>
-#include <regex>
 extern thread_local jmp_buf stack_pointer;
 extern void throw_now(std::wstring&& type, std::wstring&& what);
 inline std::int64_t wtoi64_t(const wchar_t* str)
@@ -66,16 +68,22 @@ inline std::int64_t stoi64_t(const std::wstring& str)
 	std::wstring result = std::regex_replace(str, std::wregex(L" "), L"");
 	return wtoi64_t(result.c_str());
 };
+inline std::wstring double_to_wstring(double Number)
+{
+	std::wstringstream TheString;
+	TheString << std::defaultfloat << std::setprecision(17) << Number;
+	return std::regex_replace(TheString.str(), std::wregex(L"e-0(?=[1-9])"), L"e-");
+};
 template <typename T>
-inline std::wstring to_wstring(T t) { return T::CType_String(t); };
+inline std::wstring to_wstring(T o) { return T::CType_String(o); };
 template <>
-inline std::wstring to_wstring<double>(double t) { return std::to_wstring(t); };
+inline std::wstring to_wstring<double>(double o) { return double_to_wstring(o); };
 template <>
-inline std::wstring to_wstring<std::size_t>(std::size_t t) { return std::to_wstring(t); };
+inline std::wstring to_wstring<std::size_t>(std::size_t o) { return std::to_wstring(o); };
 template <>
-inline std::wstring to_wstring<std::int64_t>(std::int64_t t) { return std::to_wstring(t); };
+inline std::wstring to_wstring<std::int64_t>(std::int64_t o) { return std::to_wstring(o); };
 template <>
-inline std::wstring to_wstring<bool>(bool t) { return t ? L"true" : L"false"; };
+inline std::wstring to_wstring<bool>(bool o) { return o ? L"true" : L"false"; };
 namespace ComplexTestingConsole
 {
 	class Base final
