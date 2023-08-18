@@ -53,6 +53,40 @@ inline std::wstring double_to_wstring(double Number)
 	TheString << std::defaultfloat << std::setprecision(17) << Number;
 	return std::regex_replace(TheString.str(), std::wregex(L"e-0(?=[1-9])"), L"e-");
 };
+inline void CheckForRange(const std::wstring& Number, const std::wstring& Check, bool Sign)
+{
+	for (std::size_t i = 0; i < Number.size() < Check.size() ? Number.size() : Check.size(); ++i)
+	{
+		if (Sign)
+		{
+			if (Number[i] < Check[i]) { break; }
+			else if (Number[i] > Check[i]) { throw_now(L"std::out_of_range", L"The number is out of range which cannot be a vaild representation in double."); }
+		}
+		else
+		{
+			if (Number[i] > Check[i]) { break; }
+			else if (Number[i] < Check[i]) { throw_now(L"std::out_of_range", L"The number is out of range which cannot be a vaild representation in double."); }
+		}
+	}
+};
+inline void TestForRange(const std::wsmatch& Match)
+{
+	long long Exponent = 0;
+	if (!Match.str(4).empty()) { Exponent = std::stoll(Match.str(5) + Match.str(6)); }
+	Exponent += static_cast<long long>(Match.str(2).length()) - 1;
+	if (Exponent == 308)
+	{
+		CheckForRange(Match.str(2) + (Match.str(3).empty() ? L"" : Match.str(3).substr(1)), L"17976931348623157", true);
+	}
+	else if (Exponent == -324)
+	{
+		CheckForRange(Match.str(2) + (Match.str(3).empty() ? L"" : Match.str(3).substr(1)), L"49406564584124654", false);
+	}
+	else if (Exponent > 308 || Exponent < -324)
+	{
+		throw_now(L"std::out_of_range", L"The number is out of range which cannot be a vaild representation in double.");
+	}
+};
 template <std::size_t I = 0, std::size_t N> requires (I <= N)
 std::wstring ToString(std::wstringstream& TheString, const std::array<double, N>& Numbers, const std::array<std::wstring, N>& Terms)
 {
@@ -147,6 +181,7 @@ void SetForValue(const std::wstring& TheValue, const std::array<double*, N>& Num
 		std::wsmatch Match;
 		while (std::regex_search(TheString, Match, Regex))
 		{
+			TestForRange(Match);
 			Data += std::stod(Match.str());
 			TheString = Match.suffix().str();
 		}
