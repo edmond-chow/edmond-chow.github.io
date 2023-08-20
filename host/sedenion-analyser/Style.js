@@ -492,18 +492,30 @@
 	/* { event-dispatcher } */
 	let isLoaded = false;
 	let structuredTag = () => {
+		/* [iostream] */
 		Object.defineProperty(window, 'iostream', {
 			value: new Console(),
 			writable: false,
 			configurable: false
 		});
 		window.iostream.bindTo(document.body);
+		document.body.classList.add('no-text');
 		let scriptNode = document.createElement('script');
 		scriptNode.src = 'Sedenion.js';
 		scriptNode.defer = true;
 		document.head.append(scriptNode);
 	};
 	let formedStyle = () => {
+		/* .no-text */
+		Array.from(document.getElementsByClassName('no-text')).map((value) => {
+			return value.childNodes;
+		}).forEach((value) => {
+			value.forEach((value) => {
+				if (value.nodeName == '#text') {
+					value.textContent = '';
+				}
+			});
+		});
 	};
 	let delegate = () => {
 		if (document.readyState == 'complete') {
