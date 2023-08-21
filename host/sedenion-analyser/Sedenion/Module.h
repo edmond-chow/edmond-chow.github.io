@@ -71,16 +71,27 @@ inline void CheckForRange(const std::wstring& Number, const std::wstring& Check,
 };
 inline void TestForRange(const std::wsmatch& Match)
 {
-	long long Exponent = 0;
-	if (!Match.str(4).empty()) { Exponent = std::stoll(Match.str(5) + Match.str(6)); }
-	Exponent += static_cast<long long>(Match.str(2).length()) - 1;
+	int Exponent = 0;
+	std::wstring Exponential = Match.str(4);
+	if (!Exponential.empty())
+	{
+		std::wstring ExponentialSign = Match.str(5);
+		std::wstring ExponentialDigits = Match.str(6);
+		Exponent = std::stoi(ExponentialSign + ExponentialDigits);
+	}
+	std::wstring Integral = Match.str(2);
+	std::wstring Decimal = Match.str(3);
+	for (std::wstring::const_iterator ite = ++Integral.begin(); ite < Integral.end(); ++ite)
+	{
+		Exponent += 1;
+	}
 	if (Exponent == 308)
 	{
-		CheckForRange(Match.str(2) + (Match.str(3).empty() ? L"" : Match.str(3).substr(1)), L"17976931348623157", true);
+		CheckForRange(Integral + (Decimal.empty() ? L"" : Decimal.substr(1)), L"17976931348623157", true);
 	}
 	else if (Exponent == -324)
 	{
-		CheckForRange(Match.str(2) + (Match.str(3).empty() ? L"" : Match.str(3).substr(1)), L"49406564584124654", false);
+		CheckForRange(Integral + (Decimal.empty() ? L"" : Decimal.substr(1)), L"49406564584124654", false);
 	}
 	else if (Exponent > 308 || Exponent < -324)
 	{
