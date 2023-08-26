@@ -5,7 +5,7 @@
 #include "Cayley Dickson Algebra.h"
 inline std::size_t wtos_t(const wchar_t* str)
 {
-static const std::wstring limit = std::to_wstring(std::numeric_limits<std::size_t>::max());
+	static const std::wstring limit = std::to_wstring(std::numeric_limits<std::size_t>::max());
 	if (str[0] == L'\0' || str[0] == L'-') { throw std::invalid_argument("The string cannot not be converted as an integer."); }
 	const wchar_t* number = str;
 	if (str[0] == L'+')
