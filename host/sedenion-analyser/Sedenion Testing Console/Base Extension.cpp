@@ -8,7 +8,20 @@
 #include <cstdlib>
 #include <string>
 #include <sstream>
+#include <stdexcept>
 #include "Base.h"
+struct evaluate_t
+{
+private:
+	static const evaluate_t evaluate;
+	evaluate_t()
+	{
+		EM_ASM(
+			Module.onAbort = () => { Module.__Z12abort_unwindv(); };
+		);
+	};
+};
+const evaluate_t evaluate_t::evaluate{};
 struct evaluate_local
 {
 	std::jmp_buf stack_pointer;
@@ -19,10 +32,15 @@ void evaluate(void(*operate)(), void(*caught)(const std::exception& ex))
 {
 	evaluate_local* pushed_local_ptr = local_ptr;
 	evaluate_local local{{ 0 }, caught };
-	if (setjmp(local.stack_pointer) == 0)
+	auto jmp_return = setjmp(local.stack_pointer);
+	if (jmp_return == 0)
 	{
 		local_ptr = &local;
 		operate();
+	}
+	else if (jmp_return == -1)
+	{
+		local_ptr->caught(std::runtime_error("An unhandled exception has occurred."));
 	}
 	local_ptr = pushed_local_ptr;
 };
@@ -31,6 +49,10 @@ void throw_now(const std::exception& ex)
 	if (local_ptr == nullptr) { std::terminate(); }
 	local_ptr->caught(ex);
 	std::longjmp(local_ptr->stack_pointer, 1);
+};
+void __attribute__((used)) abort_unwind()
+{
+	std::longjmp(local_ptr->stack_pointer, -1);
 };
 namespace SedenConExt
 {
