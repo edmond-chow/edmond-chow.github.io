@@ -137,6 +137,49 @@ bool TestForValid(const std::wstring& Value, const std::array<std::wstring, N>& 
 {
 	return TestForValid(std::wstring(Value), Terms);
 };
+inline bool CheckForRange(const std::wstring& Number, const std::wstring& Check, bool Sign)
+{
+	for (std::size_t i = 0; i < Number.size() < Check.size() ? Number.size() : Check.size(); ++i)
+	{
+		if (Sign)
+		{
+			if (Number[i] < Check[i]) { break; }
+			else if (Number[i] > Check[i]) { return false; }
+		}
+		else
+		{
+			if (Number[i] > Check[i]) { break; }
+			else if (Number[i] < Check[i]) { return false; }
+		}
+	}
+	return true;
+};
+inline double CaseToDouble(const std::wsmatch& Match)
+{
+	int Exponent = 0;
+	std::wstring Exponential = Match.str(4);
+	if (!Exponential.empty())
+	{
+		std::wstring ExponentialSign = Match.str(5);
+		std::wstring ExponentialDigits = Match.str(6);
+		Exponent = std::stoi(ExponentialSign + ExponentialDigits);
+	}
+	std::wstring Integral = Match.str(2);
+	std::wstring Decimal = Match.str(3);
+	for (std::wstring::const_iterator ite = ++Integral.begin(); ite < Integral.end(); ++ite)
+	{
+		Exponent += 1;
+	}
+	if ((Exponent == 308 && CheckForRange(Integral + (Decimal.empty() ? L"" : Decimal.substr(1)), L"17976931348623157", true) == false) || Exponent > 308)
+	{
+		throw_now(std::out_of_range("The number is out of range which cannot be a vaild representation in double."));
+	}
+	else if ((Exponent == -324 && CheckForRange(Integral + (Decimal.empty() ? L"" : Decimal.substr(1)), L"49406564584124654", false) == false) || Exponent < -324)
+	{
+		return 0;
+	}
+	return std::stod(Match.str());
+};
 template <std::size_t I = 0, std::size_t N> requires (I <= N)
 void SetForValue(const std::wstring& TheValue, const std::array<double*, N>& Numbers, const std::array<std::wstring, N>& Terms)
 {
@@ -148,7 +191,7 @@ void SetForValue(const std::wstring& TheValue, const std::array<double*, N>& Num
 		std::wsmatch Match;
 		while (std::regex_search(TheString, Match, Regex))
 		{
-			Data += std::stod(Match.str());
+			Data += CaseToDouble(Match);
 			TheString = Match.suffix().str();
 		}
 		*std::get<I>(Numbers) = Data;
