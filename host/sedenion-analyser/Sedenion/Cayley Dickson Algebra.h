@@ -1,6 +1,6 @@
 #include <algorithm>
 #include <stdexcept>
-extern void throw_now(std::wstring&& type, std::wstring&& what);
+void throw_now(const std::exception& ex);
 constexpr bool is_factor(std::size_t n) noexcept
 {
 	if (n == 1) { return true; }
@@ -23,7 +23,7 @@ public:
 		if (!is_factor(size))
 		{
 			delete[] this->data;
-			throw_now(L"std::invalid_argument", L"The size must be a number which is 2 to the power of a natural number.");
+			throw_now(std::invalid_argument("The size must be a number which is 2 to the power of a natural number."));
 		}
 		std::copy(data, data + size, this->data);
 	};
@@ -33,7 +33,7 @@ public:
 		if (!is_factor(init.size()))
 		{
 			delete[] data;
-			throw_now(L"std::invalid_argument", L"The size must be a number which is 2 to the power of a natural number.");
+			throw_now(std::invalid_argument("The size must be a number which is 2 to the power of a natural number."));
 		}
 		std::copy(init.begin(), init.end(), data);
 	};

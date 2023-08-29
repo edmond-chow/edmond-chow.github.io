@@ -6,7 +6,8 @@
 #include <tuple>
 #include <array>
 #include <functional>
-extern void throw_now(std::wstring&& type, std::wstring&& what);
+#include <stdexcept>
+void throw_now(const std::exception& ex);
 template <typename CharT, typename Traits, typename Allocator, typename RegexTraits, typename FuncT>
 std::basic_string<CharT, Traits, Allocator> regex_search_and_replace(const std::basic_string<CharT, Traits, Allocator>& String, const std::basic_regex<CharT, RegexTraits>& Regex, FuncT Function)
 {
@@ -52,51 +53,6 @@ inline std::wstring double_to_wstring(double Number)
 	std::wstringstream TheString;
 	TheString << std::defaultfloat << std::setprecision(17) << Number;
 	return std::regex_replace(TheString.str(), std::wregex(L"e-0(?=[1-9])"), L"e-");
-};
-inline void CheckForRange(const std::wstring& Number, const std::wstring& Check, bool Sign)
-{
-	for (std::size_t i = 0; i < Number.size() < Check.size() ? Number.size() : Check.size(); ++i)
-	{
-		if (Sign)
-		{
-			if (Number[i] < Check[i]) { break; }
-			else if (Number[i] > Check[i]) { throw_now(L"std::out_of_range", L"The number is out of range which cannot be a vaild representation in double."); }
-		}
-		else
-		{
-			if (Number[i] > Check[i]) { break; }
-			else if (Number[i] < Check[i]) { throw_now(L"std::out_of_range", L"The number is out of range which cannot be a vaild representation in double."); }
-		}
-	}
-};
-inline void TestForRange(const std::wsmatch& Match)
-{
-	int Exponent = 0;
-	std::wstring Exponential = Match.str(4);
-	if (!Exponential.empty())
-	{
-		std::wstring ExponentialSign = Match.str(5);
-		std::wstring ExponentialDigits = Match.str(6);
-		Exponent = std::stoi(ExponentialSign + ExponentialDigits);
-	}
-	std::wstring Integral = Match.str(2);
-	std::wstring Decimal = Match.str(3);
-	for (std::wstring::const_iterator ite = ++Integral.begin(); ite < Integral.end(); ++ite)
-	{
-		Exponent += 1;
-	}
-	if (Exponent == 308)
-	{
-		CheckForRange(Integral + (Decimal.empty() ? L"" : Decimal.substr(1)), L"17976931348623157", true);
-	}
-	else if (Exponent == -324)
-	{
-		CheckForRange(Integral + (Decimal.empty() ? L"" : Decimal.substr(1)), L"49406564584124654", false);
-	}
-	else if (Exponent > 308 || Exponent < -324)
-	{
-		throw_now(L"std::out_of_range", L"The number is out of range which cannot be a vaild representation in double.");
-	}
 };
 template <std::size_t I = 0, std::size_t N> requires (I <= N)
 std::wstring ToString(std::wstringstream& TheString, const std::array<double, N>& Numbers, const std::array<std::wstring, N>& Terms)
@@ -192,7 +148,6 @@ void SetForValue(const std::wstring& TheValue, const std::array<double*, N>& Num
 		std::wsmatch Match;
 		while (std::regex_search(TheString, Match, Regex))
 		{
-			TestForRange(Match);
 			Data += std::stod(Match.str());
 			TheString = Match.suffix().str();
 		}
@@ -207,8 +162,8 @@ void ToNumbers(const std::wstring& Value, const std::array<double*, N>& Numbers,
 	TheValue = regex_search_and_replace(TheValue, std::wregex(GetInitTermRegexString(Terms)), [](const std::wsmatch& Match) -> std::wstring {
 		return Match.str() + L"1";
 	});
-	if (!TestForValid(TheValue, Terms)) { throw_now(L"std::invalid_argument", L"The string is invalid."); }
-	if (TheValue.length() == 0) { throw_now(L"std::invalid_argument", L"The string is empty."); }
+	if (!TestForValid(TheValue, Terms)) { throw_now(std::invalid_argument("The string is invalid.")); }
+	if (TheValue.length() == 0) { throw_now(std::invalid_argument("The string is empty.")); }
 	SetForValue(TheValue, Numbers, Terms);
 };
 template <typename Args, std::size_t... I> requires (std::tuple_size_v<Args> == 2 * sizeof...(I))
