@@ -133,7 +133,6 @@ namespace Mod
 			struct LatestCapturedLocal { std::wstring* Str; } LatestCaptured{ Captured.Str };
 			Captured.Str = &Str;
 			if (Str.empty()) { continue; }
-			using operate_t = void(*)();
 			operate_t operate = +[]() -> void {
 				const std::wstring& Str = *Captured.Str;
 				op(Str, L"=", operator ==);
@@ -180,7 +179,6 @@ namespace Mod
 				arctri(Str, L"arcsech", Complex::arcsech);
 				arctri(Str, L"arccoth", Complex::arccoth);
 			};
-			using caught_t = void(*)(const std::exception& ex);
 			caught_t caught = +[](const std::exception& ex) -> void { Base::Exception(ex); };
 			evaluate(operate, caught);
 			Captured.Str = LatestCaptured.Str;

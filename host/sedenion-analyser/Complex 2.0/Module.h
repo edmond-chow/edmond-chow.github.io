@@ -1,4 +1,5 @@
 #include <cmath>
+#include <cstdint>
 #include <iomanip>
 #include <string>
 #include <regex>
@@ -7,7 +8,65 @@
 #include <array>
 #include <functional>
 #include <stdexcept>
-void throw_now(const std::exception& ex);
+#include "../Evaluation/[Export]/Evaluation.h"
+inline std::int16_t wtoi16_t(const wchar_t* str)
+{
+	if (str[0] == L'\0') { throw_now(std::invalid_argument("The string cannot not be converted as an integer.")); }
+	const wchar_t* number = str;
+	if (str[0] == L'-' || str[0] == L'+')
+	{
+		if (str[1] == L'\0') { throw_now(std::invalid_argument("The string cannot not be converted as an integer.")); }
+		++number;
+	}
+	std::size_t number_size = 0;
+	const wchar_t* number_end = number;
+	while (*number_end != L'\0')
+	{
+		if (static_cast<std::uint16_t>(*number_end) < 48 || static_cast<std::uint16_t>(*number_end) > 57) { throw_now(std::invalid_argument("The string cannot not be converted as an integer.")); }
+		++number_end;
+		++number_size;
+	}
+	const wchar_t wcharsPlus[] = L"32767";
+	const wchar_t wcharsMinus[] = L"32768";
+	wchar_t digitsCheck[5]{ L'\0' };
+	if (number_size > 5)
+	{
+		throw_now(std::out_of_range("An integer is exceeded the limit."));
+	}
+	std::int16_t accumulate = 1;
+	std::int16_t output = 0;
+	for (std::size_t i = 0; i < number_size; ++i)
+	{
+		wchar_t wchar = number[number_size - i - 1];
+		digitsCheck[number_size - i - 1] = wchar;
+		std::uint16_t digit = static_cast<std::uint16_t>(wchar) - 48;
+		if (str[0] == L'-') { output -= digit * accumulate; }
+		else { output += digit * accumulate; }
+		accumulate = accumulate * 10;
+	}
+	if (number_size == 5)
+	{
+		for (std::size_t i = 0; i < 5; ++i)
+		{
+			if (str[0] == L'-')
+			{
+				if (digitsCheck[i] < wcharsMinus[i]) { break; }
+				else if (digitsCheck[i] > wcharsMinus[i]) { throw_now(std::out_of_range("An integer is exceeded the limit.")); }
+			}
+			else
+			{
+				if (digitsCheck[i] < wcharsPlus[i]) { break; }
+				else if (digitsCheck[i] > wcharsPlus[i]) { throw_now(std::out_of_range("An integer is exceeded the limit.")); }
+			}
+		}
+	}
+	return output;
+};
+inline std::int16_t stoi16_t(const std::wstring& str)
+{
+	std::wstring result = std::regex_replace(str, std::wregex(L" "), L"");
+	return wtoi16_t(result.c_str());
+};
 template <typename CharT, typename Traits, typename Allocator, typename RegexTraits, typename FuncT>
 std::basic_string<CharT, Traits, Allocator> regex_search_and_replace(const std::basic_string<CharT, Traits, Allocator>& String, const std::basic_regex<CharT, RegexTraits>& Regex, FuncT Function)
 {
@@ -156,13 +215,25 @@ inline bool CheckForRange(const std::wstring& Number, const std::wstring& Check,
 };
 inline double CaseToDouble(const std::wsmatch& Match)
 {
-	int Exponent = 0;
+	std::int16_t Exponent = 0;
 	std::wstring Exponential = Match.str(4);
 	if (!Exponential.empty())
 	{
 		std::wstring ExponentialSign = Match.str(5);
 		std::wstring ExponentialDigits = Match.str(6);
-		Exponent = std::stoi(ExponentialSign + ExponentialDigits);
+		static thread_local const struct References {
+			std::int16_t* Exponent;
+			std::wstring* ExponentialSign;
+			std::wstring* ExponentialDigits;
+		} References{ &Exponent, &ExponentialSign, &ExponentialDigits };
+		operate_t operate = +[]() -> void {
+			*References.Exponent = stoi16_t(*References.ExponentialSign + *References.ExponentialDigits);
+		};
+		caught_t caught = +[](const std::exception& ex) -> void {
+			if (typeid(ex) == typeid(std::out_of_range)) { throw_now(std::out_of_range("The number is out of range which cannot be a vaild representation in double.")); }
+			rethrow_current();
+		};
+		evaluate(operate, caught);
 	}
 	std::wstring Integral = Match.str(2);
 	std::wstring Decimal = Match.str(3);

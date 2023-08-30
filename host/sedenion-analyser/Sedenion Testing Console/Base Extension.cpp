@@ -10,50 +10,6 @@
 #include <sstream>
 #include <stdexcept>
 #include "Base.h"
-struct evaluate_t
-{
-private:
-	static const evaluate_t evaluate;
-	evaluate_t()
-	{
-		EM_ASM(
-			Module.onAbort = () => { Module.__Z12abort_unwindv(); };
-		);
-	};
-};
-const evaluate_t evaluate_t::evaluate{};
-struct evaluate_local
-{
-	std::jmp_buf stack_pointer;
-	void(*caught_delegate)(const std::exception& ex);
-};
-static thread_local evaluate_local* local_pointer{ nullptr };
-void evaluate(void(*operate)(), void(*caught)(const std::exception& ex))
-{
-	evaluate_local* pushed_local_pointer = local_pointer;
-	evaluate_local local{};
-	auto jump_yield = setjmp(local.stack_pointer);
-	if (jump_yield == 0)
-	{
-		local_pointer = &local;
-		operate();
-	}
-	else if (jump_yield == -1)
-	{
-		caught(std::runtime_error("An unhandled exception has occurred."));
-	}
-	local_pointer = pushed_local_pointer;
-};
-void throw_now(const std::exception& ex)
-{
-	if (local_pointer == nullptr) { std::terminate(); }
-	local_pointer->caught_delegate(ex);
-	std::longjmp(local_pointer->stack_pointer, 1);
-};
-void __attribute__((used)) abort_unwind()
-{
-	if (local_pointer != nullptr) { std::longjmp(local_pointer->stack_pointer, -1); }
-};
 namespace SedenConExt
 {
 	EM_ASYNC_JS(void, readWrapper, (), {

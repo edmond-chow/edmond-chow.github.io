@@ -1,6 +1,6 @@
 #include <algorithm>
 #include <stdexcept>
-void throw_now(const std::exception& ex);
+#include "../Evaluation/[Export]/Evaluation.h"
 constexpr bool is_factor(std::size_t n) noexcept
 {
 	if (n == 1) { return true; }

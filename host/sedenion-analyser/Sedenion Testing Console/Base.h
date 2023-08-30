@@ -10,8 +10,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <functional>
-void evaluate(void(*operate)(), void(*caught)(const std::exception& ex));
-void throw_now(const std::exception& ex);
+#include "../Evaluation/[Export]/Evaluation.h"
 inline std::int64_t wtoi64_t(const wchar_t* str)
 {
 	if (str[0] == L'\0') { throw_now(std::invalid_argument("The string cannot not be converted as an integer.")); }

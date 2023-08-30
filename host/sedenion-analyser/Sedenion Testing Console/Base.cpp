@@ -7,7 +7,7 @@
 #include "Module3.h"
 #include "SedenionMod.h"
 #include "Base Extension.h"
-void throw_now(const std::exception& ex);
+#include "../Evaluation/[Export]/Evaluation.h"
 using namespace SedenConExt;
 namespace SedenionTestingConsole
 {

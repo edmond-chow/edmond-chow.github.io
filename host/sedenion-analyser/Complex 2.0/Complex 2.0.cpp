@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include "Module.h"
 #include "Cayley Dickson Algebra.h"
+#include "../Evaluation/[Export]/Evaluation.h"
 #pragma pack(push)
 #pragma push_macro("CALL")
 #pragma push_macro("CMPLX2_INTERFACE")
@@ -17,7 +18,6 @@
 #define CMPLX2_INTERFACE
 #define CMPLX2_FUNC_CALL
 #define CMPLX2_FUNC_INSTANCE_CALL
-void throw_now(const std::exception& ex);
 namespace Cmplx2
 {
 	namespace BaseType

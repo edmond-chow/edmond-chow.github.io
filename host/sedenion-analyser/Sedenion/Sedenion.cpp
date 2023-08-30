@@ -1,9 +1,10 @@
 ﻿#include <cmath>
 #include <numbers>
-#include <limits>
 #include <stdexcept>
+#include <limits>
 #include "Module.h"
 #include "Cayley Dickson Algebra.h"
+#include "../Evaluation/[Export]/Evaluation.h"
 #pragma pack(push)
 #pragma push_macro("CALL")
 #pragma push_macro("SEDEN_INTERFACE")
@@ -18,7 +19,6 @@
 #define SEDEN_INTERFACE
 #define SEDEN_FUNC_CALL
 #define SEDEN_FUNC_INSTANCE_CALL
-void throw_now(const std::exception& ex);
 inline std::size_t wtos_t(const wchar_t* str)
 {
 	static const std::wstring limit = std::to_wstring(std::numeric_limits<std::size_t>::max());
