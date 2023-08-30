@@ -25,34 +25,34 @@ const evaluate_t evaluate_t::evaluate{};
 struct evaluate_local
 {
 	std::jmp_buf stack_pointer;
-	void(*caught)(const std::exception& ex);
+	void(*caught_delegate)(const std::exception& ex);
 };
-static thread_local evaluate_local* local_ptr{ nullptr };
+static thread_local evaluate_local* local_pointer{ nullptr };
 void evaluate(void(*operate)(), void(*caught)(const std::exception& ex))
 {
-	evaluate_local* pushed_local_ptr = local_ptr;
-	evaluate_local local{{ 0 }, caught };
-	auto jmp_return = setjmp(local.stack_pointer);
-	if (jmp_return == 0)
+	evaluate_local* pushed_local_pointer = local_pointer;
+	evaluate_local local{};
+	auto jump_yield = setjmp(local.stack_pointer);
+	if (jump_yield == 0)
 	{
-		local_ptr = &local;
+		local_pointer = &local;
 		operate();
 	}
-	else if (jmp_return == -1)
+	else if (jump_yield == -1)
 	{
-		local_ptr->caught(std::runtime_error("An unhandled exception has occurred."));
+		caught(std::runtime_error("An unhandled exception has occurred."));
 	}
-	local_ptr = pushed_local_ptr;
+	local_pointer = pushed_local_pointer;
 };
 void throw_now(const std::exception& ex)
 {
-	if (local_ptr == nullptr) { std::terminate(); }
-	local_ptr->caught(ex);
-	std::longjmp(local_ptr->stack_pointer, 1);
+	if (local_pointer == nullptr) { std::terminate(); }
+	local_pointer->caught_delegate(ex);
+	std::longjmp(local_pointer->stack_pointer, 1);
 };
 void __attribute__((used)) abort_unwind()
 {
-	std::longjmp(local_ptr->stack_pointer, -1);
+	if (local_pointer != nullptr) { std::longjmp(local_pointer->stack_pointer, -1); }
 };
 namespace SedenConExt
 {
@@ -92,7 +92,7 @@ namespace SedenConExt
 		{
 			wcout_count = 0;
 			std::string call = "iostream.writeWithColorCodes('" + toMbsString(wcout.str()) + "')";
-			emscripten_run_script(call.c_str()); 
+			emscripten_run_script(call.c_str());
 			wcout.str(L"");
 			suspendWrapper();
 		};
@@ -213,23 +213,29 @@ namespace SedenConExt
 		dom::print(dom::wcout);
 		pressAnyKeyWrapper();
 	};
+	struct initiator_t
+	{
+	private:
+		static const initiator_t initiator;
+		initiator_t()
+		{
+			ForegroundColor = toConsoleColor(emscripten_run_script_string("iostream.getForegroundColor()"));
+			BackgroundColor = toConsoleColor(emscripten_run_script_string("iostream.getBackgroundColor()"));
+			Title = toWcsString(emscripten_run_script_string("getTitle()"));
+		};
+	};
+	const initiator_t initiator_t::initiator{};
 }
+EM_ASYNC_JS(void, operateExitWrapper, (), {
+	await iostream.operateExit(0);
+});
 int main()
 {
-	using namespace SedenionTestingConsole;
-	using namespace SedenConExt;
-	ForegroundColor = toConsoleColor(emscripten_run_script_string("iostream.getForegroundColor()"));
-	BackgroundColor = toConsoleColor(emscripten_run_script_string("iostream.getBackgroundColor()"));
-	Title = toWcsString(emscripten_run_script_string("getTitle()"));
 	while (true)
 	{
-		Base::Main();
-		dom::wcout << dom::endl;
-		dom::wcout << L"   The program ended with a return code EXIT_SUCCESS successfully." << dom::endl;
-		dom::wcout << dom::endl;
-		dom::wcout << L"   >> Press any key to continue with restart the program . . .   " << dom::endl;
-		pressAnyKey();
-		Base::IsSwitchTo(L"[Octonion Testing Console]");
+		SedenionTestingConsole::Base::Main();
+		SedenionTestingConsole::Base::__init();
+		operateExitWrapper();
 	}
 	return EXIT_SUCCESS;
 };

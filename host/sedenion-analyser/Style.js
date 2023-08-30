@@ -132,7 +132,7 @@
 				writable: false,
 				configurable: false
 			});
-			this.ConsoleNode.setAttribute('foreground', 'dark-gray');
+			this.ConsoleNode.setAttribute('foreground', 'gray');
 			this.ConsoleNode.setAttribute('background', 'default');
 			this.ConsoleNode.setAttribute('scheme', 'campbell');
 			Object.defineProperty(this, 'BufferNode', {
@@ -474,6 +474,15 @@
 		function resolveReaded() {
 			arguments.constrainedWithAndThrow();
 			return this.ConsoleNode.getAttribute('read');
+		},
+		async function operateExit(code) {
+			this.ConsoleNode.setAttribute('foreground', 'gray');
+			this.ConsoleNode.setAttribute('background', 'default');
+			this.writeLine("");
+			this.writeLine("   The program ended with a return code " + code.toString() + ".");
+			this.writeLine("");
+			this.writeLine("   >> Press any key to continue with restart the program . . .   ");
+			await this.pressAnyKey();
 		},
 		function bindTo(node) {
 			arguments.constrainedWithAndThrow(Element);

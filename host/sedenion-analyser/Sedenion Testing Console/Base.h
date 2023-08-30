@@ -96,7 +96,10 @@ namespace SedenionTestingConsole
 		///
 		/// Base
 		///
+		static constexpr const std::size_t DefaultIndex = 3;
+		static std::size_t Index;
 	public:
+		static inline void __init() { Index = DefaultIndex; };
 		static std::wstring GetTitle();
 		static std::wstring GetStartupLine();
 		static bool IsSwitchTo(const std::wstring& Str);
