@@ -1,6 +1,7 @@
 ﻿#pragma once
 #ifndef SEDEN_UNIT_TEST
 #define SEDEN_UNIT_TEST
+#include <Evaluation.h>
 #include <cstdint>
 #include <csetjmp>
 #include <array>
@@ -10,7 +11,6 @@
 #include <sstream>
 #include <stdexcept>
 #include <functional>
-#include "../Evaluation/[Export]/Evaluation.h"
 inline std::int64_t wtoi64_t(const wchar_t* str)
 {
 	if (str[0] == L'\0') { throw_now(std::invalid_argument("The string cannot not be converted as an integer.")); }
@@ -95,17 +95,14 @@ namespace SedenionTestingConsole
 		///
 		/// Base
 		///
-		static constexpr const std::size_t DefaultIndex = 3;
-		static std::size_t Index;
 	public:
-		static inline void __init() { Index = DefaultIndex; };
 		static std::wstring GetTitle();
 		static std::wstring GetStartupLine();
 		static bool IsSwitchTo(const std::wstring& Str);
 		///
 		/// Main Thread
 		///
-		static void Main();
+		static void Main(void (**OnExit)());
 		///
 		/// Console Line Materials
 		///

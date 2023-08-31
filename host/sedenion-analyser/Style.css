@@ -464,6 +464,7 @@
 		display: inline-block;
 		padding: 8px;
 		box-sizing: border-box;
+		transition-duration: 0.4s;
 		background-color: inherit;
 		color: rgb(192, 192, 192);
 		outline: none;

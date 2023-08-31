@@ -478,10 +478,10 @@
 		async function operateExit(code) {
 			this.ConsoleNode.setAttribute('foreground', 'gray');
 			this.ConsoleNode.setAttribute('background', 'default');
-			this.writeLine("");
-			this.writeLine("   The program ended with a return code " + code.toString() + ".");
-			this.writeLine("");
-			this.writeLine("      >> Press any key to continue with restart the program . . .   ");
+			this.writeLine('');
+			this.writeLine('   The program ended with a return code ' + code.toString() + '.');
+			this.writeLine('');
+			this.writeLine('      >> Press any key to continue with restart the program . . .   ');
 			await this.pressAnyKey();
 		},
 		function bindTo(node) {

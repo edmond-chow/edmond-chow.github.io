@@ -1,5 +1,5 @@
 ﻿#include "Base.h"
-#include "../Complex/export/Complex.h"
+#include "Complex.h"
 using namespace SedenionTestingConsole;
 using namespace Cmplx;
 using namespace Cmplx::MainType;

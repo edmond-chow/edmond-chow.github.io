@@ -1,5 +1,6 @@
-﻿#include "Base.h"
-#include "../Sedenion/export/Sedenion.h"
+﻿#include <Evaluation.h>
+#include "Base.h"
+#include "Sedenion.h"
 using namespace SedenionTestingConsole;
 using namespace Seden;
 inline std::int16_t wtoi16_t(const wchar_t* str)

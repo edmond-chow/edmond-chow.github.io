@@ -61,7 +61,7 @@ namespace SedenConExt
 		wcout_t& endl(wcout_t& wcout)
 		{
 			wcout << L"\\n";
-			if (++wcout_count > 5) { print(wcout); }
+			if (++wcout_count >= 0xffff) { print(wcout); }
 			return wcout;
 		};
 		template <typename T>
@@ -185,17 +185,14 @@ namespace SedenConExt
 EM_ASYNC_JS(void, operateExitWrapper, (), {
 	await iostream.operateExit(0);
 });
-void operateExitAndRestart()
-{
-	operateExitWrapper();
-	SedenionTestingConsole::Base::__init();
-};
 int main()
 {
 	while (true)
 	{
-		SedenionTestingConsole::Base::Main();
-		operateExitAndRestart();
+		void (*OnExit)() = nullptr;
+		SedenionTestingConsole::Base::Main(&OnExit);
+		operateExitWrapper();
+		OnExit();
 	}
 	return EXIT_SUCCESS;
 };

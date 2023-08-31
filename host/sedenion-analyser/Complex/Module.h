@@ -1,3 +1,4 @@
+#include <Evaluation.h>
 #include <cmath>
 #include <cstdint>
 #include <iomanip>
@@ -8,7 +9,6 @@
 #include <array>
 #include <functional>
 #include <stdexcept>
-#include "../Evaluation/[Export]/Evaluation.h"
 inline std::int16_t wtoi16_t(const wchar_t* str)
 {
 	if (str[0] == L'\0') { throw_now(std::invalid_argument("The string cannot not be converted as an integer.")); }

@@ -1,4 +1,5 @@
-﻿#include <csetjmp>
+﻿#include <Evaluation.h>
+#include <csetjmp>
 #include <string>
 #include <iostream>
 #include <stdexcept>
@@ -7,7 +8,6 @@
 #include "Module3.h"
 #include "SedenionMod.h"
 #include "Base Extension.h"
-#include "../Evaluation/[Export]/Evaluation.h"
 using namespace SedenConExt;
 namespace SedenionTestingConsole
 {
@@ -30,7 +30,7 @@ namespace SedenionTestingConsole
 		///
 		/// Main Thread
 		///
-		static void Main();
+		static void Main(void (**OnExit)());
 		///
 		/// Console Line Materials
 		///
@@ -80,8 +80,9 @@ namespace SedenionTestingConsole
 	///
 	/// Main Thread
 	///
-	void Base::Main()
+	void Base::Main(void (**OnExit)())
 	{
+		*OnExit = +[]() -> void { Index = DefaultIndex; };
 		while (true)
 		{
 			switch (Index)

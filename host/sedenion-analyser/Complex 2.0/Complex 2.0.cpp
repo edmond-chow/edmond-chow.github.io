@@ -1,9 +1,9 @@
-﻿#include <cmath>
+﻿#include <Evaluation.h>
+#include <cmath>
 #include <numbers>
 #include <stdexcept>
 #include "Module.h"
 #include "Cayley Dickson Algebra.h"
-#include "../Evaluation/[Export]/Evaluation.h"
 #pragma pack(push)
 #pragma push_macro("CALL")
 #pragma push_macro("CMPLX2_INTERFACE")
