@@ -185,13 +185,17 @@ namespace SedenConExt
 EM_ASYNC_JS(void, operateExitWrapper, (), {
 	await iostream.operateExit(0);
 });
+void operateExitAndRestart()
+{
+	operateExitWrapper();
+	SedenionTestingConsole::Base::__init();
+};
 int main()
 {
 	while (true)
 	{
 		SedenionTestingConsole::Base::Main();
-		SedenionTestingConsole::Base::__init();
-		operateExitWrapper();
+		operateExitAndRestart();
 	}
 	return EXIT_SUCCESS;
 };
