@@ -61,7 +61,7 @@ namespace SedenConExt
 		wcout_t& endl(wcout_t& wcout)
 		{
 			wcout << L"\\n";
-			if (++wcout_count > 100) { print(wcout); }
+			if (++wcout_count > 5) { print(wcout); }
 			return wcout;
 		};
 		template <typename T>
