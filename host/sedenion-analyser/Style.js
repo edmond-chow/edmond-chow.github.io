@@ -472,11 +472,7 @@
 		async function registerReaded(line) {
 			arguments.constrainedWithAndThrow(String);
 			await this.writeLine(line);
-			this.ConsoleNode.setAttribute('read', line);
-		},
-		function resolveReaded() {
-			arguments.constrainedWithAndThrow();
-			return this.ConsoleNode.getAttribute('read');
+			return line;
 		},
 		async function operateExit(code) {
 			this.ConsoleNode.setAttribute('foreground', 'gray');
@@ -494,13 +490,42 @@
 	].bindTo(Console.prototype);
 	/* { functionality } */
 	[
+		function getUTF8String(jsString) {
+			arguments.constrainedWithAndThrow(String);
+			let myScope = getUTF8String;
+			let stringObject = jsString;
+			let stringLength = lengthBytesUTF8(stringObject) + 1;
+			if (!myScope.bufferSize || myScope.bufferSize < stringLength) {
+				if (myScope.bufferSize) {
+					_free(myScope.bufferData);
+				}
+				myScope.bufferData = _malloc(stringLength);
+				myScope.bufferSize = stringLength;
+			}
+			stringToUTF8(stringObject, myScope.bufferData, myScope.bufferSize);
+			return myScope.bufferData;
+		},
 		function getTitle() {
+			arguments.constrainedWithAndThrow();
 			return document.title;
 		},
 		function setTitle(title) {
+			arguments.constrainedWithAndThrow(String);
 			document.title = title;
 		}
 	].bindTo(window);
+	Object.defineProperty(getUTF8String, 'bufferData', {
+		value: 0,
+		writable: true,
+		configurable: false,
+		enumerable: false
+	});
+	Object.defineProperty(getUTF8String, 'bufferSize', {
+		value: 0,
+		writable: true,
+		configurable: false,
+		enumerable: false
+	});
 	/* { event-dispatcher } */
 	let isLoaded = false;
 	let structuredTag = () => {

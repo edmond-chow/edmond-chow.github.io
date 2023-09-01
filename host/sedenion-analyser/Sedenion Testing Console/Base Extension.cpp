@@ -4,7 +4,6 @@
 /*               */
 /* ============= */
 #include <emscripten.h>
-#include <emscripten/bind.h>
 #include <cstdlib>
 #include <string>
 #include <sstream>
@@ -12,14 +11,26 @@
 #include "Base.h"
 namespace SedenConExt
 {
-	EM_ASYNC_JS(void, readWrapper, (), {
-		await iostream.registerReaded(await iostream.read());
+	EM_ASYNC_JS(const char*, readWrapper, (), {
+		return getUTF8String(await iostream.registerReaded(await iostream.read()));
+	});
+	EM_JS(const char*, clearWrapper, (), {
+		iostream.clear();
 	});
 	EM_ASYNC_JS(void, pressAnyKeyWrapper, (), {
 		await iostream.pressAnyKey();
 	});
 	EM_ASYNC_JS(void, writeWithColorCodesWrapper, (const char* str), {
 		await iostream.writeWithColorCodes(UTF8ToString(str));
+	});
+	EM_JS(const char*, getInitForegroundColorWrapper, (), {
+		return getUTF8String(iostream.getForegroundColor());
+	});
+	EM_JS(const char*, getInitBackgroundColorWrapper, (), {
+		return getUTF8String(iostream.getBackgroundColor());
+	});
+	EM_JS(const char*, getInitTitleWrapper, (), {
+		return getUTF8String(getTitle());
 	});
 	inline std::string toMbsString(const std::wstring& string)
 	{
@@ -54,8 +65,7 @@ namespace SedenConExt
 		void getline(wcin_t&, std::wstring& line)
 		{
 			print(wcout);
-			readWrapper();
-			line = toWcsString(emscripten_run_script_string("iostream.resolveReaded()"));
+			line = toWcsString(readWrapper());
 		};
 		wcout_t& endl(wcout_t& wcout)
 		{
@@ -161,7 +171,7 @@ namespace SedenConExt
 	void clear()
 	{
 		dom::print(dom::wcout);
-		emscripten_run_script("iostream.clear()");
+		clearWrapper();
 	};
 	void pressAnyKey()
 	{
@@ -174,9 +184,9 @@ namespace SedenConExt
 		static const initiator_t initiator;
 		initiator_t()
 		{
-			ForegroundColor = toConsoleColor(emscripten_run_script_string("iostream.getForegroundColor()"));
-			BackgroundColor = toConsoleColor(emscripten_run_script_string("iostream.getBackgroundColor()"));
-			Title = toWcsString(emscripten_run_script_string("getTitle()"));
+			ForegroundColor = toConsoleColor(getInitForegroundColorWrapper());
+			BackgroundColor = toConsoleColor(getInitBackgroundColorWrapper());
+			Title = toWcsString(getInitTitleWrapper());
 		};
 	};
 	const initiator_t initiator_t::initiator{};

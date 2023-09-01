@@ -1,5 +1,4 @@
 ﻿#include <emscripten.h>
-#include <emscripten/bind.h>
 #include <csetjmp>
 #include <stdexcept>
 struct evaluate_t
