@@ -343,10 +343,11 @@
 			arguments.constrainedWithAndThrow(String);
 			return this.ConsoleNode.setAttribute('background', color);
 		},
-		function write(content) {
+		async function write(content) {
 			arguments.constrainedWithAndThrow(String);
-			content.split('\n').forEach((value, index) => {
-				if (this.LineNodes.length == 0 || index > 0) {
+			let lines = content.split('\n');
+			for (let i = 0; i < lines.length; i++) {
+				if (this.LineNodes.length == 0 || i > 0) {
 					if (Math.round(this.BufferNode.scrollTop) == this.BufferNode.scrollHeight - this.BufferNode.clientHeight) {
 						send(() => {
 							this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
@@ -354,7 +355,7 @@
 					}
 					this.BufferNode.append(document.createElement('line'));
 				}
-				if (value.removeSpace() != '') {
+				if (lines[i].removeSpace() != '') {
 					let colorStateChanged = () => {
 						return this.LastLineNode.LastSpanNode.getAttribute('foreground') != this.ConsoleNode.getAttribute('foreground') || this.LastLineNode.LastSpanNode.getAttribute('background') != this.ConsoleNode.getAttribute('background');
 					};
@@ -371,21 +372,22 @@
 							this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
 						}, 5);
 					}
-					this.LastLineNode.LastSpanNode.textContent += value;
+					this.LastLineNode.LastSpanNode.textContent += lines[i];
 				}
-			});
+				await defer(1);
+			}
 		},
-		function writeLine(content) {
+		async function writeLine(content) {
 			arguments.constrainedWithAndThrow(String);
-			this.write(content);
-			this.write('\n');
+			await this.write(content + '\n');
 		},
-		function writeWithColorCodes(content) {
+		async function writeWithColorCodes(content) {
 			arguments.constrainedWithAndThrow(String);
 			let foreground = this.ConsoleNode.getAttribute('foreground');
 			let background = this.ConsoleNode.getAttribute('background');
-			content.split('\n').forEach((value, index) => {
-				if (this.LineNodes.length == 0 || index > 0) {
+			let lines = content.split('\n');
+			for (let i = 0; i < lines.length; i++) {
+				if (this.LineNodes.length == 0 || i > 0) {
 					if (Math.round(this.BufferNode.scrollTop) == this.BufferNode.scrollHeight - this.BufferNode.clientHeight) {
 						send(() => {
 							this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
@@ -393,8 +395,8 @@
 					}
 					this.BufferNode.append(document.createElement('line'));
 				}
-				if (value.removeSpace() != '') {
-					value.split('\\').forEach((value, index) => {
+				if (lines[i].removeSpace() != '') {
+					lines[i].split('\\').forEach((value, index) => {
 						if (index % 2 == 1) {
 							if (value.substring(0, 11) == 'foreground:') {
 								foreground = value.substring(11, value.length);
@@ -427,7 +429,8 @@
 						}
 					});
 				}
-			});
+				await defer(1);
+			}
 			this.ConsoleNode.setAttribute('foreground', foreground);
 			this.ConsoleNode.setAttribute('background', background);
 		},
@@ -466,9 +469,9 @@
 				await defer(5);
 			}
 		},
-		function registerReaded(line) {
+		async function registerReaded(line) {
 			arguments.constrainedWithAndThrow(String);
-			this.writeLine(line);
+			await this.writeLine(line);
 			this.ConsoleNode.setAttribute('read', line);
 		},
 		function resolveReaded() {
@@ -478,10 +481,10 @@
 		async function operateExit(code) {
 			this.ConsoleNode.setAttribute('foreground', 'gray');
 			this.ConsoleNode.setAttribute('background', 'default');
-			this.writeLine('');
-			this.writeLine('   The program ended with a return code ' + code.toString() + '.');
-			this.writeLine('');
-			this.writeLine('      >> Press any key to continue with restart the program . . .   ');
+			await this.writeLine('');
+			await this.writeLine('   The program ended with a return code ' + code.toString() + '.');
+			await this.writeLine('');
+			await this.writeLine('      >> Press any key to continue with restart the program . . .   ');
 			await this.pressAnyKey();
 		},
 		function bindTo(node) {

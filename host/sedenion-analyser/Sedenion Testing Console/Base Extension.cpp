@@ -13,13 +13,13 @@
 namespace SedenConExt
 {
 	EM_ASYNC_JS(void, readWrapper, (), {
-		iostream.registerReaded(await iostream.read());
+		await iostream.registerReaded(await iostream.read());
 	});
 	EM_ASYNC_JS(void, pressAnyKeyWrapper, (), {
 		await iostream.pressAnyKey();
 	});
-	EM_ASYNC_JS(void, suspendWrapper, (), {
-		await defer(50);
+	EM_ASYNC_JS(void, writeWithColorCodesWrapper, (const char* str), {
+		await iostream.writeWithColorCodes(UTF8ToString(str));
 	});
 	inline std::string toMbsString(const std::wstring& string)
 	{
@@ -47,10 +47,9 @@ namespace SedenConExt
 		inline void print(wcout_t& wcout)
 		{
 			wcout_count = 0;
-			std::string call = "iostream.writeWithColorCodes('" + toMbsString(wcout.str()) + "')";
-			emscripten_run_script(call.c_str());
+			std::string call = toMbsString(wcout.str());
+			writeWithColorCodesWrapper(call.c_str());
 			wcout.str(L"");
-			suspendWrapper();
 		};
 		void getline(wcin_t&, std::wstring& line)
 		{
@@ -60,7 +59,7 @@ namespace SedenConExt
 		};
 		wcout_t& endl(wcout_t& wcout)
 		{
-			wcout << L"\\n";
+			wcout << L"\n";
 			if (++wcout_count >= 0xffff) { print(wcout); }
 			return wcout;
 		};
@@ -147,17 +146,17 @@ namespace SedenConExt
 	void setForegroundColor(ConsoleColor color)
 	{
 		ForegroundColor = color;
-		dom::wcout << L"\\\\foreground:" << toStringLiteral(color) << L"\\\\";
+		dom::wcout << L"\\foreground:" << toStringLiteral(color) << L"\\";
 	};
 	void setBackgroundColor(ConsoleColor color)
 	{
 		BackgroundColor = color;
-		dom::wcout << L"\\\\background:" << toStringLiteral(color) << L"\\\\";
+		dom::wcout << L"\\background:" << toStringLiteral(color) << L"\\";
 	};
 	void setTitle(const std::wstring& title)
 	{
 		Title = title;
-		dom::wcout << L"\\\\title:" << title << L"\\\\";
+		dom::wcout << L"\\title:" << title << L"\\";
 	};
 	void clear()
 	{
