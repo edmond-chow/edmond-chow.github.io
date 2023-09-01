@@ -30,7 +30,7 @@ namespace SedenionTestingConsole
 		///
 		/// Main Thread
 		///
-		static void Main(void (**OnExit)());
+		static void Main();
 		///
 		/// Console Line Materials
 		///
@@ -80,14 +80,14 @@ namespace SedenionTestingConsole
 	///
 	/// Main Thread
 	///
-	void Base::Main(void (**OnExit)())
+	void Base::Main()
 	{
-		*OnExit = +[]() -> void { Index = DefaultIndex; };
 		while (true)
 		{
 			switch (Index)
 			{
 			case 0:
+				Index = DefaultIndex;
 				clear();
 				return;
 			case 1:

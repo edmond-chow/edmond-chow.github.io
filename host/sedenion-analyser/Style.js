@@ -26,6 +26,14 @@
 			}
 		].bindTo(Function.prototype);
 		[
+			async function forEachAsync(delegate) {
+				for (let i = 0; i < this.length; i++) {
+					delegate.call(null, this[i], i, this);
+					await defer(1);
+				}
+			}
+		].bindTo(Array.prototype);
+		[
 			function isNullable(container) {
 				return container instanceof Nullable;
 			},
@@ -345,9 +353,8 @@
 		},
 		async function write(content) {
 			arguments.constrainedWithAndThrow(String);
-			let lines = content.split('\n');
-			for (let i = 0; i < lines.length; i++) {
-				if (this.LineNodes.length == 0 || i > 0) {
+			await content.split('\n').forEachAsync((value, index) => {
+				if (this.LineNodes.length == 0 || index > 0) {
 					if (Math.round(this.BufferNode.scrollTop) == this.BufferNode.scrollHeight - this.BufferNode.clientHeight) {
 						send(() => {
 							this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
@@ -355,7 +362,7 @@
 					}
 					this.BufferNode.append(document.createElement('line'));
 				}
-				if (lines[i].removeSpace() != '') {
+				if (value.removeSpace() != '') {
 					let colorStateChanged = () => {
 						return this.LastLineNode.LastSpanNode.getAttribute('foreground') != this.ConsoleNode.getAttribute('foreground') || this.LastLineNode.LastSpanNode.getAttribute('background') != this.ConsoleNode.getAttribute('background');
 					};
@@ -372,10 +379,9 @@
 							this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
 						}, 5);
 					}
-					this.LastLineNode.LastSpanNode.textContent += lines[i];
+					this.LastLineNode.LastSpanNode.textContent += value;
 				}
-				await defer(1);
-			}
+			});
 		},
 		async function writeLine(content) {
 			arguments.constrainedWithAndThrow(String);
@@ -385,9 +391,8 @@
 			arguments.constrainedWithAndThrow(String);
 			let foreground = this.ConsoleNode.getAttribute('foreground');
 			let background = this.ConsoleNode.getAttribute('background');
-			let lines = content.split('\n');
-			for (let i = 0; i < lines.length; i++) {
-				if (this.LineNodes.length == 0 || i > 0) {
+			await content.split('\n').forEachAsync((value, index) => {
+				if (this.LineNodes.length == 0 || index > 0) {
 					if (Math.round(this.BufferNode.scrollTop) == this.BufferNode.scrollHeight - this.BufferNode.clientHeight) {
 						send(() => {
 							this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
@@ -395,8 +400,8 @@
 					}
 					this.BufferNode.append(document.createElement('line'));
 				}
-				if (lines[i].removeSpace() != '') {
-					lines[i].split('\\').forEach((value, index) => {
+				if (value.removeSpace() != '') {
+					value.split('\\').forEach((value, index) => {
 						if (index % 2 == 1) {
 							if (value.substring(0, 11) == 'foreground:') {
 								foreground = value.substring(11, value.length);
@@ -429,8 +434,7 @@
 						}
 					});
 				}
-				await defer(1);
-			}
+			});
 			this.ConsoleNode.setAttribute('foreground', foreground);
 			this.ConsoleNode.setAttribute('background', background);
 		},
@@ -454,11 +458,10 @@
 			arguments.constrainedWithAndThrow(String);
 			this.istream.push(content);
 		},
-		function clear() {
+		async function clear() {
 			arguments.constrainedWithAndThrow();
-			this.LineNodes.forEach(async (value) => {
+			await this.LineNodes.forEachAsync((value) => {
 				value.Self.remove();
-				await defer(5);
 			});
 		},
 		async function pressAnyKey() {

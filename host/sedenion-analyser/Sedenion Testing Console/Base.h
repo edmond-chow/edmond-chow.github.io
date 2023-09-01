@@ -102,7 +102,7 @@ namespace SedenionTestingConsole
 		///
 		/// Main Thread
 		///
-		static void Main(void (**OnExit)());
+		static void Main();
 		///
 		/// Console Line Materials
 		///

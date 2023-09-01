@@ -14,8 +14,8 @@ namespace SedenConExt
 	EM_ASYNC_JS(const char*, readWrapper, (), {
 		return getUTF8String(await iostream.registerReaded(await iostream.read()));
 	});
-	EM_JS(const char*, clearWrapper, (), {
-		iostream.clear();
+	EM_ASYNC_JS(const char*, clearWrapper, (), {
+		await iostream.clear();
 	});
 	EM_ASYNC_JS(void, pressAnyKeyWrapper, (), {
 		await iostream.pressAnyKey();
@@ -198,10 +198,8 @@ int main()
 {
 	while (true)
 	{
-		void (*OnExit)() = nullptr;
-		SedenionTestingConsole::Base::Main(&OnExit);
+		SedenionTestingConsole::Base::Main();
 		operateExitWrapper();
-		OnExit();
 	}
 	return EXIT_SUCCESS;
 };
