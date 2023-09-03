@@ -253,6 +253,12 @@
 				configurable: false,
 				enumerable: false
 			});
+			Object.defineProperty(this, 'scroll', {
+				value: false,
+				writable: true,
+				configurable: false,
+				enumerable: false
+			});
 		}
 	].bindTo(window);
 	[
@@ -354,12 +360,9 @@
 		async function write(content) {
 			arguments.constrainedWithAndThrow(String);
 			await content.split('\n').forEachAsync((value, index) => {
+				this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
 				if (this.LineNodes.length == 0 || index > 0) {
-					if (Math.round(this.BufferNode.scrollTop) == this.BufferNode.scrollHeight - this.BufferNode.clientHeight) {
-						send(() => {
-							this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
-						}, 5);
-					}
+					this.scroll = Math.round(this.BufferNode.scrollTop) == this.BufferNode.scrollHeight - this.BufferNode.clientHeight || this.scroll;
 					this.BufferNode.append(document.createElement('line'));
 				}
 				if (value.removeSpace() != '') {
@@ -374,12 +377,11 @@
 						this.LastLineNode.LastSpanNode.setAttribute('foreground', this.ConsoleNode.getAttribute('foreground'));
 						this.LastLineNode.LastSpanNode.setAttribute('background', this.ConsoleNode.getAttribute('background'));
 					}
-					if (Math.round(this.BufferNode.scrollTop) == this.BufferNode.scrollHeight - this.BufferNode.clientHeight) {
-						send(() => {
-							this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
-						}, 5);
-					}
 					this.LastLineNode.LastSpanNode.textContent += value;
+				}
+				let Lines = this.LineNodes;
+				for (let i = 0; i < Lines.length - 1000; i++) {
+					Lines[i].Self.remove();
 				}
 			});
 		},
@@ -392,12 +394,9 @@
 			let foreground = this.ConsoleNode.getAttribute('foreground');
 			let background = this.ConsoleNode.getAttribute('background');
 			await content.split('\n').forEachAsync((value, index) => {
+				this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
 				if (this.LineNodes.length == 0 || index > 0) {
-					if (Math.round(this.BufferNode.scrollTop) == this.BufferNode.scrollHeight - this.BufferNode.clientHeight) {
-						send(() => {
-							this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
-						}, 5);
-					}
+					this.scroll = Math.round(this.BufferNode.scrollTop) == this.BufferNode.scrollHeight - this.BufferNode.clientHeight || this.scroll;
 					this.BufferNode.append(document.createElement('line'));
 				}
 				if (value.removeSpace() != '') {
@@ -425,14 +424,13 @@
 								SpanNode.setAttribute('background', background);
 								this.LastLineNode.Self.append(SpanNode);
 							}
-							if (Math.round(this.BufferNode.scrollTop) == this.BufferNode.scrollHeight - this.BufferNode.clientHeight) {
-								send(() => {
-									this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
-								}, 5);
-							}
 							this.LastLineNode.LastSpanNode.textContent += value;
 						}
 					});
+				}
+				let Lines = this.LineNodes;
+				for (let i = 0; i < Lines.length - 1000; i++) {
+					Lines[i].Self.remove();
 				}
 			});
 			this.ConsoleNode.setAttribute('foreground', foreground);
@@ -493,10 +491,10 @@
 	].bindTo(Console.prototype);
 	/* { functionality } */
 	[
-		function getUTF8String(jsString) {
-			arguments.constrainedWithAndThrow(String);
-			let myScope = getUTF8String;
-			let stringObject = jsString;
+		function getUTF8String(fnScope, jsString) {
+			arguments.constrainedWithAndThrow(Function.toNullable(), String.toNullable());
+			let myScope = fnScope == null ? getUTF8String : fnScope;
+			let stringObject = jsString == null ? "" : jsString;
 			let stringLength = lengthBytesUTF8(stringObject) + 1;
 			if (!myScope.bufferSize || myScope.bufferSize < stringLength) {
 				if (myScope.bufferSize) {
@@ -517,18 +515,6 @@
 			document.title = title;
 		}
 	].bindTo(window);
-	Object.defineProperty(getUTF8String, 'bufferData', {
-		value: 0,
-		writable: true,
-		configurable: false,
-		enumerable: false
-	});
-	Object.defineProperty(getUTF8String, 'bufferSize', {
-		value: 0,
-		writable: true,
-		configurable: false,
-		enumerable: false
-	});
 	/* { event-dispatcher } */
 	let isLoaded = false;
 	let structuredTag = () => {
