@@ -9,7 +9,6 @@ private:
 	{
 		EM_ASM(
 			Module.onAbort = () => { Module.__Z12abort_unwindv(); };
-			Object.freeze(Module.onAbort);
 		);
 	};
 };
