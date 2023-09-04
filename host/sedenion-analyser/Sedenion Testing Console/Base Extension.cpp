@@ -5,6 +5,7 @@
 /* ============= */
 #include <emscripten.h>
 #include <cstdlib>
+#include <cstdint>
 #include <string>
 #include <sstream>
 #include <stdexcept>
@@ -14,7 +15,7 @@ namespace SedenConExt
 	EM_ASYNC_JS(const char*, readWrapper, (), {
 		return getUTF8String(__asyncjs__readWrapper, await iostream.registerReaded(await iostream.read()));
 	});
-	EM_ASYNC_JS(const char*, clearWrapper, (), {
+	EM_ASYNC_JS(void, clearWrapper, (), {
 		await iostream.clear();
 	});
 	EM_ASYNC_JS(void, pressAnyKeyWrapper, (), {
@@ -23,14 +24,17 @@ namespace SedenConExt
 	EM_ASYNC_JS(void, writeWithColorCodesWrapper, (const char* str), {
 		await iostream.writeWithColorCodes(UTF8ToString(str));
 	});
-	EM_JS(const char*, getInitForegroundColorWrapper, (), {
-		return getUTF8String(getInitForegroundColorWrapper, iostream.getForegroundColor());
+	EM_JS(std::uint8_t, getInitForegroundColorWrapper, (), {
+		return iostream.getForegroundColor().toConsoleColor();
 	});
-	EM_JS(const char*, getInitBackgroundColorWrapper, (), {
-		return getUTF8String(getInitBackgroundColorWrapper, iostream.getBackgroundColor());
+	EM_JS(std::uint8_t, getInitBackgroundColorWrapper, (), {
+		return iostream.getBackgroundColor().toConsoleColor();
 	});
 	EM_JS(const char*, getInitTitleWrapper, (), {
 		return getUTF8String(getInitTitleWrapper, getTitle());
+	});
+	EM_JS(const char*, ToStringLiteralWrapper, (std::uint8_t Color), {
+		return getUTF8String(ToStringLiteralWrapper, Color.fromConsoleColor());
 	});
 	inline std::string ToMbsString(const std::wstring& string)
 	{
@@ -86,6 +90,7 @@ namespace SedenConExt
 	}
 	enum class ConsoleColor : std::uint8_t
 	{
+		Default = 0xff,
 		Black = 0,
 		DarkBlue = 1,
 		DarkGreen = 2,
@@ -102,45 +107,10 @@ namespace SedenConExt
 		Magenta = 13,
 		Yellow = 14,
 		White = 15,
-		Default = 16
 	};
-	static ConsoleColor ForegroundColor = ConsoleColor::DarkGray;
-	static ConsoleColor BackgroundColor = ConsoleColor::Black;
-	static std::wstring Title = L"";
-	static const char* ConsoleColorList[] {
-		"black",
-		"dark-blue",
-		"dark-green",
-		"dark-cyan",
-		"dark-red",
-		"dark-magenta",
-		"dark-yellow",
-		"gray",
-		"dark-gray",
-		"blue",
-		"green",
-		"cyan",
-		"red",
-		"magenta",
-		"yellow",
-		"white",
-		"default"
-	};
-	inline ConsoleColor ToConsoleColor(const char* output)
-	{
-		for (std::size_t i = 0; i < std::extent_v<decltype(ConsoleColorList)>; ++i)
-		{
-			if (std::strcmp(output, ConsoleColorList[i]) == 0)
-			{
-				return static_cast<ConsoleColor>(i);
-			}
-		}
-		return ConsoleColor::Default;
-	};
-	inline const char* ToStringLiteral(ConsoleColor input)
-	{
-		return ConsoleColorList[static_cast<std::size_t>(input) % std::extent_v<decltype(ConsoleColorList)>];
-	};
+	static ConsoleColor ForegroundColor{ ConsoleColor::Gray };
+	static ConsoleColor BackgroundColor{ ConsoleColor::Default };
+	static std::wstring Title{ L"" };
 	ConsoleColor GetForegroundColor()
 	{
 		return ForegroundColor;
@@ -153,20 +123,20 @@ namespace SedenConExt
 	{
 		return Title;
 	};
-	void SetForegroundColor(ConsoleColor color)
+	void SetForegroundColor(ConsoleColor Color)
 	{
-		ForegroundColor = color;
-		dom::wcout << L"\\foreground:" << ToStringLiteral(color) << L"\\";
+		ForegroundColor = Color;
+		dom::wcout << L"\\foreground:" << ToStringLiteralWrapper(static_cast<std::uint8_t>(Color)) << L"\\";
 	};
-	void SetBackgroundColor(ConsoleColor color)
+	void SetBackgroundColor(ConsoleColor Color)
 	{
-		BackgroundColor = color;
-		dom::wcout << L"\\background:" << ToStringLiteral(color) << L"\\";
+		BackgroundColor = Color;
+		dom::wcout << L"\\background:" << ToStringLiteralWrapper(static_cast<std::uint8_t>(Color)) << L"\\";
 	};
-	void SetTitle(const std::wstring& title)
+	void SetTitle(const std::wstring& Text)
 	{
-		Title = title;
-		dom::wcout << L"\\title:" << title << L"\\";
+		Title = Text;
+		dom::wcout << L"\\title:" << Text << L"\\";
 	};
 	void Clear()
 	{
@@ -184,8 +154,8 @@ namespace SedenConExt
 		static const initiator_t initiator;
 		initiator_t()
 		{
-			ForegroundColor = ToConsoleColor(getInitForegroundColorWrapper());
-			BackgroundColor = ToConsoleColor(getInitBackgroundColorWrapper());
+			ForegroundColor = static_cast<ConsoleColor>(getInitForegroundColorWrapper());
+			BackgroundColor = static_cast<ConsoleColor>(getInitBackgroundColorWrapper());
 			Title = ToWcsString(getInitTitleWrapper());
 		};
 	};

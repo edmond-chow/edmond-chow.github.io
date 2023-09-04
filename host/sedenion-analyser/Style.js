@@ -261,7 +261,70 @@
 			});
 		}
 	].bindTo(window);
+	Object.defineProperty(Console, 'Colors', {
+		value: [
+			'black',
+			'dark-blue',
+			'dark-green',
+			'dark-cyan',
+			'dark-red',
+			'dark-magenta',
+			'dark-yellow',
+			'gray',
+			'dark-gray',
+			'blue',
+			'green',
+			'cyan',
+			'red',
+			'magenta',
+			'yellow',
+			'white',
+		],
+		writable: false,
+		configurable: false
+	});
+	Console.Colors[0xFF] = 'default';
+	Object.freeze(Console.Colors);
+	Object.defineProperty(Console, 'Themes', {
+		value: [
+			'campbell',
+			'campbell-powershell',
+			'solarized-dark',
+			'solarized',
+			'solarized-light',
+			'tango-dark',
+			'tango',
+			'tango-light',
+			'gnome',
+			'linux',
+			'xterm',
+			'rxvt',
+			'vintage'
+		],
+		writable: false,
+		configurable: false
+	});
+	Object.freeze(Console.Themes);
+	Object.defineProperty(Console.prototype, 'Scheme', {
+		configurable: false,
+		get: function getter() {
+			return this.ConsoleNode.getAttribute('scheme');
+		},
+		set: function setter(Scheme) {
+			this.ConsoleNode.setAttribute('scheme', Scheme);
+		}
+	});
 	[
+		function fromConsoleColor() {
+			arguments.constrainedWithAndThrow();
+			return Console.Colors[this];
+		}
+	].bindTo(Number.prototype);
+	[
+		function toConsoleColor() {
+			arguments.constrainedWithAndThrow();
+			return Console.Colors.indexOf(this.toString());
+		},
 		function removeSpace() {
 			arguments.constrainedWithAndThrow();
 			return this.replace(/\t/g, '').replace(/\r/g, '').replace(/\n/g, '').replace(/\f/g, '')
@@ -287,59 +350,6 @@
 				.replace(/\uFEFF/g, '');
 		}
 	].bindTo(String.prototype);
-	Object.defineProperty(Console, 'Colors', {
-		value: [
-			'default',
-			'black',
-			'dark-blue',
-			'dark-green',
-			'dark-cyan',
-			'dark-red',
-			'dark-magenta',
-			'dark-yellow',
-			'gray',
-			'dark-gray',
-			'blue',
-			'green',
-			'cyan',
-			'red',
-			'magenta',
-			'yellow',
-			'white',
-		],
-		writable: false,
-		configurable: false
-	});
-	Object.freeze(Console.Colors);
-	Object.defineProperty(Console, 'Themes', {
-		value: [
-			'campbell',
-			'campbell-powershell',
-			'solarized-dark',
-			'solarized',
-			'solarized-light',
-			'tango-dark',
-			'tango',
-			'tango-light',
-			'gnome',
-			'linux',
-			'xterm',
-			'rxvt',
-			'vintage'
-		],
-		writable: false,
-		configurable: false
-	});
-	Object.freeze(Console.Themes);
-	Object.defineProperty(Console.prototype, 'scheme', {
-		configurable: false,
-		get: function getter() {
-			return this.ConsoleNode.getAttribute('scheme');
-		},
-		set: function setter(scheme) {
-			this.ConsoleNode.setAttribute('scheme', scheme);
-		}
-	});
 	[
 		function getForegroundColor() {
 			arguments.constrainedWithAndThrow();
