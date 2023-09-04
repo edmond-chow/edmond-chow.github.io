@@ -27,6 +27,7 @@ namespace SedenConExt
 	}
 	enum class ConsoleColor : std::uint8_t
 	{
+		Default = 0xff,
 		Black = 0,
 		DarkBlue = 1,
 		DarkGreen = 2,

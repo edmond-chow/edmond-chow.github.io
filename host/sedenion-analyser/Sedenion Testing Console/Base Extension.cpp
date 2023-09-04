@@ -12,82 +12,24 @@
 #include "Base.h"
 namespace SedenConExt
 {
-	EM_ASYNC_JS(const char*, readWrapper, (), {
-		return getUTF8String(__asyncjs__readWrapper, await iostream.registerReaded(await iostream.read()));
-	});
-	EM_ASYNC_JS(void, clearWrapper, (), {
-		await iostream.clear();
-	});
-	EM_ASYNC_JS(void, pressAnyKeyWrapper, (), {
-		await iostream.pressAnyKey();
-	});
-	EM_ASYNC_JS(void, writeWithColorCodesWrapper, (const char* str), {
-		await iostream.writeWithColorCodes(UTF8ToString(str));
-	});
-	EM_JS(std::uint8_t, getInitForegroundColorWrapper, (), {
-		return iostream.getForegroundColor().toConsoleColor();
-	});
-	EM_JS(std::uint8_t, getInitBackgroundColorWrapper, (), {
-		return iostream.getBackgroundColor().toConsoleColor();
-	});
-	EM_JS(const char*, getInitTitleWrapper, (), {
-		return getUTF8String(getInitTitleWrapper, getTitle());
-	});
-	EM_JS(const char*, ToStringLiteralWrapper, (std::uint8_t Color), {
-		return getUTF8String(ToStringLiteralWrapper, Color.fromConsoleColor());
-	});
-	inline std::string ToMbsString(const std::wstring& string)
+	inline std::string ToMbsString(const std::wstring& String)
 	{
-		std::size_t length = string.size() * 5 + 1;
+		std::size_t length = String.size() * 2 + 1;
 		char* temporary = new char[length] { '\0' };
-		std::wcstombs(temporary, string.c_str(), length);
+		std::wcstombs(temporary, String.c_str(), length);
 		std::string converted = temporary;
 		delete[] temporary;
 		return converted;
 	};
-	inline std::wstring ToWcsString(const std::string& string)
+	inline std::wstring ToWcsString(const std::string& String)
 	{
-		std::size_t length = string.size() * 5 + 1;
-		wchar_t* temporary = new wchar_t[length] { '\0' };
-		std::mbstowcs(temporary, string.c_str(), length);
+		std::size_t length = String.size() + 1;
+		wchar_t* temporary = new wchar_t[length] { L'\0' };
+		std::mbstowcs(temporary, String.c_str(), length);
 		std::wstring converted = temporary;
 		delete[] temporary;
 		return converted;
 	};
-	namespace dom
-	{
-		struct wcin_t {} wcin;
-		struct wcout_t : std::wstringstream {} wcout;
-		static std::size_t wcout_count = 0;
-		inline void print(wcout_t& wcout)
-		{
-			wcout_count = 0;
-			std::string call = ToMbsString(wcout.str());
-			writeWithColorCodesWrapper(call.c_str());
-			wcout.str(L"");
-		};
-		void getline(wcin_t&, std::wstring& line)
-		{
-			print(wcout);
-			line = ToWcsString(readWrapper());
-		};
-		wcout_t& endl(wcout_t& wcout)
-		{
-			wcout << L"\n";
-			if (++wcout_count >= 0xff) { print(wcout); }
-			return wcout;
-		};
-		template <typename T>
-		wcout_t& operator <<(wcout_t& wcout, T o)
-		{
-			dynamic_cast<std::wstringstream&>(wcout) << o;
-			return wcout;
-		};
-		inline wcout_t& operator <<(wcout_t& wcout, wcout_t&(*endl)(wcout_t&))
-		{
-			return endl(wcout);
-		};
-	}
 	enum class ConsoleColor : std::uint8_t
 	{
 		Default = 0xff,
@@ -108,9 +50,93 @@ namespace SedenConExt
 		Yellow = 14,
 		White = 15,
 	};
-	static ConsoleColor ForegroundColor{ ConsoleColor::Gray };
-	static ConsoleColor BackgroundColor{ ConsoleColor::Default };
-	static std::wstring Title{ L"" };
+	namespace Native {
+		EM_ASYNC_JS(const char*, ReadSync, (), {
+			return getUTF8String(__asyncjs__ReadSync, await iostream.writeLine(await iostream.read()));
+		});
+		EM_ASYNC_JS(void, WriteSync, (const char* Content), {
+			await iostream.writeWithColorCodes(UTF8ToString(Content));
+		});
+		EM_ASYNC_JS(void, ClearSync, (), {
+			await iostream.clear();
+		});
+		EM_ASYNC_JS(void, PressAnyKeySync, (), {
+			await iostream.pressAnyKey();
+		});
+		EM_JS(std::uint8_t, GetSyncForeground, (), {
+			return iostream.getForegroundColor().toConsoleColor();
+		});
+		EM_JS(std::uint8_t, GetSyncBackground, (), {
+			return iostream.getBackgroundColor().toConsoleColor();
+		});
+		EM_JS(const char*, GetSyncTitle, (), {
+			return getUTF8String(GetSyncTitle, getTitle());
+		});
+		EM_JS(const char*, GetString, (std::uint8_t Color), {
+			return getUTF8String(GetString, Color.fromConsoleColor());
+		});
+	}
+	std::wstring ReadSync() {
+		return ToWcsString(Native::ReadSync());
+	};
+	void WriteSync(const std::wstring& Content) {
+		std::string temporary = ToMbsString(Content);
+		Native::WriteSync(temporary.c_str());
+	};
+	void ClearSync() {
+		Native::ClearSync();
+	};
+	void PressAnyKeySync() {
+		Native::PressAnyKeySync();
+	};
+	ConsoleColor GetSyncForeground() {
+		return static_cast<ConsoleColor>(Native::GetSyncForeground());
+	};
+	ConsoleColor GetSyncBackground() {
+		return static_cast<ConsoleColor>(Native::GetSyncBackground());
+	};
+	std::wstring GetSyncTitle() {
+		return ToWcsString(Native::GetSyncTitle());
+	};
+	std::wstring GetString(ConsoleColor Color) {
+		return ToWcsString(Native::GetString(static_cast<std::uint8_t>(Color)));
+	};
+	namespace dom
+	{
+		struct wcin_t {} wcin;
+		struct wcout_t : std::wstringstream {} wcout;
+		static std::size_t wcout_count = 0;
+		inline void print(wcout_t& wcout)
+		{
+			wcout_count = 0;
+			WriteSync(wcout.str());
+			wcout.str(L"");
+		};
+		void getline(wcin_t&, std::wstring& line)
+		{
+			print(wcout);
+			line = ReadSync();
+		};
+		wcout_t& endl(wcout_t& wcout)
+		{
+			wcout << L"\n";
+			if (++wcout_count >= 0xff) { print(wcout); }
+			return wcout;
+		};
+		template <typename T>
+		wcout_t& operator <<(wcout_t& wcout, T o)
+		{
+			dynamic_cast<std::wstringstream&>(wcout) << o;
+			return wcout;
+		};
+		inline wcout_t& operator <<(wcout_t& wcout, wcout_t&(*endl)(wcout_t&))
+		{
+			return endl(wcout);
+		};
+	}
+	static ConsoleColor ForegroundColor{ GetSyncForeground() };
+	static ConsoleColor BackgroundColor{ GetSyncBackground() };
+	static std::wstring Title{ GetSyncTitle() };
 	ConsoleColor GetForegroundColor()
 	{
 		return ForegroundColor;
@@ -126,12 +152,12 @@ namespace SedenConExt
 	void SetForegroundColor(ConsoleColor Color)
 	{
 		ForegroundColor = Color;
-		dom::wcout << L"\\foreground:" << ToStringLiteralWrapper(static_cast<std::uint8_t>(Color)) << L"\\";
+		dom::wcout << L"\\foreground:" << GetString(Color) << L"\\";
 	};
 	void SetBackgroundColor(ConsoleColor Color)
 	{
 		BackgroundColor = Color;
-		dom::wcout << L"\\background:" << ToStringLiteralWrapper(static_cast<std::uint8_t>(Color)) << L"\\";
+		dom::wcout << L"\\background:" << GetString(Color) << L"\\";
 	};
 	void SetTitle(const std::wstring& Text)
 	{
@@ -141,35 +167,28 @@ namespace SedenConExt
 	void Clear()
 	{
 		dom::print(dom::wcout);
-		clearWrapper();
+		ClearSync();
 	};
 	void PressAnyKey()
 	{
 		dom::print(dom::wcout);
-		pressAnyKeyWrapper();
+		PressAnyKeySync();
 	};
-	struct initiator_t
-	{
-	private:
-		static const initiator_t initiator;
-		initiator_t()
-		{
-			ForegroundColor = static_cast<ConsoleColor>(getInitForegroundColorWrapper());
-			BackgroundColor = static_cast<ConsoleColor>(getInitBackgroundColorWrapper());
-			Title = ToWcsString(getInitTitleWrapper());
-		};
-	};
-	const initiator_t initiator_t::initiator{};
 }
-EM_ASYNC_JS(void, operateExitWrapper, (), {
-	await iostream.operateExit(0);
-});
+namespace Native {
+	EM_ASYNC_JS(void, ReloadSync, (), {
+		await iostream.reload(0);
+	});
+}
+void ReloadSync() {
+	Native::ReloadSync();
+};
 int main()
 {
 	while (true)
 	{
 		SedenionTestingConsole::Base::Main();
-		operateExitWrapper();
+		ReloadSync();
 	}
 	return EXIT_SUCCESS;
 };

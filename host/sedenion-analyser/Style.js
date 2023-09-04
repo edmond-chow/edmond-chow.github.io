@@ -249,7 +249,7 @@
 				configurable: false,
 				enumerable: false
 			});
-			Object.defineProperty(this, 'readed', {
+			Object.defineProperty(this, 'received', {
 				value: 0,
 				writable: true,
 				configurable: false,
@@ -458,14 +458,14 @@
 			arguments.constrainedWithAndThrow();
 			let capturedCounted = this.counted;
 			this.counted++;
-			while (this.readed >= this.istream.length || capturedCounted != this.readed) {
+			while (this.received >= this.istream.length || capturedCounted != this.received) {
 				this.CanType = true;
 				await defer(5);
 			}
-			let output = this.istream[this.readed++];
-			if (this.readed == this.counted) {
+			let output = this.istream[this.received++];
+			if (this.received == this.counted) {
 				this.istream = [];
-				this.readed = 0;
+				this.received = 0;
 				this.counted = 0;
 			}
 			return output;
@@ -488,12 +488,7 @@
 				await defer(5);
 			}
 		},
-		async function registerReaded(line) {
-			arguments.constrainedWithAndThrow(String);
-			await this.writeLine(line);
-			return line;
-		},
-		async function operateExit(code) {
+		async function reload(code) {
 			this.ConsoleNode.setAttribute('foreground', 'gray');
 			this.ConsoleNode.setAttribute('background', 'default');
 			await this.writeLine('');
