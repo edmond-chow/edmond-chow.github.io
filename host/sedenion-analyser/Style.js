@@ -49,6 +49,9 @@
 		].bindTo(window);
 		[
 			function constrainedWith(...types) {
+				if (!window.constrained) {
+					return true;
+				}
 				let arguments = Array.from(this);
 				if (arguments.length != types.length) {
 					return false;
@@ -65,12 +68,17 @@
 				return constrained;
 			},
 			function constrainedWithAndThrow(...types) {
-				if (!this.constrainedWith(...types)) {
+				if (constrained && !this.constrainedWith(...types)) {
 					throw 'The function arguments should match up the parameter types.';
 				}
 			}
 		].bindTo(Object.prototype);
 	})();
+	Object.defineProperty(window, 'constrained', {
+		value: false,
+		writable: true,
+		configurable: false,
+	});
 	/* { control-flow } */
 	(() => {
 		let loop = [];
