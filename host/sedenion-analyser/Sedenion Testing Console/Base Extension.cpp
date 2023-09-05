@@ -12,6 +12,36 @@
 #include "Base.h"
 namespace SedenConExt
 {
+	namespace Native
+	{
+		EM_ASYNC_JS(const char*, ReadSync, (), {
+			return getUTF8String(__asyncjs__ReadSync, await iostream.writeLine(await iostream.read()));
+		});
+		EM_ASYNC_JS(void, WriteSync, (const char* Content), {
+			await iostream.writeWithColorCodes(UTF8ToString(Content));
+		});
+		EM_ASYNC_JS(void, ClearSync, (), {
+			await iostream.clear();
+		});
+		EM_ASYNC_JS(void, PressAnyKeySync, (), {
+			await iostream.pressAnyKey();
+		});
+		EM_JS(std::uint8_t, GetSyncForeground, (), {
+			return iostream.getForegroundColor().toConsoleColor();
+		});
+		EM_JS(std::uint8_t, GetSyncBackground, (), {
+			return iostream.getBackgroundColor().toConsoleColor();
+		});
+		EM_JS(const char*, GetSyncTitle, (), {
+			return getUTF8String(GetSyncTitle, getTitle());
+		});
+		EM_JS(const char*, GetString, (std::uint8_t Color), {
+			return getUTF8String(GetString, Color.fromConsoleColor());
+		});
+		EM_ASYNC_JS(void, ReloadSync, (), {
+			await iostream.reload(0);
+		});
+	}
 	inline std::string ToMbsString(const std::wstring& String)
 	{
 		std::size_t length = String.size() * 2 + 1;
@@ -50,56 +80,41 @@ namespace SedenConExt
 		Yellow = 14,
 		White = 15,
 	};
-	namespace Native {
-		EM_ASYNC_JS(const char*, ReadSync, (), {
-			return getUTF8String(__asyncjs__ReadSync, await iostream.writeLine(await iostream.read()));
-		});
-		EM_ASYNC_JS(void, WriteSync, (const char* Content), {
-			await iostream.writeWithColorCodes(UTF8ToString(Content));
-		});
-		EM_ASYNC_JS(void, ClearSync, (), {
-			await iostream.clear();
-		});
-		EM_ASYNC_JS(void, PressAnyKeySync, (), {
-			await iostream.pressAnyKey();
-		});
-		EM_JS(std::uint8_t, GetSyncForeground, (), {
-			return iostream.getForegroundColor().toConsoleColor();
-		});
-		EM_JS(std::uint8_t, GetSyncBackground, (), {
-			return iostream.getBackgroundColor().toConsoleColor();
-		});
-		EM_JS(const char*, GetSyncTitle, (), {
-			return getUTF8String(GetSyncTitle, getTitle());
-		});
-		EM_JS(const char*, GetString, (std::uint8_t Color), {
-			return getUTF8String(GetString, Color.fromConsoleColor());
-		});
-	}
-	std::wstring ReadSync() {
+	std::wstring ReadSync()
+	{
 		return ToWcsString(Native::ReadSync());
 	};
-	void WriteSync(const std::wstring& Content) {
+	void WriteSync(const std::wstring& Content)
+	{
 		std::string temporary = ToMbsString(Content);
 		Native::WriteSync(temporary.c_str());
 	};
-	void ClearSync() {
+	void ClearSync()
+	{
 		Native::ClearSync();
 	};
-	void PressAnyKeySync() {
+	void PressAnyKeySync()
+	{
 		Native::PressAnyKeySync();
 	};
-	ConsoleColor GetSyncForeground() {
+	ConsoleColor GetSyncForeground()
+	{
 		return static_cast<ConsoleColor>(Native::GetSyncForeground());
 	};
-	ConsoleColor GetSyncBackground() {
+	ConsoleColor GetSyncBackground()
+	{
 		return static_cast<ConsoleColor>(Native::GetSyncBackground());
 	};
-	std::wstring GetSyncTitle() {
+	std::wstring GetSyncTitle()
+	{
 		return ToWcsString(Native::GetSyncTitle());
 	};
-	std::wstring GetString(ConsoleColor Color) {
+	std::wstring GetString(ConsoleColor Color)
+	{
 		return ToWcsString(Native::GetString(static_cast<std::uint8_t>(Color)));
+	};
+	void ReloadSync() {
+		Native::ReloadSync();
 	};
 	namespace dom
 	{
@@ -129,7 +144,7 @@ namespace SedenConExt
 			dynamic_cast<std::wstringstream&>(wcout) << o;
 			return wcout;
 		};
-		inline wcout_t& operator <<(wcout_t& wcout, wcout_t&(*endl)(wcout_t&))
+		inline wcout_t& operator <<(wcout_t& wcout, wcout_t& (*endl)(wcout_t&))
 		{
 			return endl(wcout);
 		};
@@ -175,20 +190,12 @@ namespace SedenConExt
 		PressAnyKeySync();
 	};
 }
-namespace Native {
-	EM_ASYNC_JS(void, ReloadSync, (), {
-		await iostream.reload(0);
-	});
-}
-void ReloadSync() {
-	Native::ReloadSync();
-};
 int main()
 {
 	while (true)
 	{
 		SedenionTestingConsole::Base::Main();
-		ReloadSync();
+		SedenConExt::ReloadSync();
 	}
 	return EXIT_SUCCESS;
 };
