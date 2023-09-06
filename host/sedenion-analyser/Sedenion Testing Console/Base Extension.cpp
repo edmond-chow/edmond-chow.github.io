@@ -15,7 +15,9 @@ namespace SedenConExt
 	namespace Native
 	{
 		EM_ASYNC_JS(const char*, ReadSync, (), {
-			return getUTF8String(__asyncjs__ReadSync, await iostream.writeLine(await iostream.read()));
+			let line = await iostream.read();
+			await iostream.writeLine(line);
+			return getUTF8String(__asyncjs__ReadSync, line + '\n');
 		});
 		EM_ASYNC_JS(void, WriteSync, (const char* Content), {
 			await iostream.writeWithColorCodes(UTF8ToString(Content));
@@ -113,41 +115,56 @@ namespace SedenConExt
 	{
 		return ToWcsString(Native::GetString(static_cast<std::uint8_t>(Color)));
 	};
-	void ReloadSync() {
+	void ReloadSync()
+	{
 		Native::ReloadSync();
 	};
 	namespace dom
 	{
-		struct wcin_t {} wcin;
-		struct wcout_t : std::wstringstream {} wcout;
-		static std::size_t wcout_count = 0;
-		inline void print(wcout_t& wcout)
+		struct client_t : public std::wstreambuf
 		{
-			wcout_count = 0;
-			WriteSync(wcout.str());
-			wcout.str(L"");
+		private:
+			std::wstringstream output;
+			std::size_t output_lines;
+			std::wstring input;
+			std::wstring::const_iterator input_current;
+			std::wstring::const_iterator input_end;
+			wchar_t input_popped;
+		public:
+			client_t() : output{}, output_lines{}, input{}, input_current{}, input_end{}, input_popped{} {};
+		protected:
+			virtual int sync() override
+			{
+				WriteSync(output.str());
+				output.str(L"");
+				output_lines = 0;
+				return 0;
+			};
+			virtual int_type overflow(int_type c) override
+			{
+				if (output_lines >= 0xff) { sync(); }
+				if (c == L'\n') { ++output_lines; }
+				output << static_cast<wchar_t>(c);
+				return c;
+			};
+			virtual int_type underflow() override
+			{
+				setg(&input_popped, &input_popped, &input_popped + 1);
+				if (input_current == input_end)
+				{
+					sync();
+					input = ReadSync();
+					input_current = input.cbegin();
+					input_end = input.cend();
+				}
+				input_popped = *input_current;
+				++input_current;
+				return static_cast<int_type>(input_popped);
+			};
 		};
-		void getline(wcin_t&, std::wstring& line)
-		{
-			print(wcout);
-			line = ReadSync();
-		};
-		wcout_t& endl(wcout_t& wcout)
-		{
-			wcout << L"\n";
-			if (++wcout_count >= 0xff) { print(wcout); }
-			return wcout;
-		};
-		template <typename T>
-		wcout_t& operator <<(wcout_t& wcout, T o)
-		{
-			dynamic_cast<std::wstringstream&>(wcout) << o;
-			return wcout;
-		};
-		inline wcout_t& operator <<(wcout_t& wcout, wcout_t& (*endl)(wcout_t&))
-		{
-			return endl(wcout);
-		};
+		static client_t client{};
+		std::wistream wcin{ &client };
+		std::wostream wcout{ &client };
 	}
 	static ConsoleColor ForegroundColor{ GetSyncForeground() };
 	static ConsoleColor BackgroundColor{ GetSyncBackground() };
@@ -181,12 +198,12 @@ namespace SedenConExt
 	};
 	void Clear()
 	{
-		dom::print(dom::wcout);
+		dom::client.pubsync();
 		ClearSync();
 	};
 	void PressAnyKey()
 	{
-		dom::print(dom::wcout);
+		dom::client.pubsync();
 		PressAnyKeySync();
 	};
 }

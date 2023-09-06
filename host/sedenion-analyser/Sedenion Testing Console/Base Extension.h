@@ -10,20 +10,8 @@ namespace SedenConExt
 {
 	namespace dom
 	{
-		extern struct wcin_t {} wcin;
-		extern struct wcout_t : std::wstringstream {} wcout;
-		void getline(wcin_t&, std::wstring& line);
-		wcout_t& endl(wcout_t& wcout);
-		template <typename T>
-		wcout_t& operator <<(wcout_t& wcout, T o)
-		{
-			dynamic_cast<std::wstringstream&>(wcout) << o;
-			return wcout;
-		};
-		inline wcout_t& operator <<(wcout_t& wcout, wcout_t& (*endl)(wcout_t&))
-		{
-			return endl(wcout);
-		};
+		extern std::wistream wcin;
+		extern std::wostream wcout;
 	}
 	enum class ConsoleColor : std::uint8_t
 	{

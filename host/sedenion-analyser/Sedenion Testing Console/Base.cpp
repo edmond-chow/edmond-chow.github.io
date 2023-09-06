@@ -110,13 +110,13 @@ namespace SedenionTestingConsole
 	std::wstring Base::Exception(const std::exception& Exception)
 	{
 		SetForegroundColor(ConsoleColor::DarkCyan);
-		dom::wcout << dom::endl << L"   [" << typeid(Exception).name() << L"] ";
+		dom::wcout << std::endl << L"   [" << typeid(Exception).name() << L"] ";
 		SetForegroundColor(ConsoleColor::Cyan);
-		dom::wcout << Exception.what() << dom::endl;
+		dom::wcout << Exception.what() << std::endl;
 		SetForegroundColor(ConsoleColor::White);
-		dom::wcout << L"   Press any key to continue . . .   " << dom::endl;
+		dom::wcout << L"   Press any key to continue . . .   " << std::endl;
 		PressAnyKey();
-		dom::wcout << dom::endl;
+		dom::wcout << std::endl;
 		return L"";
 	};
 	std::wstring Base::Exception() { return Exception(std::exception()); };
@@ -125,7 +125,7 @@ namespace SedenionTestingConsole
 		SetForegroundColor(ConsoleColor::DarkCyan);
 		dom::wcout << L" %   ";
 		SetForegroundColor(ConsoleColor::Blue);
-		dom::wcout << Content << dom::endl;
+		dom::wcout << Content << std::endl;
 		return Content;
 	};
 	std::wstring Base::Selection() { return Selection(L""); };
@@ -137,7 +137,7 @@ namespace SedenionTestingConsole
 		dom::wcout << Content;
 		SetForegroundColor(ConsoleColor::Green);
 		std::wstring output;
-		dom::getline(dom::wcin, output);
+		std::getline(dom::wcin, output);
 		return output;
 	};
 	std::wstring Base::Input() { return Input(L""); };
@@ -148,7 +148,7 @@ namespace SedenionTestingConsole
 		SetForegroundColor(ConsoleColor::DarkRed);
 		dom::wcout << Preceding;
 		SetForegroundColor(ConsoleColor::Red);
-		dom::wcout << Content << dom::endl;
+		dom::wcout << Content << std::endl;
 		return Content;
 	};
 	std::wstring Base::Output(const std::wstring& Content) { return Output(L"", Content); };
@@ -160,7 +160,7 @@ namespace SedenionTestingConsole
 		SetForegroundColor(ConsoleColor::Cyan);
 		dom::wcout << Preceding;
 		SetForegroundColor(ConsoleColor::Gray);
-		dom::wcout << Content << dom::endl;
+		dom::wcout << Content << std::endl;
 		return Content;
 	};
 	std::wstring Base::Comment(const std::wstring& Content) { return Comment(L"", Content); };
@@ -169,6 +169,6 @@ namespace SedenionTestingConsole
 	{
 		Clear();
 		SetTitle(Title);
-		dom::wcout << dom::endl;
+		dom::wcout << std::endl;
 	};
 }
