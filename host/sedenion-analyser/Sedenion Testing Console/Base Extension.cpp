@@ -15,8 +15,8 @@ namespace SedenConExt
 	namespace Native
 	{
 		EM_ASYNC_JS(const char*, ReadSync, (), {
-			let line = await iostream.read() + '\n';
-			await iostream.write(line);
+			let line = await iostream.read();
+			await iostream.writeLine(line);
 			return getUTF8String(__asyncjs__ReadSync, line);
 		});
 		EM_ASYNC_JS(void, WriteSync, (const char* Content), {
@@ -124,6 +124,12 @@ namespace SedenConExt
 		struct client_t : public std::wstreambuf
 		{
 		private:
+			enum class state
+			{
+				write = 0,
+				read = 1,
+			};
+			state state;
 			std::wstringstream output;
 			std::size_t output_lines;
 			std::wstring input;
@@ -131,10 +137,11 @@ namespace SedenConExt
 			std::wstring::const_iterator input_end;
 			wchar_t input_popped;
 		public:
-			client_t() : output{}, output_lines{}, input{}, input_current{}, input_end{}, input_popped{} {};
+			client_t() : state{ state::write }, output{}, output_lines{}, input{}, input_current{}, input_end{}, input_popped{} {};
 		protected:
 			virtual int sync() override
 			{
+				if (state == state::read) { return -1; }
 				WriteSync(output.str());
 				output.str(L"");
 				output_lines = 0;
@@ -149,16 +156,25 @@ namespace SedenConExt
 			};
 			virtual int_type underflow() override
 			{
-				setg(&input_popped, &input_popped, &input_popped + 1);
-				if (input_current == input_end)
+				if (state == state::write)
 				{
 					sync();
 					input = ReadSync();
 					input_current = input.cbegin();
 					input_end = input.cend();
+					state = state::read;
 				}
-				input_popped = *input_current;
-				++input_current;
+				setg(&input_popped, &input_popped, &input_popped + 1);
+				if (input_current == input_end)
+				{
+					input_popped = L'\n';
+					state = state::write;
+				}
+				else
+				{
+					input_popped = *input_current;
+					++input_current;
+				}
 				return static_cast<int_type>(input_popped);
 			};
 		};
