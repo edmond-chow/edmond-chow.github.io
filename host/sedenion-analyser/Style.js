@@ -332,30 +332,6 @@
 		function toConsoleColor() {
 			arguments.constrainedWithAndThrow();
 			return Console.Colors.indexOf(this.toString());
-		},
-		function removeSpace() {
-			arguments.constrainedWithAndThrow();
-			return this.replace(/\t/g, '').replace(/\r/g, '').replace(/\n/g, '').replace(/\f/g, '')
-				.replace(/\u0020/g, '')
-				.replace(/\u00A0/g, '')
-				.replace(/\u1680/g, '')
-				.replace(/\u180E/g, '')
-				.replace(/\u2000/g, '')
-				.replace(/\u2001/g, '')
-				.replace(/\u2002/g, '')
-				.replace(/\u2003/g, '')
-				.replace(/\u2004/g, '')
-				.replace(/\u2005/g, '')
-				.replace(/\u2006/g, '')
-				.replace(/\u2007/g, '')
-				.replace(/\u2008/g, '')
-				.replace(/\u2009/g, '')
-				.replace(/\u200A/g, '')
-				.replace(/\u200B/g, '')
-				.replace(/\u202F/g, '')
-				.replace(/\u205F/g, '')
-				.replace(/\u3000/g, '')
-				.replace(/\uFEFF/g, '');
 		}
 	].bindTo(String.prototype);
 	[
