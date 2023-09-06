@@ -29,7 +29,7 @@
 			async function forEachAsync(delegate) {
 				for (let i = 0; i < this.length; i++) {
 					delegate.call(null, this[i], i, this);
-					await defer(1);
+					await defer(0);
 				}
 			}
 		].bindTo(Array.prototype);
@@ -114,7 +114,7 @@
 			}
 		].bindTo(window);
 	})();
-	await defer(5);
+	await defer(0);
 	/* constructor() */
 	function LineNodeWrapper(node) {
 		Object.defineProperty(this, 'Self', {
@@ -377,31 +377,38 @@
 		},
 		async function write(content) {
 			arguments.constrainedWithAndThrow(String);
-			await content.split('\n').forEachAsync((value, index) => {
-				this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
-				if (this.LineNodes.length == 0 || index > 0) {
-					this.scroll = Math.round(this.BufferNode.scrollTop) == this.BufferNode.scrollHeight - this.BufferNode.clientHeight || this.scroll;
-					this.BufferNode.append(document.createElement('line'));
-				}
-				if (value.removeSpace() != '') {
-					let colorStateChanged = () => {
-						return this.LastLineNode.LastSpanNode.getAttribute('foreground') != this.ConsoleNode.getAttribute('foreground') || this.LastLineNode.LastSpanNode.getAttribute('background') != this.ConsoleNode.getAttribute('background');
-					};
-					if (this.LastLineNode.SpanNodes.length == 0 || colorStateChanged()) {
-						let SpanNode = document.createElement('span');
-						this.LastLineNode.Self.append(SpanNode);
-					}
-					if (this.LastLineNode.LastSpanNode.textContent == '' || colorStateChanged()) {
-						this.LastLineNode.LastSpanNode.setAttribute('foreground', this.ConsoleNode.getAttribute('foreground'));
-						this.LastLineNode.LastSpanNode.setAttribute('background', this.ConsoleNode.getAttribute('background'));
-					}
-					this.LastLineNode.LastSpanNode.textContent += value;
-				}
+			let Foreground = this.ConsoleNode.getAttribute('foreground');
+			let Background = this.ConsoleNode.getAttribute('background');
+			let Fragment = document.createDocumentFragment();
+			let LineNode = null;
+			let SpanNode = null;
+			let NoLineNodes = this.LineNodes.length == 0;
+			let pushNode = () => {
+				this.BufferNode.append(Fragment);
+				Fragment = document.createDocumentFragment();
 				let Lines = this.LineNodes;
-				for (let i = 0; i < Lines.length - 1000; i++) {
+				for (let i = 0; i < Lines.length - 1024; i++) {
 					Lines[i].Self.remove();
 				}
+				this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
+			};
+			await content.split('\n').forEachAsync((value, index) => {
+				if ((NoLineNodes ? index : index - 1) % 512 == 0) {
+					pushNode();
+				}
+				if (index > 0 || NoLineNodes) {
+					LineNode = document.createElement('line');
+					Fragment.append(LineNode);
+				} else {
+					LineNode = this.LastLineNode.Self;
+				}	
+				SpanNode = document.createElement('span');
+				SpanNode.setAttribute('foreground', Foreground);
+				SpanNode.setAttribute('background', Background);
+				SpanNode.textContent += value;
+				LineNode.append(SpanNode);
 			});
+			pushNode();
 		},
 		async function writeLine(content) {
 			arguments.constrainedWithAndThrow(String);
@@ -409,50 +416,54 @@
 		},
 		async function writeWithColorCodes(content) {
 			arguments.constrainedWithAndThrow(String);
-			let foreground = this.ConsoleNode.getAttribute('foreground');
-			let background = this.ConsoleNode.getAttribute('background');
-			await content.split('\n').forEachAsync((value, index) => {
-				this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
-				if (this.LineNodes.length == 0 || index > 0) {
-					this.scroll = Math.round(this.BufferNode.scrollTop) == this.BufferNode.scrollHeight - this.BufferNode.clientHeight || this.scroll;
-					this.BufferNode.append(document.createElement('line'));
-				}
-				if (value.removeSpace() != '') {
-					value.split('\\').forEach((value, index) => {
-						if (index % 2 == 1) {
-							if (value.substring(0, 11) == 'foreground:') {
-								foreground = value.substring(11, value.length);
-							} else if (value.substring(0, 11) == 'background:') {
-								background = value.substring(11, value.length);
-							} else if (value.substring(0, 6) == 'title:') {
-								setTitle(value.substring(6, value.length));
-							}
-							let SpanNode = document.createElement('span');
-							SpanNode.setAttribute('foreground', foreground);
-							SpanNode.setAttribute('background', background);
-							if (this.LastLineNode.LastSpanNode.textContent.removeSpace() == '') {
-								SpanNode.textContent = this.LastLineNode.LastSpanNode.textContent;
-								this.LastLineNode.LastSpanNode.remove();
-							}
-							this.LastLineNode.Self.append(SpanNode);
-						} else {
-							if (this.LastLineNode.SpanNodes.length == 0) {
-								let SpanNode = document.createElement('span');
-								SpanNode.setAttribute('foreground', foreground);
-								SpanNode.setAttribute('background', background);
-								this.LastLineNode.Self.append(SpanNode);
-							}
-							this.LastLineNode.LastSpanNode.textContent += value;
-						}
-					});
-				}
+			let Foreground = this.ConsoleNode.getAttribute('foreground');
+			let Background = this.ConsoleNode.getAttribute('background');
+			let Title = getTitle();
+			let Fragment = document.createDocumentFragment();
+			let LineNode = null;
+			let SpanNode = null;
+			let NoLineNodes = this.LineNodes.length == 0;
+			let pushNode = () => {
+				this.BufferNode.append(Fragment);
+				Fragment = document.createDocumentFragment();
 				let Lines = this.LineNodes;
-				for (let i = 0; i < Lines.length - 1000; i++) {
+				for (let i = 0; i < Lines.length - 1024; i++) {
 					Lines[i].Self.remove();
 				}
+				setTitle(Title);
+				this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
+			};
+			await content.split('\n').forEachAsync((value, index) => {
+				if ((NoLineNodes ? index : index - 1) % 512 == 0) {
+					pushNode();
+				}
+				if (index > 0 || NoLineNodes) {
+					LineNode = document.createElement('line');
+					Fragment.append(LineNode);
+				} else {
+					LineNode = this.LastLineNode.Self;
+				}
+				value.split('\\').forEach((value, index) => {
+					if (index % 2 == 1) {
+						if (value.substring(0, 11) == 'foreground:') {
+							Foreground = value.substring(11, value.length);
+						} else if (value.substring(0, 11) == 'background:') {
+							Background = value.substring(11, value.length);
+						} else if (value.substring(0, 6) == 'title:') {
+							Title = value.substring(6, value.length);
+						}
+					} else {
+						SpanNode = document.createElement('span');
+						SpanNode.setAttribute('foreground', Foreground);
+						SpanNode.setAttribute('background', Background);
+						SpanNode.textContent += value;
+						LineNode.append(SpanNode);
+					}
+				});
 			});
-			this.ConsoleNode.setAttribute('foreground', foreground);
-			this.ConsoleNode.setAttribute('background', background);
+			pushNode();
+			this.ConsoleNode.setAttribute('foreground', Foreground);
+			this.ConsoleNode.setAttribute('background', Background);
 		},
 		async function read() {
 			arguments.constrainedWithAndThrow();
@@ -460,7 +471,7 @@
 			this.counted++;
 			while (this.received >= this.istream.length || capturedCounted != this.received) {
 				this.CanType = true;
-				await defer(5);
+				await defer(0);
 			}
 			let output = this.istream[this.received++];
 			if (this.received == this.counted) {
@@ -485,7 +496,7 @@
 			this.ConsoleNode.setAttribute('for-any-key', '');
 			this.CanType = true;
 			while (this.ConsoleNode.hasAttribute('for-any-key')) {
-				await defer(5);
+				await defer(0);
 			}
 		},
 		async function reload(code) {
