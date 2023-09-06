@@ -15,9 +15,9 @@ namespace SedenConExt
 	namespace Native
 	{
 		EM_ASYNC_JS(const char*, ReadSync, (), {
-			let line = await iostream.read();
-			await iostream.writeLine(line);
-			return getUTF8String(__asyncjs__ReadSync, line + '\n');
+			let line = await iostream.read() + '\n';
+			await iostream.write(line);
+			return getUTF8String(__asyncjs__ReadSync, line);
 		});
 		EM_ASYNC_JS(void, WriteSync, (const char* Content), {
 			await iostream.writeWithColorCodes(UTF8ToString(Content));
