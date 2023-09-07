@@ -126,8 +126,9 @@ namespace SedenConExt
 		private:
 			enum class state
 			{
-				write = 0,
-				read = 1,
+				write = 1,
+				freeze = 2,
+				read = 3,
 			};
 			state state;
 			std::wstringstream output;
@@ -137,28 +138,39 @@ namespace SedenConExt
 			std::wstring::const_iterator input_end;
 			wchar_t input_popped;
 		public:
-			client_t() : state{ state::write }, output{}, output_lines{}, input{}, input_current{}, input_end{}, input_popped{} {};
+			client_t() : state{ state::freeze }, output{}, output_lines{}, input{}, input_current{}, input_end{}, input_popped{} {};
 		protected:
 			virtual int sync() override
 			{
 				if (state == state::read) { return -1; }
-				WriteSync(output.str());
-				output.str(L"");
-				output_lines = 0;
+				if (state == state::write)
+				{
+					WriteSync(output.str());
+					output.str(L"");
+					output_lines = 0;
+					state = state::freeze;
+				}
 				return 0;
 			};
+		public:
+			int send()
+			{
+				state = state::write;
+				return sync();
+			};
+		protected:
 			virtual int_type overflow(int_type c) override
 			{
-				if (output_lines >= 0xff) { sync(); }
+				if (output_lines >= 1024) { send(); }
 				if (c == L'\n') { ++output_lines; }
 				output << static_cast<wchar_t>(c);
 				return c;
 			};
 			virtual int_type underflow() override
 			{
-				if (state == state::write)
+				if (state == state::write || state == state::freeze)
 				{
-					sync();
+					send();
 					input = ReadSync();
 					input_current = input.cbegin();
 					input_end = input.cend();
@@ -168,7 +180,7 @@ namespace SedenConExt
 				if (input_current == input_end)
 				{
 					input_popped = L'\n';
-					state = state::write;
+					state = state::freeze;
 				}
 				else
 				{
@@ -214,12 +226,12 @@ namespace SedenConExt
 	};
 	void Clear()
 	{
-		dom::client.pubsync();
+		dom::client.send();
 		ClearSync();
 	};
 	void PressAnyKey()
 	{
-		dom::client.pubsync();
+		dom::client.send();
 		PressAnyKeySync();
 	};
 }

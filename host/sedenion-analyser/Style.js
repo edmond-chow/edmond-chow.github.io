@@ -359,11 +359,15 @@
 			let LineNode = null;
 			let SpanNode = null;
 			let NoLineNodes = this.LineNodes.length == 0;
+			let Colorless = () => {
+				let SpanNode = this.LastLineNode.LastSpanNode;
+				return SpanNode == null ? false : SpanNode.getAttribute('foreground') == Foreground && SpanNode.getAttribute('background') == Background;
+			};
 			let pushNode = () => {
 				this.BufferNode.append(Fragment);
 				Fragment = document.createDocumentFragment();
 				let Lines = this.LineNodes;
-				for (let i = 0; i < Lines.length - 1024; i++) {
+				for (let i = 0; i < Lines.length - 8192; i++) {
 					Lines[i].Self.remove();
 				}
 				this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
@@ -372,17 +376,28 @@
 				if ((NoLineNodes ? index : index - 1) % 512 == 0) {
 					pushNode();
 				}
+				let AddSpan = () => {
+					if (value != '') {
+						SpanNode = document.createElement('span');
+						SpanNode.setAttribute('foreground', Foreground);
+						SpanNode.setAttribute('background', Background);
+						SpanNode.textContent += value;
+						LineNode.append(SpanNode);
+					}
+				};
 				if (index > 0 || NoLineNodes) {
 					LineNode = document.createElement('line');
+					AddSpan();
 					Fragment.append(LineNode);
 				} else {
 					LineNode = this.LastLineNode.Self;
-				}	
-				SpanNode = document.createElement('span');
-				SpanNode.setAttribute('foreground', Foreground);
-				SpanNode.setAttribute('background', Background);
-				SpanNode.textContent += value;
-				LineNode.append(SpanNode);
+					if (Colorless()) {
+						SpanNode = this.LastLineNode.LastSpanNode;
+						SpanNode.textContent += value;
+					} else {
+						AddSpan();
+					}
+				}
 			});
 			pushNode();
 		},
@@ -399,11 +414,15 @@
 			let LineNode = null;
 			let SpanNode = null;
 			let NoLineNodes = this.LineNodes.length == 0;
+			let Colorless = () => {
+				let SpanNode = this.LastLineNode.LastSpanNode;
+				return SpanNode == null ? false : SpanNode.getAttribute('foreground') == Foreground && SpanNode.getAttribute('background') == Background;
+			};
 			let pushNode = () => {
 				this.BufferNode.append(Fragment);
 				Fragment = document.createDocumentFragment();
 				let Lines = this.LineNodes;
-				for (let i = 0; i < Lines.length - 1024; i++) {
+				for (let i = 0; i < Lines.length - 8192; i++) {
 					Lines[i].Self.remove();
 				}
 				setTitle(Title);
@@ -413,29 +432,36 @@
 				if ((NoLineNodes ? index : index - 1) % 512 == 0) {
 					pushNode();
 				}
+				let NonFirstLine = true;
 				if (index > 0 || NoLineNodes) {
 					LineNode = document.createElement('line');
 					Fragment.append(LineNode);
 				} else {
 					LineNode = this.LastLineNode.Self;
+					NonFirstLine = false;
 				}
-				value.split('\\').forEach((value, index) => {
-					if (index % 2 == 1) {
-						if (value.substring(0, 11) == 'foreground:') {
-							Foreground = value.substring(11, value.length);
-						} else if (value.substring(0, 11) == 'background:') {
-							Background = value.substring(11, value.length);
-						} else if (value.substring(0, 6) == 'title:') {
-							Title = value.substring(6, value.length);
+				if (value != '') {
+					value.split('\\').forEach((value, index) => {
+						if (index % 2 == 1) {
+							if (value.substring(0, 11) == 'foreground:') {
+								Foreground = value.substring(11, value.length);
+							} else if (value.substring(0, 11) == 'background:') {
+								Background = value.substring(11, value.length);
+							} else if (value.substring(0, 6) == 'title:') {
+								Title = value.substring(6, value.length);
+							}
+						} else if (NonFirstLine == false && index == 0 && Colorless()) {
+							SpanNode = this.LastLineNode.LastSpanNode;
+							SpanNode.textContent += value;
+						} else if (value != '') {
+							SpanNode = document.createElement('span');
+							SpanNode.setAttribute('foreground', Foreground);
+							SpanNode.setAttribute('background', Background);
+							SpanNode.textContent += value;
+							LineNode.append(SpanNode);
 						}
-					} else {
-						SpanNode = document.createElement('span');
-						SpanNode.setAttribute('foreground', Foreground);
-						SpanNode.setAttribute('background', Background);
-						SpanNode.textContent += value;
-						LineNode.append(SpanNode);
-					}
-				});
+					});
+				}
 			});
 			pushNode();
 			this.ConsoleNode.setAttribute('foreground', Foreground);
