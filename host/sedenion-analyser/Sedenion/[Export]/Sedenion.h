@@ -9,11 +9,6 @@
 #pragma push_macro("SEDEN_INTERFACE")
 #pragma push_macro("SEDEN_FUNC_CALL")
 #pragma push_macro("SEDEN_FUNC_INSTANCE_CALL")
-#if defined(X86) || defined(ARM)
-#pragma pack(4)
-#elif defined(X64) || defined(ARM64)
-#pragma pack(8)
-#endif
 #define CALL(c)
 #define SEDEN_INTERFACE
 #define SEDEN_FUNC_CALL

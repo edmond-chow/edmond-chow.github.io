@@ -9,11 +9,6 @@
 #pragma push_macro("CMPLX2_INTERFACE")
 #pragma push_macro("CMPLX2_FUNC_CALL")
 #pragma push_macro("CMPLX2_FUNC_INSTANCE_CALL")
-#if defined(X86) || defined(ARM)
-#pragma pack(4)
-#elif defined(X64) || defined(ARM64)
-#pragma pack(8)
-#endif
 #define CALL(c)
 #define CMPLX2_INTERFACE
 #define CMPLX2_FUNC_CALL
