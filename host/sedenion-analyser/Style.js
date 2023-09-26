@@ -563,9 +563,6 @@
 		let scriptNode = document.createElement('script');
 		scriptNode.src = 'Sedenion.js';
 		scriptNode.defer = true;
-		scriptNode.addEventListener('load', () => {
-			scriptNode.setAttribute('done', '');
-		});
 		document.head.append(scriptNode);
 		await new Promise(async (resolve) => {
 			while (initialized == false) {
