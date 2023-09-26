@@ -543,7 +543,7 @@
 	].bindTo(window);
 	/* { event-dispatcher } */
 	let isLoaded = false;
-	let structuredTag = () => {
+	let structuredTag = async () => {
 		/* [iostream] */
 		Object.defineProperty(window, 'iostream', {
 			value: new Console(),
@@ -551,17 +551,36 @@
 			configurable: false
 		});
 		window.iostream.bindTo(document.body);
-		document.body.classList.add('no-text');
+		let initialized = false;
+		Module = {
+			onRuntimeInitialized: () => {
+				initialized = true;
+			},
+			onAbort: () => {
+				Module.__Z12abort_unwindv();
+			}
+		};
 		let scriptNode = document.createElement('script');
 		scriptNode.src = 'Sedenion.js';
 		scriptNode.defer = true;
+		scriptNode.addEventListener('load', () => {
+			scriptNode.setAttribute('done', '');
+		});
 		document.head.append(scriptNode);
-	};
-	let formedStyle = () => {
+		await new Promise(async (resolve) => {
+			while (initialized == false) {
+				await defer(0);
+			}
+			resolve();
+		});
 		/* .no-text */
-		Array.from(document.getElementsByClassName('no-text')).map((value) => {
+		document.body.classList.add('no-text');
+	};
+	let formedStyle = async () => {
+		/* .no-text */
+		await Array.from(document.getElementsByClassName('no-text')).map((value) => {
 			return value.childNodes;
-		}).forEach((value) => {
+		}).forEachAsync((value) => {
 			value.forEach((value) => {
 				if (value.nodeName == '#text') {
 					value.textContent = '';
@@ -569,17 +588,17 @@
 			});
 		});
 	};
-	let delegate = () => {
+	let delegate = async () => {
 		if (document.readyState == 'complete') {
 			if (isLoaded == false) {
-				structuredTag();
+				await structuredTag();
 				isLoaded = true;
 			}
-			formedStyle();
+			await formedStyle();
 		}
 	};
 	while (true) {
 		await defer(5);
-		delegate();
+		await delegate();
 	}
 })();

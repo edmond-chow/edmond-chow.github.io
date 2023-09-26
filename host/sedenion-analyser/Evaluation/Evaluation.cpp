@@ -1,18 +1,5 @@
-﻿#include <emscripten.h>
-#include <csetjmp>
+﻿#include <csetjmp>
 #include <stdexcept>
-struct evaluate_t
-{
-private:
-	static const evaluate_t evaluate;
-	evaluate_t()
-	{
-		EM_ASM(
-			Module.onAbort = () => { Module.__Z12abort_unwindv(); };
-		);
-	};
-};
-const evaluate_t evaluate_t::evaluate{};
 struct evaluate_local
 {
 	evaluate_local* lastest_state;
@@ -56,7 +43,7 @@ void rethrow_current() noexcept
 	local_reference->caught_delegate(*rethrow_captured);
 	std::longjmp(local_reference->stack_pointer, 1);
 };
-void EMSCRIPTEN_KEEPALIVE abort_unwind() noexcept
+void abort_unwind() noexcept
 {
 	if (local_pointer != nullptr) { std::longjmp(local_pointer->stack_pointer, -1); }
 };
