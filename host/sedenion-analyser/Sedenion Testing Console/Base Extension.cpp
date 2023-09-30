@@ -40,9 +40,6 @@ namespace SedenConExt
 		EM_JS(const char*, GetString, (std::uint8_t Color), {
 			return getUTF8String(GetString, Color.fromConsoleColor());
 		});
-		EM_ASYNC_JS(void, ReloadSync, (int code), {
-			await iostream.reload(code);
-		});
 	}
 	inline std::string ToMbsString(const std::wstring& String)
 	{
@@ -114,10 +111,6 @@ namespace SedenConExt
 	std::wstring GetString(ConsoleColor Color)
 	{
 		return ToWcsString(Native::GetString(static_cast<std::uint8_t>(Color)));
-	};
-	void ReloadSync(int code)
-	{
-		Native::ReloadSync(code);
 	};
 	namespace dom
 	{
@@ -237,10 +230,6 @@ namespace SedenConExt
 }
 int main()
 {
-	while (true)
-	{
-		SedenionTestingConsole::Base::Main();
-		SedenConExt::ReloadSync(0);
-	}
+	SedenionTestingConsole::Base::Main();
 	return EXIT_SUCCESS;
 };

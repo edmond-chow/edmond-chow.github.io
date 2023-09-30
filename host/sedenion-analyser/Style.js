@@ -504,11 +504,13 @@
 		async function reload(code) {
 			this.ConsoleNode.setAttribute('foreground', 'gray');
 			this.ConsoleNode.setAttribute('background', 'default');
+			await this.clear();
 			await this.writeLine('');
 			await this.writeLine('   The program ended with a return code ' + code.toString() + '.');
 			await this.writeLine('');
 			await this.writeLine('      >> Press any key to continue with restart the program . . .   ');
 			await this.pressAnyKey();
+			await this.clear();
 		},
 		function bindTo(node) {
 			arguments.constrainedWithAndThrow(Element);
@@ -574,6 +576,11 @@
 		document.body.classList.add('no-text');
 	};
 	let formedStyle = async () => {
+		/* [iostream] */
+		if (EXITSTATUS == 0 && keepRuntimeAlive() == false) {
+			await iostream.reload(EXITSTATUS);
+			Module._main();
+		}
 		/* .no-text */
 		await Array.from(document.getElementsByClassName('no-text')).map((value) => {
 			return value.childNodes;
