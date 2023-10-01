@@ -192,6 +192,15 @@
 			});
 			Object.defineProperty(this, 'ReadLineType', {
 				value: () => {
+					let value = this.InputNode.value;
+					if (value.substring(0, 8) == '$scheme ') {
+						this.Scheme = value.substring(8, value.length);
+						this.writeWithColorCodes('\n\\foreground:gray\\ &   \\foreground:white\\' + value).then(() => {
+							this.BufferNode.append(this.LastLineNode.Self.previousElementSibling);
+						});
+						this.InputNode.value = '';
+						return;
+					}
 					if (this.CanType == true) {
 						this.pushInput(this.InputNode.value);
 						this.InputNode.value = '';
