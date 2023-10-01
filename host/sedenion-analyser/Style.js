@@ -170,6 +170,10 @@
 				set: (value) => {
 					this.InputNode.readOnly = !value;
 					this.ButtonNode.disabled = !value;
+					if (value == true && this.focused == false) {
+						this.InputNode.focus();
+					}
+					this.focused = value;
 				},
 				configurable: false,
 				enumerable: false
@@ -262,6 +266,12 @@
 				enumerable: false
 			});
 			Object.defineProperty(this, 'scroll', {
+				value: false,
+				writable: true,
+				configurable: false,
+				enumerable: false
+			});
+			Object.defineProperty(this, 'focused', {
 				value: false,
 				writable: true,
 				configurable: false,
@@ -564,6 +574,7 @@
 			configurable: false
 		});
 		window.iostream.bindTo(document.body);
+		iostream.InputNode.focus();
 		let initialized = false;
 		Module = {
 			onRuntimeInitialized: () => {
@@ -594,6 +605,7 @@
 				Module._main();
 			} else {
 				await iostream.terminated(EXITSTATUS);
+				document.location = document.location;
 			}
 		}
 		/* .no-text */
