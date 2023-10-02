@@ -1,16 +1,16 @@
 (async () => {
 	/* [Array.prototype.bindTo].bindTo(instance = window) */
 	(() => {
-		let lock = { configurable: false, writable: false };
+		let locked = { configurable: false, writable: false };
 		Array.prototype.bindTo = function bindTo(instance = window) {
 			this.forEach((value) => {
 				if (value instanceof Function) {
 					instance[value.name] = value;
-					Object.defineProperty(instance, value.name, lock);
+					Object.defineProperty(instance, value.name, locked);
 					if (value.prototype instanceof Object) {
-						Object.defineProperty(value, 'prototype', lock);
+						Object.defineProperty(value, 'prototype', locked);
 						value.prototype.constructor = value;
-						Object.defineProperty(value.prototype, 'constructor', lock);
+						Object.defineProperty(value.prototype, 'constructor', locked);
 					}
 				}
 			});
@@ -18,7 +18,7 @@
 		[Array.prototype.bindTo].bindTo(Array.prototype);
 		let Nullable = function Nullable(type) {
 			this.type = type;
-			Object.defineProperty(this, 'type', lock);
+			Object.defineProperty(this, 'type', locked);
 		};
 		[
 			function toNullable() {
@@ -68,17 +68,49 @@
 				return constrained;
 			},
 			function constrainedWithAndThrow(...types) {
-				if (constrained && !this.constrainedWith(...types)) {
+				if (window.constrained && !this.constrainedWith(...types)) {
 					throw 'The function arguments should match up the parameter types.';
 				}
+			},
+			function defineField(instance, key, data, mutable = false) {
+				[instance, key].constrainedWithAndThrow(Object, String);
+				Object.defineProperty(instance, key, {
+					value: data,
+					writable: mutable,
+					enumerable: false,
+					configurable: false,
+				});
+			},
+			function defineSharedField(instance, key, data, mutable = false) {
+				[instance, key].constrainedWithAndThrow(Object, String);
+				Object.defineProperty(instance, key, {
+					value: data,
+					writable: mutable,
+					enumerable: true,
+					configurable: false,
+				});
+			},
+			function defineSharedProperty(instance, key, getter, setter) {
+				[instance, key].constrainedWithAndThrow(Object, String);
+				Object.defineProperty(instance, key, {
+					get: getter,
+					set: setter,
+					enumerable: true,
+					configurable: false,
+				});
+			},
+			function defineProperty(instance, key, getter, setter) {
+				[instance, key].constrainedWithAndThrow(Object, String);
+				Object.defineProperty(instance, key, {
+					get: getter,
+					set: setter,
+					enumerable: false,
+					configurable: false,
+				});
 			}
 		].bindTo(Object.prototype);
 	})();
-	Object.defineProperty(window, 'constrained', {
-		value: false,
-		writable: true,
-		configurable: false,
-	});
+	defineSharedField(window, 'constrained', false, true);
 	/* { control-flow } */
 	(() => {
 		let loop = [];
@@ -117,24 +149,14 @@
 	await defer(0);
 	/* constructor() */
 	function LineNodeWrapper(node) {
-		Object.defineProperty(this, 'Self', {
-			value: node,
-			writable: false,
-			configurable: false,
+		defineField(this, 'Self', node);
+		defineProperty(this, 'SpanNodes', () => {
+			return Array.from(this.Self.childNodes).filter((value) => {
+				return value.nodeName == 'span'.toUpperCase();
+			});
 		});
-		Object.defineProperty(this, 'SpanNodes', {
-			configurable: false,
-			get: function getter() {
-				return Array.from(node.childNodes).filter((value) => {
-					return value.nodeName == 'span'.toUpperCase();
-				});
-			}
-		});
-		Object.defineProperty(this, 'LastSpanNode', {
-			configurable: false,
-			get: function getter() {
-				return this.SpanNodes.length == 0 ? null : this.SpanNodes[this.SpanNodes.length - 1];
-			}
+		defineProperty(this, 'LastSpanNode', () => {
+			return this.SpanNodes.length == 0 ? null : this.SpanNodes[this.SpanNodes.length - 1];
 		});
 	}
 	[
@@ -143,79 +165,46 @@
 				return;
 			}
 			arguments.constrainedWithAndThrow();
-			Object.defineProperty(this, 'ConsoleNode', {
-				value: document.createElement('console'),
-				writable: false,
-				configurable: false
-			});
+			defineSharedField(this, 'ConsoleNode', document.createElement('console'));
 			this.ConsoleNode.setAttribute('foreground', 'gray');
 			this.ConsoleNode.setAttribute('background', 'default');
 			this.ConsoleNode.setAttribute('scheme', 'campbell');
-			Object.defineProperty(this, 'BufferNode', {
-				value: document.createElement('buffer'),
-				writable: false,
-				configurable: false
-			});
+			defineSharedField(this, 'BufferNode', document.createElement('buffer'));
 			this.ConsoleNode.append(this.BufferNode);
-			Object.defineProperty(this, 'ControlNode', {
-				value: document.createElement('control'),
-				writable: false,
-				configurable: false
-			});
+			defineSharedField(this, 'ControlNode', document.createElement('control'));
 			this.ConsoleNode.append(this.ControlNode);
-			Object.defineProperty(this, 'CanType', {
-				get: () => {
-					return !this.InputNode.readOnly;
-				},
-				set: (value) => {
-					this.InputNode.readOnly = !value;
-					this.ButtonNode.disabled = !value;
-					if (value == true && this.focused == false) {
-						this.InputNode.focus();
-					}
-					this.focused = value;
-				},
-				configurable: false,
-				enumerable: false
+			defineProperty(this, 'CanType', () => {
+				return !this.InputNode.readOnly;
+			}, (value) => {
+				this.InputNode.readOnly = !value;
+				this.ButtonNode.disabled = !value;
+				if (value == true && this.focused == false) {
+					this.InputNode.focus();
+				}
+				this.focused = value;
 			});
-			Object.defineProperty(this, 'ForAnyKeyType', {
-				value: () => {
-					if (this.CanType == true) {
-						this.ConsoleNode.removeAttribute('for-any-key');
-						this.InputNode.value = '';
-						this.CanType = false;
-					}
-				},
-				writable: false,
-				configurable: false,
-				enumerable: false
+			defineField(this, 'ForAnyKeyType', () => {
+				if (this.CanType == true) {
+					this.ConsoleNode.removeAttribute('for-any-key');
+					this.InputNode.value = '';
+					this.CanType = false;
+				}
 			});
-			Object.defineProperty(this, 'ReadLineType', {
-				value: () => {
-					let value = this.InputNode.value;
-					if (value.substring(0, 8) == '$scheme ') {
-						this.Scheme = value.substring(8, value.length);
-						this.writeWithColorCodes('\n\\foreground:gray\\ &   \\foreground:white\\' + value).then(() => {
-							this.BufferNode.append(this.LastLineNode.Self.previousElementSibling);
-						});
-						this.InputNode.value = '';
-						return;
-					}
-					if (this.CanType == true) {
-						this.pushInput(this.InputNode.value);
-						this.InputNode.value = '';
-						this.CanType = false;
-					}
-				},
-				writable: false,
-				configurable: false,
-				enumerable: false
+			defineField(this, 'ReadLineType', () => {
+				let value = this.InputNode.value;
+				if (value.substring(0, 8) == '$scheme ') {
+					this.Scheme = value.substring(8, value.length);
+					this.writeWithColorCodes('\n\\foreground:gray\\ &   \\foreground:white\\' + value).then(() => {
+						this.BufferNode.append(this.LastLineNode.Self.previousElementSibling);
+					});
+					this.InputNode.value = '';
+				} else if (this.CanType == true) {
+					this.pushInput(this.InputNode.value);
+					this.InputNode.value = '';
+					this.CanType = false;
+				}
 			});
-			Object.defineProperty(this, 'InputNode', {
-				value: document.createElement('input'),
-				writable: false,
-				configurable: false
-			});
+			defineSharedField(this, 'InputNode', document.createElement('input'));
 			this.InputNode.type = 'text';
 			this.InputNode.placeholder = 'type in something for interacting with the console . . . . .';
 			this.InputNode.addEventListener('keydown', (e) => {
@@ -226,11 +215,7 @@
 				}
 			});
 			this.ControlNode.append(this.InputNode);
-			Object.defineProperty(this, 'ButtonNode', {
-				value: document.createElement('button'),
-				writable: false,
-				configurable: false
-			});
+			defineSharedField(this, 'ButtonNode', document.createElement('button'));
 			this.ButtonNode.addEventListener('click', () => {
 				if (this.ConsoleNode.hasAttribute('for-any-key')) {
 					this.ForAnyKeyType();
@@ -240,107 +225,66 @@
 			});
 			this.ControlNode.append(this.ButtonNode);
 			this.CanType = false;
-			Object.defineProperty(this, 'LineNodes', {
-				configurable: false,
-				get: function getter() {
-					return Array.from(this.BufferNode.childNodes).filter((value) => {
-						return value.nodeName == 'line'.toUpperCase();
-					}).map((value) => {
-						return new LineNodeWrapper(value);
-					});
-				}
+			defineSharedProperty(this, 'LineNodes', () => {
+				return Array.from(this.BufferNode.childNodes).filter((value) => {
+					return value.nodeName == 'line'.toUpperCase();
+				}).map((value) => {
+					return new LineNodeWrapper(value);
+				});
 			});
-			Object.defineProperty(this, 'LastLineNode', {
-				configurable: false,
-				get: function getter() {
-					return this.LineNodes.length == 0 ? null : this.LineNodes[this.LineNodes.length - 1];
-				}
+			defineSharedProperty(this, 'LastLineNode', () => {
+				return this.LineNodes.length == 0 ? null : this.LineNodes[this.LineNodes.length - 1];
 			});
-			Object.defineProperty(this, 'istream', {
-				value: [],
-				writable: true,
-				configurable: false,
-				enumerable: false
-			});
-			Object.defineProperty(this, 'received', {
-				value: 0,
-				writable: true,
-				configurable: false,
-				enumerable: false
-			});
-			Object.defineProperty(this, 'counted', {
-				value: 0,
-				writable: true,
-				configurable: false,
-				enumerable: false
-			});
-			Object.defineProperty(this, 'scroll', {
-				value: false,
-				writable: true,
-				configurable: false,
-				enumerable: false
-			});
-			Object.defineProperty(this, 'focused', {
-				value: false,
-				writable: true,
-				configurable: false,
-				enumerable: false
+			defineField(this, 'istream', [], true);
+			defineField(this, 'received', 0, true);
+			defineField(this, 'counted', 0, true);
+			defineField(this, 'scroll', false, true);
+			defineField(this, 'focused', false, true);
+			defineSharedProperty(this, 'Scheme', () => {
+				return this.ConsoleNode.getAttribute('scheme');
+			}, () => {
+				this.ConsoleNode.setAttribute('scheme', Scheme);
 			});
 		}
 	].bindTo(window);
-	Object.defineProperty(Console, 'Colors', {
-		value: [
-			'black',
-			'dark-blue',
-			'dark-green',
-			'dark-cyan',
-			'dark-red',
-			'dark-magenta',
-			'dark-yellow',
-			'gray',
-			'dark-gray',
-			'blue',
-			'green',
-			'cyan',
-			'red',
-			'magenta',
-			'yellow',
-			'white',
-		],
-		writable: false,
-		configurable: false
-	});
-	Console.Colors[0xFF] = 'default';
+	let Colors = [
+		'black',
+		'dark-blue',
+		'dark-green',
+		'dark-cyan',
+		'dark-red',
+		'dark-magenta',
+		'dark-yellow',
+		'gray',
+		'dark-gray',
+		'blue',
+		'green',
+		'cyan',
+		'red',
+		'magenta',
+		'yellow',
+		'white',
+	];
+	Colors[0xFF] = 'default';
+	defineSharedField(Console, 'Colors', Colors);
 	Object.freeze(Console.Colors);
-	Object.defineProperty(Console, 'Themes', {
-		value: [
-			'campbell',
-			'campbell-powershell',
-			'solarized-dark',
-			'solarized',
-			'solarized-light',
-			'tango-dark',
-			'tango',
-			'tango-light',
-			'gnome',
-			'linux',
-			'xterm',
-			'rxvt',
-			'vintage'
-		],
-		writable: false,
-		configurable: false
-	});
+	let Themes = [
+		'campbell',
+		'campbell-powershell',
+		'solarized-dark',
+		'solarized',
+		'solarized-light',
+		'tango-dark',
+		'tango',
+		'tango-light',
+		'gnome',
+		'linux',
+		'xterm',
+		'rxvt',
+		'vintage'
+	];
+	defineSharedField(Console, 'Themes', Themes);
 	Object.freeze(Console.Themes);
-	Object.defineProperty(Console.prototype, 'Scheme', {
-		configurable: false,
-		get: function getter() {
-			return this.ConsoleNode.getAttribute('scheme');
-		},
-		set: function setter(Scheme) {
-			this.ConsoleNode.setAttribute('scheme', Scheme);
-		}
-	});
 	[
 		function fromConsoleColor() {
 			arguments.constrainedWithAndThrow();
@@ -577,11 +521,7 @@
 	let isLoaded = false;
 	let structuredTag = async () => {
 		/* [iostream] */
-		Object.defineProperty(window, 'iostream', {
-			value: new Console(),
-			writable: false,
-			configurable: false
-		});
+		defineSharedField(window, 'iostream', new Console());
 		window.iostream.bindTo(document.body);
 		iostream.InputNode.focus();
 		let initialized = false;
