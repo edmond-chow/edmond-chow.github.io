@@ -1,16 +1,16 @@
 (async () => {
 	/* [Array.prototype.bindTo].bindTo(instance = window) */
 	(() => {
-		let locked = { configurable: false, writable: false };
+		let lock = { configurable: false, writable: false };
 		Array.prototype.bindTo = function bindTo(instance = window) {
 			this.forEach((value) => {
 				if (value instanceof Function) {
 					instance[value.name] = value;
-					Object.defineProperty(instance, value.name, locked);
+					Object.defineProperty(instance, value.name, lock);
 					if (value.prototype instanceof Object) {
-						Object.defineProperty(value, 'prototype', locked);
+						Object.defineProperty(value, 'prototype', lock);
 						value.prototype.constructor = value;
-						Object.defineProperty(value.prototype, 'constructor', locked);
+						Object.defineProperty(value.prototype, 'constructor', lock);
 					}
 				}
 			});
@@ -18,7 +18,7 @@
 		[Array.prototype.bindTo].bindTo(Array.prototype);
 		let Nullable = function Nullable(type) {
 			this.type = type;
-			Object.defineProperty(this, 'type', locked);
+			Object.defineProperty(this, 'type', lock);
 		};
 		[
 			function toNullable() {
