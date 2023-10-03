@@ -149,13 +149,13 @@
 	await defer(0);
 	/* constructor() */
 	function LineNodeWrapper(node) {
-		defineField(this, 'Self', node);
-		defineProperty(this, 'SpanNodes', () => {
+		defineSharedField(this, 'Self', node);
+		defineSharedProperty(this, 'SpanNodes', () => {
 			return Array.from(this.Self.childNodes).filter((value) => {
 				return value.nodeName == 'span'.toUpperCase();
 			});
 		});
-		defineProperty(this, 'LastSpanNode', () => {
+		defineSharedProperty(this, 'LastSpanNode', () => {
 			return this.SpanNodes.length == 0 ? null : this.SpanNodes[this.SpanNodes.length - 1];
 		});
 	}
