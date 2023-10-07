@@ -72,6 +72,34 @@
 					throw 'The function arguments should match up the parameter types.';
 				}
 			},
+			function makePrototypeOf(proto) {
+				let base = [proto].constrainedWith(Object) ? proto : null;
+				while (base != null) {
+					Object.keys(base).forEach((key) => {
+						let descriptor = Object.getOwnPropertyDescriptor(base, key);
+						if (this.hasOwnProperty(key)) { }
+						else if (descriptor.hasOwnProperty('value')) {
+							defineSharedProperty(this, key, () => {
+								return proto[key];
+							}, (value) => {
+								proto[key] = value;
+							});
+						} else {
+							let getter = descriptor.get;
+							let setter = descriptor.set;
+							defineSharedProperty(this, key, getter == undefined ? undefined : () => {
+								return getter.call(proto);
+							}, setter == undefined ? undefined : (value) => {
+								setter.call(proto, value);
+							});
+						}
+					});
+					base = Object.getPrototypeOf(base);
+				}
+				return this;
+			}
+		].bindTo(Object.prototype);
+		[
 			function defineField(instance, key, data, mutable = false) {
 				[instance, key].constrainedWithAndThrow(Object, String);
 				Object.defineProperty(instance, key, {
@@ -108,7 +136,7 @@
 					configurable: false,
 				});
 			}
-		].bindTo(Object.prototype);
+		].bindTo(window);
 	})();
 	defineSharedField(window, 'constrained', false, true);
 	/* { control-flow } */
@@ -149,6 +177,7 @@
 	await defer(0);
 	/* constructor() */
 	function LineNodeWrapper(node) {
+		Object.setPrototypeOf(this, new Object().makePrototypeOf(node));
 		defineSharedField(this, 'Self', node);
 		defineSharedProperty(this, 'SpanNodes', () => {
 			return Array.from(this.Self.childNodes).filter((value) => {
