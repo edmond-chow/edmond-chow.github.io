@@ -43,21 +43,21 @@ namespace SedenConExt
 	}
 	inline std::string ToMbsString(const std::wstring& String)
 	{
-		std::size_t length = String.size() * 2 + 1;
-		char* temporary = new char[length] { '\0' };
-		std::wcstombs(temporary, String.c_str(), length);
-		std::string converted = temporary;
-		delete[] temporary;
-		return converted;
+		std::size_t Length = String.size() * sizeof(wchar_t) + 1;
+		char* Temporary = new char[Length] { '\0' };
+		std::wcstombs(Temporary, String.c_str(), Length);
+		std::string Converted = Temporary;
+		delete[] Temporary;
+		return Converted;
 	};
 	inline std::wstring ToWcsString(const std::string& String)
 	{
-		std::size_t length = String.size() + 1;
-		wchar_t* temporary = new wchar_t[length] { L'\0' };
-		std::mbstowcs(temporary, String.c_str(), length);
-		std::wstring converted = temporary;
-		delete[] temporary;
-		return converted;
+		std::size_t Length = String.size() + 1;
+		wchar_t* Temporary = new wchar_t[Length] { L'\0' };
+		std::mbstowcs(Temporary, String.c_str(), Length);
+		std::wstring Converted = Temporary;
+		delete[] Temporary;
+		return Converted;
 	};
 	enum class ConsoleColor : std::uint8_t
 	{
