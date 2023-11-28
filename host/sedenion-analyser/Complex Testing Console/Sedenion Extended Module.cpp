@@ -144,20 +144,18 @@ namespace SedenBasis
 	};
 	void SedenConsole::Load() noexcept
 	{
-		static thread_local struct CurrentCapturedLocal { std::wstring* Line; } Captured{ nullptr };
+		static thread_local const std::wstring* Captured{ nullptr };
 		Base::Startup(Base::GetTitle());
 		Base::Selection(L"=   +   -   *   /   ^   power()   root()   log()");
 		Base::Selection(L"abs   arg()   conjg   sgn   inverse   exp   ln()   dot   outer   even   cross");
 		Base::Selection(L"sin   cos   tan   csc   sec   cot   arcsin()   arccos()   arctan()   arccsc()   arcsec()   arccot()");
 		Base::Selection(L"sinh   cosh   tanh   csch   sech   coth   arcsinh()   arccosh()   arctanh()   arccsch()   arcsech()   arccoth()");
 		Base::Selection(Base::GetStartupLine());
-		for (std::wstring Line; !Base::IsSwitchTo(Line); Line = Base::Input())
+		for (std::wstring Line; !Base::IsSwitchTo(Line); Line = Base::Input(), Captured = &Line)
 		{
-			struct LastCapturedLocal { std::wstring* Line; } LastCaptured{ Captured.Line };
-			Captured.Line = &Line;
 			if (Line.empty()) { continue; }
 			operate_t operate = +[]() -> void {
-				const std::wstring& Line = *Captured.Line;
+				const std::wstring& Line = *Captured;
 				op(Line, L"=", operator ==);
 				op(Line, L"+", operator +);
 				op(Line, L"-", operator -);
@@ -208,7 +206,6 @@ namespace SedenBasis
 			};
 			caught_t caught = +[](const std::exception& ex) -> void { Base::Exception(ex); };
 			evaluate(operate, caught);
-			Captured.Line = LastCaptured.Line;
 		}
 	};
 }
