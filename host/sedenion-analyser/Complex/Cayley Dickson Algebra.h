@@ -97,11 +97,11 @@ public:
 	};
 	template <std::size_t U, std::size_t V, std::size_t... I, std::size_t... J>
 	friend constexpr Number<U + V> merge_impl(const Number<U>& Union, const Number<V>& Value, std::integer_sequence<std::size_t, I...>, std::integer_sequence<std::size_t, J...>) noexcept;
-	template <std::size_t S>
+	template <std::size_t S, typename>
 	friend constexpr Number<S> operator *(const Number<S>& Union, const Number<S>& Value) noexcept;
-	template <std::size_t S, std::size_t... I>
+	template <std::size_t S, std::size_t... I, typename>
 	friend constexpr double vector_dot_impl(const Number<S>& Union, const Number<S>& Value, std::integer_sequence<std::size_t, I...>) noexcept;
-	template <std::size_t S, std::size_t... I>
+	template <std::size_t S, std::size_t... I, typename>
 	friend constexpr Number<S> vector_cross_impl(const Number<S>& Union, const Number<S>& Value, std::integer_sequence<std::size_t, I...>) noexcept;
 };
 template <std::size_t U, std::size_t V, std::size_t... I, std::size_t... J>
@@ -144,7 +144,7 @@ constexpr Number<N> operator ~(const Number<N>& Value) noexcept
 {
 	return Number<N>::conjg(Value);
 };
-template <std::size_t N>
+template <std::size_t N, typename = std::enable_if_t<is_number(N)>>
 constexpr Number<N> operator *(const Number<N>& Union, const Number<N>& Value) noexcept
 {
 	if constexpr (N == 1) { return Number<1>{ Union.data[0] * Value.data[0] }; }
@@ -171,7 +171,7 @@ constexpr Number<N> operator /(const Number<N>& Union, double Value) noexcept
 {
 	return Union * (1 / Value);
 };
-template <std::size_t N, std::size_t... I>
+template <std::size_t N, std::size_t... I, typename = std::enable_if_t<is_number(N + 1)>>
 constexpr double vector_dot_impl(const Number<N>& Union, const Number<N>& Value, std::integer_sequence<std::size_t, I...>) noexcept
 {
 	return ((Union.data[I] * Value.data[I]) + ...);
@@ -181,7 +181,7 @@ constexpr double vector_dot(const Number<N>& Union, const Number<N>& Value) noex
 {
 	return vector_dot_impl(Union, Value, std::make_index_sequence<N>{});
 };
-template <std::size_t N, std::size_t... I>
+template <std::size_t N, std::size_t... I, typename = std::enable_if_t<is_number(N + 1)>>
 constexpr Number<N> vector_cross_impl(const Number<N>& Union, const Number<N>& Value, std::integer_sequence<std::size_t, I...>) noexcept
 {
 	Number<N + 1> Result = Number<N + 1>{ 0, Union.data[I]... } * Number<N + 1>{ 0, Value.data[I]... };
