@@ -50,9 +50,9 @@ namespace Quter
 			///
 			Vector3D QUTER_FUNC_INSTANCE_CALL operator ()() const noexcept;
 			double& QUTER_FUNC_INSTANCE_CALL operator [](index i) &;
-			double& QUTER_FUNC_INSTANCE_CALL operator [](std::int64_t i) & noexcept;
+			double& QUTER_FUNC_INSTANCE_CALL operator [](std::size_t i) & noexcept;
 			const double& QUTER_FUNC_INSTANCE_CALL operator [](index i) const&;
-			const double& QUTER_FUNC_INSTANCE_CALL operator [](std::int64_t i) const& noexcept;
+			const double& QUTER_FUNC_INSTANCE_CALL operator [](std::size_t i) const& noexcept;
 			friend bool QUTER_INTERFACE QUTER_FUNC_CALL operator ==(const Vector3D& Union, const Vector3D& Value) noexcept;
 			friend bool QUTER_INTERFACE QUTER_FUNC_CALL operator !=(const Vector3D& Union, const Vector3D& Value) noexcept;
 			friend Vector3D QUTER_INTERFACE QUTER_FUNC_CALL operator +(const Vector3D& Value) noexcept;
@@ -143,7 +143,7 @@ namespace Quter
 				throw_now(std::out_of_range("The index is out of range."));
 			}
 		};
-		double& QUTER_FUNC_INSTANCE_CALL Vector3D::operator [](std::int64_t i) & noexcept
+		double& QUTER_FUNC_INSTANCE_CALL Vector3D::operator [](std::size_t i) & noexcept
 		{
 			try
 			{
@@ -166,7 +166,7 @@ namespace Quter
 				throw_now(std::out_of_range("The index is out of range."));
 			}
 		};
-		const double& QUTER_FUNC_INSTANCE_CALL Vector3D::operator [](std::int64_t i) const& noexcept
+		const double& QUTER_FUNC_INSTANCE_CALL Vector3D::operator [](std::size_t i) const& noexcept
 		{
 			try
 			{
@@ -283,9 +283,9 @@ namespace Quter
 			///
 			Quaternion QUTER_FUNC_INSTANCE_CALL operator ()() const noexcept;
 			double& QUTER_FUNC_INSTANCE_CALL operator [](index i) &;
-			double& QUTER_FUNC_INSTANCE_CALL operator [](std::int64_t i) & noexcept;
+			double& QUTER_FUNC_INSTANCE_CALL operator [](std::size_t i) & noexcept;
 			const double& QUTER_FUNC_INSTANCE_CALL operator [](index i) const&;
-			const double& QUTER_FUNC_INSTANCE_CALL operator [](std::int64_t i) const& noexcept;
+			const double& QUTER_FUNC_INSTANCE_CALL operator [](std::size_t i) const& noexcept;
 			friend bool QUTER_INTERFACE QUTER_FUNC_CALL operator ==(const Quaternion& Union, const Quaternion& Value) noexcept;
 			friend bool QUTER_INTERFACE QUTER_FUNC_CALL operator !=(const Quaternion& Union, const Quaternion& Value) noexcept;
 			friend Quaternion QUTER_INTERFACE QUTER_FUNC_CALL operator +(const Quaternion& Value) noexcept;
@@ -455,7 +455,7 @@ namespace Quter
 				throw_now(std::out_of_range("The index is out of range."));
 			}
 		};
-		double& QUTER_FUNC_INSTANCE_CALL Quaternion::operator [](std::int64_t i) & noexcept
+		double& QUTER_FUNC_INSTANCE_CALL Quaternion::operator [](std::size_t i) & noexcept
 		{
 			try
 			{
@@ -480,7 +480,7 @@ namespace Quter
 				throw_now(std::out_of_range("The index is out of range."));
 			}
 		};
-		const double& QUTER_FUNC_INSTANCE_CALL Quaternion::operator [](std::int64_t i) const& noexcept
+		const double& QUTER_FUNC_INSTANCE_CALL Quaternion::operator [](std::size_t i) const& noexcept
 		{
 			try
 			{
