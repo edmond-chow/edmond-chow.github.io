@@ -82,16 +82,7 @@ inline std::wstring Replace(const std::wstring& Input, const std::wstring& Searc
 };
 inline std::int64_t stoi64_t(const std::wstring& str)
 {
-	std::wstring result = Replace(str, L" ", L"");
-	return wtoi64_t(result.c_str());
-};
-inline std::int64_t ParseAsInteger(const std::wstring& Value)
-{
-	return stoi64_t(Replace(Value, L" ", L""));
-};
-inline double ParseAsReal(const std::wstring& Value)
-{
-	return std::stod(Replace(Value, L" ", L""));
+	return wtoi64_t(str.c_str());
 };
 template <typename T>
 inline std::wstring to_wstring(T o) { return T::GetString(o); };
@@ -103,6 +94,14 @@ template <>
 inline std::wstring to_wstring<std::int64_t>(std::int64_t o) { return std::to_wstring(o); };
 template <>
 inline std::wstring to_wstring<bool>(bool o) { return o ? L"true" : L"false"; };
+inline std::int64_t ParseAsInteger(const std::wstring& Value)
+{
+	return stoi64_t(Replace(Value, L" ", L""));
+};
+inline double ParseAsReal(const std::wstring& Value)
+{
+	return std::stod(Replace(Value, L" ", L""));
+};
 namespace ComplexTestingConsole
 {
 	class Base final
