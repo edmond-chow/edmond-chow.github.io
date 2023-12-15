@@ -1,5 +1,7 @@
+#pragma once
 #include <Evaluation.h>
 #include <cmath>
+#include <cstdint>
 #include <limits>
 #include <numbers>
 #include <iomanip>
@@ -10,7 +12,6 @@
 #include <array>
 #include <algorithm>
 #include <stdexcept>
-#include "Cayley Dickson Algebra.h"
 inline constexpr const wchar_t SignBefore[] = LR"((-|\+|^))";
 inline constexpr const wchar_t UnsignedReal[] = LR"((\d+)(\.\d+|)([Ee](-|\+|)(\d+)|))";
 inline constexpr const wchar_t SignAfter[] = LR"((-|\+|$))";

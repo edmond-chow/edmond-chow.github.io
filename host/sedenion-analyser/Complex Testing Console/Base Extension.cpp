@@ -9,6 +9,8 @@
 #include <string>
 #include <sstream>
 #include <stdexcept>
+#include <streambuf>
+#include <iostream>
 #include "Base.h"
 namespace CmplxConExt
 {

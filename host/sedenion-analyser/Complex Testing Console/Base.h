@@ -1,13 +1,11 @@
 ﻿#pragma once
-#ifndef CMPLX_UNIT_TEST
-#define CMPLX_UNIT_TEST
 #include <Evaluation.h>
 #include <cstdint>
-#include <array>
 #include <iomanip>
 #include <string>
 #include <regex>
 #include <sstream>
+#include <array>
 #include <stdexcept>
 inline std::int64_t wtoi64_t(const wchar_t* str)
 {
@@ -238,4 +236,3 @@ namespace ComplexTestingConsole
 		}
 	};
 }
-#endif
