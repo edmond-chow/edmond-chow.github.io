@@ -110,7 +110,7 @@ namespace SedenBasis
 			bool Sign = false;
 			std::wstring Input = std::regex_replace(Base::Input(L"Sign : "), std::wregex(L" "), L"");
 			if (Input == L"+") { Sign = true; }
-			else if (Input != L"-") { throw std::invalid_argument("A string interpretation of the sign cannot be converted as a bool value."); }
+			else if (Input != L"-") { throw_now(std::invalid_argument("A string interpretation of the sign cannot be converted as a bool value.")); }
 			std::int64_t Period = ParseAsInteger(Base::Input(L"Period = "));
 			Base::Output(to_wstring(std::invoke(Subroutine, Value, Sign, Period)));
 		}
