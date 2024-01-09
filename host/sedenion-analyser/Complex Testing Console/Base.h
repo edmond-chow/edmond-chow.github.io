@@ -9,18 +9,18 @@
 #include <stdexcept>
 inline std::int64_t wtoi64_t(const wchar_t* str)
 {
-	if (str[0] == L'\0') { throw std::invalid_argument("The string cannot not be converted as an integer."); }
+	if (str[0] == L'\0') { throw_now(std::invalid_argument("The string cannot be converted as an integer.")); }
 	const wchar_t* number = str;
 	if (str[0] == L'-' || str[0] == L'+')
 	{
-		if (str[1] == L'\0') { throw std::invalid_argument("The string cannot not be converted as an integer."); }
+		if (str[1] == L'\0') { throw_now(std::invalid_argument("The string cannot be converted as an integer.")); }
 		++number;
 	}
 	std::size_t number_size = 0;
 	const wchar_t* number_end = number;
 	while (*number_end != L'\0')
 	{
-		if (static_cast<std::uint16_t>(*number_end) < 48 || static_cast<std::uint16_t>(*number_end) > 57) { throw std::invalid_argument("The string cannot not be converted as an integer."); }
+		if (static_cast<std::uint16_t>(*number_end) < 48 || static_cast<std::uint16_t>(*number_end) > 57) { throw_now(std::invalid_argument("The string cannot be converted as an integer.")); }
 		++number_end;
 		++number_size;
 	}
@@ -29,7 +29,7 @@ inline std::int64_t wtoi64_t(const wchar_t* str)
 	wchar_t digitsCheck[20]{ L'\0' };
 	if (number_size > 20)
 	{
-		throw std::out_of_range("An integer is exceeded the limit.");
+		throw_now(std::out_of_range("An integer is exceeded the limit."));
 	}
 	std::int64_t accumulate = 1;
 	std::int64_t output = 0;
@@ -49,12 +49,12 @@ inline std::int64_t wtoi64_t(const wchar_t* str)
 			if (str[0] == L'-')
 			{
 				if (digitsCheck[i] < wcharsMinus[i]) { break; }
-				else if (digitsCheck[i] > wcharsMinus[i]) { throw std::out_of_range("An integer is exceeded the limit."); }
+				else if (digitsCheck[i] > wcharsMinus[i]) { throw_now(std::out_of_range("An integer is exceeded the limit.")); }
 			}
 			else
 			{
 				if (digitsCheck[i] < wcharsPlus[i]) { break; }
-				else if (digitsCheck[i] > wcharsPlus[i]) { throw std::out_of_range("An integer is exceeded the limit."); }
+				else if (digitsCheck[i] > wcharsPlus[i]) { throw_now(std::out_of_range("An integer is exceeded the limit.")); }
 			}
 		}
 	}
@@ -97,7 +97,13 @@ inline std::int64_t ParseAsInteger(const std::wstring& Value)
 };
 inline double ParseAsReal(const std::wstring& Value)
 {
-	return std::stod(Replace(Value, L" ", L""));
+	std::wstring Replaced = Replace(Value, L" ", L"");
+	std::size_t Processed = 0;
+	double Result = 0;
+	try { Result = std::stod(Replaced, &Processed); }
+	catch (...) { Processed = std::wstring::npos; }
+	if (Processed == Replaced.size()) { return Result; }
+	throw_now(std::invalid_argument("The string cannot be converted as a real."));
 };
 namespace ComplexTestingConsole
 {

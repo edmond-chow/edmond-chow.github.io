@@ -351,7 +351,6 @@ public:
 	{
 		return right(size >> 1);
 	};
-	template <bool Shift>
 	friend constexpr bool Check(Factor& Union, Factor& Value);
 	friend constexpr Factor MakeFactor(const Factor& Value);
 	friend constexpr void AsVector(Factor& Value);
@@ -371,11 +370,9 @@ public:
 	friend constexpr Factor number_even(const Factor& Union, const Factor& Value);
 	friend constexpr Factor number_cross(const Factor& Union, const Factor& Value);
 };
-template <bool Shift>
 constexpr bool Check(Factor& Union, Factor& Value)
 {
-	std::size_t Offset = Shift ? 1 : 0;
-	if (!is_factor(Union.size + Offset) || !is_factor(Value.size + Offset))
+	if (!is_factor(Union.size) || !is_factor(Value.size))
 	{
 		throw_now(std::invalid_argument("The size must be a number which is 2 to the power of a natural number."));
 	}
@@ -448,7 +445,7 @@ constexpr Factor operator *(const Factor& Union, const Factor& Value)
 {
 	Factor NumUnion = Union;
 	Factor NumValue = Value;
-	if (Check<false>(NumUnion, NumValue)) { return Factor{ GetScalar(NumUnion) * GetScalar(NumValue) }; }
+	if (Check(NumUnion, NumValue)) { return Factor{ GetScalar(NumUnion) * GetScalar(NumValue) }; }
 	Factor MergeLeft = NumUnion.left() * NumValue.left() - ~NumValue.right() * NumUnion.right();
 	Factor MergeRight = NumValue.right() * NumUnion.left() + NumUnion.right() * ~NumValue.left();
 	return Factor::merge(MergeLeft, MergeRight);
@@ -456,7 +453,8 @@ constexpr Factor operator *(const Factor& Union, const Factor& Value)
 constexpr Factor operator *(double Union, const Factor& Value)
 {
 	Factor Result{ Value.data, Value.size };
-	for (double* ite = Value.data; ite != Value.data + Value.size; ++ite) { *ite *= Union; }
+	const double* ite_oe = Value.data + Value.size;
+	for (double* ite_o = Result.data; ite_o != ite_oe; ++ite_o) { *ite_o *= Union; }
 	return Result;
 };
 constexpr Factor operator *(const Factor& Union, double Value)
@@ -471,7 +469,7 @@ constexpr double number_dot(const Factor& Union, const Factor& Value)
 {
 	Factor NumUnion = Union;
 	Factor NumValue = Value;
-	Check<false>(NumUnion, NumValue);
+	Check(NumUnion, NumValue);
 	return Dot(NumUnion, NumValue);
 };
 constexpr Factor number_outer(const Factor& Union, const Factor& Value)
@@ -482,7 +480,7 @@ constexpr Factor number_outer(const Factor& Union, const Factor& Value)
 	double ScaValue = GetScalar(Value);
 	Factor VecValue = Value;
 	AsVector(VecValue);
-	Check<true>(VecUnion, VecValue);
+	Check(VecUnion, VecValue);
 	return number_cross(VecUnion, VecValue) + ScaUnion * VecValue - ScaValue * VecUnion;
 };
 constexpr Factor number_even(const Factor& Union, const Factor& Value)
@@ -493,14 +491,14 @@ constexpr Factor number_even(const Factor& Union, const Factor& Value)
 	double ScaValue = GetScalar(Value);
 	Factor VecValue = Value;
 	AsVector(VecValue);
-	Check<true>(VecUnion, VecValue);
+	Check(VecUnion, VecValue);
 	return Factor{ ScaUnion * ScaValue - Dot(VecUnion, VecValue) } + ScaUnion * VecValue + ScaValue * VecUnion;
 };
 constexpr Factor number_cross(const Factor& Union, const Factor& Value)
 {
 	Factor NumUnion = Union;
 	Factor NumValue = Value;
-	Check<false>(NumUnion, NumValue);
+	Check(NumUnion, NumValue);
 	AsVector(NumUnion);
 	AsVector(NumValue);
 	Factor Result = NumUnion * NumValue;
