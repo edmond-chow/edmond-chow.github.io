@@ -16,7 +16,6 @@ template <std::size_t S, std::size_t E, std::size_t... I> requires (S <= E)
 struct make_range_sequence : public make_range_sequence<S, E - 1, E - 1, I...> {};
 template <std::size_t S, std::size_t... I>
 struct make_range_sequence<S, S, I...> : public std::index_sequence<I...> {};
-inline thread_local double null_data[1]{};
 consteval bool is_number(std::size_t n) noexcept
 {
 	if (n == 1) { return true; }
