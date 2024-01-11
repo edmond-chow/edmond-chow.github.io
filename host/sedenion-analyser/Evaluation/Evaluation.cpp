@@ -8,54 +8,71 @@ enum ev_state : int
 	operate = 0,
 	after = 1,
 };
+static const std::runtime_error unhandled{ "An unhandled exception has occurred." };
 struct eval
 {
-	eval* prev;
-	void(*handler)(const std::exception& ex);
+private:
+	static thread_local eval* last;
+	static thread_local const std::exception* captured;
+	eval* previous;
+	caught_t handler;
 	std::jmp_buf sp;
+public:
+	eval(caught_t handler)
+		: previous{ last }, handler{ handler }, sp{}
+	{
+		last = this;
+	};
+	std::jmp_buf& success()
+	{
+		last = this->previous;
+		return this->sp;
+	};
+	std::jmp_buf& failure(const std::exception* ex_ptr)
+	{
+		last = this->previous;
+		if (ex_ptr != nullptr) { captured = ex_ptr; }
+		else if (captured == nullptr) { captured = &unhandled; }
+		this->handler(*captured);
+		captured = nullptr;
+		return this->sp;
+	};
+	std::jmp_buf& get_sp()
+	{
+		return this->sp;
+	};
+	static eval* get_last()
+	{
+		return last;
+	};
 };
-static const std::runtime_error err("An unhandled exception has occurred.");
-static thread_local const std::exception* captured{ nullptr };
-static thread_local eval* last{ nullptr };
+thread_local eval* eval::last{ nullptr };
+thread_local const std::exception* eval::captured{ nullptr };
 void evaluate(operate_t operate, caught_t caught) noexcept
 {
-	eval local{ last, caught };
-	int jmp = setjmp(local.sp);
+	eval local{ caught };
+	int jmp = setjmp(local.get_sp());
 	if (jmp == ev_state::operate)
 	{
-		last = &local;
 		operate();
-		last = local.prev;
+		eval::get_last()->success();
 	}
 	else if (jmp == ev_state::before)
 	{
-		last = local.prev;
-		captured = &err;
-		caught(err);
-		captured = nullptr;
+		eval::get_last()->failure(&unhandled);
 	}
 };
 void throw_now(const std::exception& ex) noexcept
 {
-	eval* local = last;
-	if (local == nullptr) { std::terminate(); }
-	last = local->prev;
-	captured = &ex;
-	local->handler(ex);
-	captured = nullptr;
-	std::longjmp(local->sp, ev_state::after);
+	if (eval::get_last() == nullptr) { std::terminate(); }
+	std::longjmp(eval::get_last()->failure(&ex), ev_state::after);
 };
 void rethrow_current() noexcept
 {
-	eval* local = last;
-	if (local == nullptr) { std::terminate(); }
-	last = local->prev;
-	if (captured == nullptr) { captured = &err; }
-	local->handler(*captured);
-	captured = nullptr;
-	std::longjmp(local->sp, ev_state::after);
+	if (eval::get_last() == nullptr) { std::terminate(); }
+	std::longjmp(eval::get_last()->failure(nullptr), ev_state::after);
 };
 void abort_unwind() noexcept
 {
-	if (last != nullptr) { std::longjmp(last->sp, ev_state::before); }
+	if (eval::get_last() != nullptr) { std::longjmp(eval::get_last()->get_sp(), ev_state::before); }
 };
