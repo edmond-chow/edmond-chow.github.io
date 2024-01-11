@@ -129,9 +129,9 @@ namespace OctonBasis
 	public:
 		static void Load() noexcept;
 	};
-	static thread_local std::wstring Line;
 	void OctonConsole::Load() noexcept
 	{
+		static thread_local std::wstring Line;
 		Base::Startup(Base::GetTitle());
 		Base::Selection(L"=   +   -   *   /   ^   power()   root()   log()");
 		Base::Selection(L"abs   arg()   conjg   sgn   inverse   exp   ln()   dot   outer   even   cross");
