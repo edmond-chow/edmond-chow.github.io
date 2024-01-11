@@ -1,49 +1,61 @@
 ﻿#include <csetjmp>
 #include <stdexcept>
-struct evaluate_local
+using operate_t = void(*)();
+using caught_t = void(*)(const std::exception& ex);
+enum ev_state : int
 {
-	evaluate_local* lastest_state;
-	void(*caught_delegate)(const std::exception& ex);
-	std::jmp_buf stack_pointer;
+	before = -1,
+	operate = 0,
+	after = 1,
 };
-static const std::runtime_error runtime_error("An unhandled exception has occurred.");
-static thread_local const std::exception* rethrow_captured{ &runtime_error };
-static thread_local evaluate_local* local_pointer{ nullptr };
-void evaluate(void(*operate)(), void(*caught)(const std::exception& ex)) noexcept
+struct eval
 {
-	evaluate_local local{ local_pointer, caught };
-	auto jump_yield = setjmp(local.stack_pointer);
-	if (jump_yield == 0)
+	eval* prev;
+	void(*handler)(const std::exception& ex);
+	std::jmp_buf sp;
+};
+static const std::runtime_error err("An unhandled exception has occurred.");
+static thread_local const std::exception* captured{ nullptr };
+static thread_local eval* last{ nullptr };
+void evaluate(operate_t operate, caught_t caught) noexcept
+{
+	eval local{ last, caught };
+	int jmp = setjmp(local.sp);
+	if (jmp == ev_state::operate)
 	{
-		local_pointer = &local;
+		last = &local;
 		operate();
+		last = local.prev;
 	}
-	else if (jump_yield == -1)
+	else if (jmp == ev_state::before)
 	{
-		local_pointer = local.lastest_state;
-		rethrow_captured = &runtime_error;
-		caught(runtime_error);
+		last = local.prev;
+		captured = &err;
+		caught(err);
+		captured = nullptr;
 	}
 };
 void throw_now(const std::exception& ex) noexcept
 {
-	evaluate_local* local_reference = local_pointer;
-	if (local_reference == nullptr) { std::terminate(); }
-	local_pointer = local_reference->lastest_state;
-	rethrow_captured = &ex;
-	local_reference->caught_delegate(ex);
-	std::longjmp(local_reference->stack_pointer, 1);
+	eval* local = last;
+	if (local == nullptr) { std::terminate(); }
+	last = local->prev;
+	captured = &ex;
+	local->handler(ex);
+	captured = nullptr;
+	std::longjmp(local->sp, ev_state::after);
 };
 void rethrow_current() noexcept
 {
-	evaluate_local* local_reference = local_pointer;
-	if (local_reference == nullptr) { std::terminate(); }
-	local_pointer = local_reference->lastest_state;
-	if (rethrow_captured == nullptr) { rethrow_captured = &runtime_error; }
-	local_reference->caught_delegate(*rethrow_captured);
-	std::longjmp(local_reference->stack_pointer, 1);
+	eval* local = last;
+	if (local == nullptr) { std::terminate(); }
+	last = local->prev;
+	if (captured == nullptr) { captured = &err; }
+	local->handler(*captured);
+	captured = nullptr;
+	std::longjmp(local->sp, ev_state::after);
 };
 void abort_unwind() noexcept
 {
-	if (local_pointer != nullptr) { std::longjmp(local_pointer->stack_pointer, -1); }
+	if (last != nullptr) { std::longjmp(last->sp, ev_state::before); }
 };
