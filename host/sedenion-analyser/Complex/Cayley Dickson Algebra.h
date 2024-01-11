@@ -298,7 +298,7 @@ public:
 	};
 	constexpr ~Factor() noexcept
 	{
-		delete[] data;
+		delete[] this->data;
 		this->data = nullptr;
 		this->size = 0;
 	};
@@ -444,7 +444,7 @@ constexpr Factor operator *(const Factor& Union, const Factor& Value)
 constexpr Factor operator *(double Union, const Factor& Value)
 {
 	Factor Result{ Value.data, Value.size };
-	const double* ite_oe = Value.data + Value.size;
+	const double* ite_oe = Result.data + Result.size;
 	for (double* ite_o = Result.data; ite_o != ite_oe; ++ite_o) { *ite_o *= Union; }
 	return Result;
 };
