@@ -97,19 +97,17 @@ inline std::int64_t ParseAsInteger(const std::wstring& Value)
 };
 inline double ParseAsReal(const std::wstring& Value)
 {
-	static thread_local std::wstring Replaced;
-	static thread_local std::size_t Processed;
-	static thread_local double Result;
-	Replaced = Replace(Value, L" ", L"");
-	Processed = 0;
-	Result = 0;
-	operate_t operate = +[]() -> void {
-		Result = std::stod(Replaced, &Processed);
-	};
-	caught_t caught = +[](const std::exception& ex) -> void {
-		Processed = std::wstring::npos;
-	};
-	evaluate(operate, caught);
+	std::wstring Replaced = Replace(Value, L" ", L"");
+	std::size_t Processed = 0;
+	double Result = 0;
+	evaluate(
+		[&]() -> void {
+			Result = std::stod(Replaced, &Processed);
+		},
+		[&](const std::exception& ex) -> void {
+			Processed = std::wstring::npos;
+		}
+	);
 	if (Processed == Replaced.size()) { return Result; }
 	throw_now(std::invalid_argument("The string cannot be converted as a real."));
 };

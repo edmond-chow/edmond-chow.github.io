@@ -131,67 +131,67 @@ namespace CmplxBasis
 	};
 	void CmplxConsole::Load() noexcept
 	{
-		static thread_local std::wstring Line;
 		Base::Startup(Base::GetTitle());
 		Base::Selection(L"=   +   -   *   /   ^   power()   root()   log()");
 		Base::Selection(L"abs   arg()   conjg   sgn   inverse   exp   ln()   dot   outer   even   cross");
 		Base::Selection(L"sin   cos   tan   csc   sec   cot   arcsin()   arccos()   arctan()   arccsc()   arcsec()   arccot()");
 		Base::Selection(L"sinh   cosh   tanh   csch   sech   coth   arcsinh()   arccosh()   arctanh()   arccsch()   arcsech()   arccoth()");
 		Base::Selection(Base::GetStartupLine());
-		for (Line = L""; !Base::IsSwitchTo(Line); Line = Base::Input())
+		for (std::wstring Line; !Base::IsSwitchTo(Line); Line = Base::Input())
 		{
 			if (Line.empty()) { continue; }
-			operate_t operate = +[]() -> void {
-				op(Line, L"=", operator ==);
-				op(Line, L"+", operator +);
-				op(Line, L"-", operator -);
-				op(Line, L"*", operator *);
-				op(Line, L"/", operator /);
-				/****/
-				power(Line, L"^", operator ^);
-				power(Line, L"power", Complex::power);
-				power(Line, L"root", Complex::root);
-				power(Line, L"log", Complex::log);
-				/****/
-				basic(Line, L"abs", Complex::abs);
-				basic(Line, L"arg", Complex::arg);
-				basic(Line, L"conjg", Complex::conjg);
-				basic(Line, L"sgn", Complex::sgn);
-				basic(Line, L"inverse", Complex::inverse);
-				basic(Line, L"exp", Complex::exp);
-				basic(Line, L"ln", Complex::ln);
-				multiple(Line, L"dot", Complex::dot);
-				multiple(Line, L"outer", Complex::outer);
-				multiple(Line, L"even", Complex::even);
-				multiple(Line, L"cross", Complex::cross);
-				/****/
-				tri(Line, L"sin", Complex::sin);
-				tri(Line, L"cos", Complex::cos);
-				tri(Line, L"tan", Complex::tan);
-				tri(Line, L"csc", Complex::csc);
-				tri(Line, L"sec", Complex::sec);
-				tri(Line, L"cot", Complex::cot);
-				tri(Line, L"sinh", Complex::sinh);
-				tri(Line, L"cosh", Complex::cosh);
-				tri(Line, L"tanh", Complex::tanh);
-				tri(Line, L"csch", Complex::csch);
-				tri(Line, L"sech", Complex::sech);
-				tri(Line, L"coth", Complex::coth);
-				arctri(Line, L"arcsin", Complex::arcsin);
-				arctri(Line, L"arccos", Complex::arccos);
-				arctri(Line, L"arctan", Complex::arctan);
-				arctri(Line, L"arccsc", Complex::arccsc);
-				arctri(Line, L"arcsec", Complex::arcsec);
-				arctri(Line, L"arccot", Complex::arccot);
-				arctri(Line, L"arcsinh", Complex::arcsinh);
-				arctri(Line, L"arccosh", Complex::arccosh);
-				arctri(Line, L"arctanh", Complex::arctanh);
-				arctri(Line, L"arccsch", Complex::arccsch);
-				arctri(Line, L"arcsech", Complex::arcsech);
-				arctri(Line, L"arccoth", Complex::arccoth);
-			};
-			caught_t caught = +[](const std::exception& ex) -> void { Base::Exception(ex); };
-			evaluate(operate, caught);
+			evaluate(
+				[&]() -> void {
+					op(Line, L"=", operator ==);
+					op(Line, L"+", operator +);
+					op(Line, L"-", operator -);
+					op(Line, L"*", operator *);
+					op(Line, L"/", operator /);
+					/****/
+					power(Line, L"^", operator ^);
+					power(Line, L"power", Complex::power);
+					power(Line, L"root", Complex::root);
+					power(Line, L"log", Complex::log);
+					/****/
+					basic(Line, L"abs", Complex::abs);
+					basic(Line, L"arg", Complex::arg);
+					basic(Line, L"conjg", Complex::conjg);
+					basic(Line, L"sgn", Complex::sgn);
+					basic(Line, L"inverse", Complex::inverse);
+					basic(Line, L"exp", Complex::exp);
+					basic(Line, L"ln", Complex::ln);
+					multiple(Line, L"dot", Complex::dot);
+					multiple(Line, L"outer", Complex::outer);
+					multiple(Line, L"even", Complex::even);
+					multiple(Line, L"cross", Complex::cross);
+					/****/
+					tri(Line, L"sin", Complex::sin);
+					tri(Line, L"cos", Complex::cos);
+					tri(Line, L"tan", Complex::tan);
+					tri(Line, L"csc", Complex::csc);
+					tri(Line, L"sec", Complex::sec);
+					tri(Line, L"cot", Complex::cot);
+					tri(Line, L"sinh", Complex::sinh);
+					tri(Line, L"cosh", Complex::cosh);
+					tri(Line, L"tanh", Complex::tanh);
+					tri(Line, L"csch", Complex::csch);
+					tri(Line, L"sech", Complex::sech);
+					tri(Line, L"coth", Complex::coth);
+					arctri(Line, L"arcsin", Complex::arcsin);
+					arctri(Line, L"arccos", Complex::arccos);
+					arctri(Line, L"arctan", Complex::arctan);
+					arctri(Line, L"arccsc", Complex::arccsc);
+					arctri(Line, L"arcsec", Complex::arcsec);
+					arctri(Line, L"arccot", Complex::arccot);
+					arctri(Line, L"arcsinh", Complex::arcsinh);
+					arctri(Line, L"arccosh", Complex::arccosh);
+					arctri(Line, L"arctanh", Complex::arctanh);
+					arctri(Line, L"arccsch", Complex::arccsch);
+					arctri(Line, L"arcsech", Complex::arcsech);
+					arctri(Line, L"arccoth", Complex::arccoth);
+				},
+				[](const std::exception& ex) -> void { Base::Exception(ex); }
+			);
 		}
 	};
 }

@@ -131,67 +131,67 @@ namespace OctonBasis
 	};
 	void OctonConsole::Load() noexcept
 	{
-		static thread_local std::wstring Line;
 		Base::Startup(Base::GetTitle());
 		Base::Selection(L"=   +   -   *   /   ^   power()   root()   log()");
 		Base::Selection(L"abs   arg()   conjg   sgn   inverse   exp   ln()   dot   outer   even   cross");
 		Base::Selection(L"sin   cos   tan   csc   sec   cot   arcsin()   arccos()   arctan()   arccsc()   arcsec()   arccot()");
 		Base::Selection(L"sinh   cosh   tanh   csch   sech   coth   arcsinh()   arccosh()   arctanh()   arccsch()   arcsech()   arccoth()");
 		Base::Selection(Base::GetStartupLine());
-		for (Line = L""; !Base::IsSwitchTo(Line); Line = Base::Input())
+		for (std::wstring Line; !Base::IsSwitchTo(Line); Line = Base::Input())
 		{
 			if (Line.empty()) { continue; }
-			operate_t operate = +[]() -> void {
-				op(Line, L"=", operator ==);
-				op(Line, L"+", operator +);
-				op(Line, L"-", operator -);
-				op(Line, L"*", operator *);
-				op(Line, L"/", operator /);
-				/****/
-				power(Line, L"^", operator ^);
-				power(Line, L"power", Octonion::power);
-				power(Line, L"root", Octonion::root);
-				power(Line, L"log", Octonion::log);
-				/****/
-				basic(Line, L"abs", Octonion::abs);
-				basic(Line, L"arg", Octonion::arg);
-				basic(Line, L"conjg", Octonion::conjg);
-				basic(Line, L"sgn", Octonion::sgn);
-				basic(Line, L"inverse", Octonion::inverse);
-				basic(Line, L"exp", Octonion::exp);
-				basic(Line, L"ln", Octonion::ln);
-				multiple(Line, L"dot", Octonion::dot);
-				multiple(Line, L"outer", Octonion::outer);
-				multiple(Line, L"even", Octonion::even);
-				multiple(Line, L"cross", Octonion::cross);
-				/****/
-				tri(Line, L"sin", Octonion::sin);
-				tri(Line, L"cos", Octonion::cos);
-				tri(Line, L"tan", Octonion::tan);
-				tri(Line, L"csc", Octonion::csc);
-				tri(Line, L"sec", Octonion::sec);
-				tri(Line, L"cot", Octonion::cot);
-				tri(Line, L"sinh", Octonion::sinh);
-				tri(Line, L"cosh", Octonion::cosh);
-				tri(Line, L"tanh", Octonion::tanh);
-				tri(Line, L"csch", Octonion::csch);
-				tri(Line, L"sech", Octonion::sech);
-				tri(Line, L"coth", Octonion::coth);
-				arctri(Line, L"arcsin", Octonion::arcsin);
-				arctri(Line, L"arccos", Octonion::arccos);
-				arctri(Line, L"arctan", Octonion::arctan);
-				arctri(Line, L"arccsc", Octonion::arccsc);
-				arctri(Line, L"arcsec", Octonion::arcsec);
-				arctri(Line, L"arccot", Octonion::arccot);
-				arctri(Line, L"arcsinh", Octonion::arcsinh);
-				arctri(Line, L"arccosh", Octonion::arccosh);
-				arctri(Line, L"arctanh", Octonion::arctanh);
-				arctri(Line, L"arccsch", Octonion::arccsch);
-				arctri(Line, L"arcsech", Octonion::arcsech);
-				arctri(Line, L"arccoth", Octonion::arccoth);
-			};
-			caught_t caught = +[](const std::exception& ex) -> void { Base::Exception(ex); };
-			evaluate(operate, caught);
+			evaluate(
+				[&]() -> void {
+					op(Line, L"=", operator ==);
+					op(Line, L"+", operator +);
+					op(Line, L"-", operator -);
+					op(Line, L"*", operator *);
+					op(Line, L"/", operator /);
+					/****/
+					power(Line, L"^", operator ^);
+					power(Line, L"power", Octonion::power);
+					power(Line, L"root", Octonion::root);
+					power(Line, L"log", Octonion::log);
+					/****/
+					basic(Line, L"abs", Octonion::abs);
+					basic(Line, L"arg", Octonion::arg);
+					basic(Line, L"conjg", Octonion::conjg);
+					basic(Line, L"sgn", Octonion::sgn);
+					basic(Line, L"inverse", Octonion::inverse);
+					basic(Line, L"exp", Octonion::exp);
+					basic(Line, L"ln", Octonion::ln);
+					multiple(Line, L"dot", Octonion::dot);
+					multiple(Line, L"outer", Octonion::outer);
+					multiple(Line, L"even", Octonion::even);
+					multiple(Line, L"cross", Octonion::cross);
+					/****/
+					tri(Line, L"sin", Octonion::sin);
+					tri(Line, L"cos", Octonion::cos);
+					tri(Line, L"tan", Octonion::tan);
+					tri(Line, L"csc", Octonion::csc);
+					tri(Line, L"sec", Octonion::sec);
+					tri(Line, L"cot", Octonion::cot);
+					tri(Line, L"sinh", Octonion::sinh);
+					tri(Line, L"cosh", Octonion::cosh);
+					tri(Line, L"tanh", Octonion::tanh);
+					tri(Line, L"csch", Octonion::csch);
+					tri(Line, L"sech", Octonion::sech);
+					tri(Line, L"coth", Octonion::coth);
+					arctri(Line, L"arcsin", Octonion::arcsin);
+					arctri(Line, L"arccos", Octonion::arccos);
+					arctri(Line, L"arctan", Octonion::arctan);
+					arctri(Line, L"arccsc", Octonion::arccsc);
+					arctri(Line, L"arcsec", Octonion::arcsec);
+					arctri(Line, L"arccot", Octonion::arccot);
+					arctri(Line, L"arcsinh", Octonion::arcsinh);
+					arctri(Line, L"arccosh", Octonion::arccosh);
+					arctri(Line, L"arctanh", Octonion::arctanh);
+					arctri(Line, L"arccsch", Octonion::arccsch);
+					arctri(Line, L"arcsech", Octonion::arcsech);
+					arctri(Line, L"arccoth", Octonion::arccoth);
+				},
+				[](const std::exception& ex) -> void { Base::Exception(ex); }
+			);
 		}
 	};
 }

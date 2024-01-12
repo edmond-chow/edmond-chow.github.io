@@ -131,67 +131,67 @@ namespace QuterBasis
 	};
 	void QuterConsole::Load() noexcept
 	{
-		static thread_local std::wstring Line;
 		Base::Startup(Base::GetTitle());
 		Base::Selection(L"=   +   -   *   /   ^   power()   root()   log()");
 		Base::Selection(L"abs   arg()   conjg   sgn   inverse   exp   ln()   dot   outer   even   cross");
 		Base::Selection(L"sin   cos   tan   csc   sec   cot   arcsin()   arccos()   arctan()   arccsc()   arcsec()   arccot()");
 		Base::Selection(L"sinh   cosh   tanh   csch   sech   coth   arcsinh()   arccosh()   arctanh()   arccsch()   arcsech()   arccoth()");
 		Base::Selection(Base::GetStartupLine());
-		for (Line = L""; !Base::IsSwitchTo(Line); Line = Base::Input())
+		for (std::wstring Line; !Base::IsSwitchTo(Line); Line = Base::Input())
 		{
 			if (Line.empty()) { continue; }
-			operate_t operate = +[]() -> void {
-				op(Line, L"=", operator ==);
-				op(Line, L"+", operator +);
-				op(Line, L"-", operator -);
-				op(Line, L"*", operator *);
-				op(Line, L"/", operator /);
-				/****/
-				power(Line, L"^", operator ^);
-				power(Line, L"power", Quaternion::power);
-				power(Line, L"root", Quaternion::root);
-				power(Line, L"log", Quaternion::log);
-				/****/
-				basic(Line, L"abs", Quaternion::abs);
-				basic(Line, L"arg", Quaternion::arg);
-				basic(Line, L"conjg", Quaternion::conjg);
-				basic(Line, L"sgn", Quaternion::sgn);
-				basic(Line, L"inverse", Quaternion::inverse);
-				basic(Line, L"exp", Quaternion::exp);
-				basic(Line, L"ln", Quaternion::ln);
-				multiple(Line, L"dot", Quaternion::dot);
-				multiple(Line, L"outer", Quaternion::outer);
-				multiple(Line, L"even", Quaternion::even);
-				multiple(Line, L"cross", Quaternion::cross);
-				/****/
-				tri(Line, L"sin", Quaternion::sin);
-				tri(Line, L"cos", Quaternion::cos);
-				tri(Line, L"tan", Quaternion::tan);
-				tri(Line, L"csc", Quaternion::csc);
-				tri(Line, L"sec", Quaternion::sec);
-				tri(Line, L"cot", Quaternion::cot);
-				tri(Line, L"sinh", Quaternion::sinh);
-				tri(Line, L"cosh", Quaternion::cosh);
-				tri(Line, L"tanh", Quaternion::tanh);
-				tri(Line, L"csch", Quaternion::csch);
-				tri(Line, L"sech", Quaternion::sech);
-				tri(Line, L"coth", Quaternion::coth);
-				arctri(Line, L"arcsin", Quaternion::arcsin);
-				arctri(Line, L"arccos", Quaternion::arccos);
-				arctri(Line, L"arctan", Quaternion::arctan);
-				arctri(Line, L"arccsc", Quaternion::arccsc);
-				arctri(Line, L"arcsec", Quaternion::arcsec);
-				arctri(Line, L"arccot", Quaternion::arccot);
-				arctri(Line, L"arcsinh", Quaternion::arcsinh);
-				arctri(Line, L"arccosh", Quaternion::arccosh);
-				arctri(Line, L"arctanh", Quaternion::arctanh);
-				arctri(Line, L"arccsch", Quaternion::arccsch);
-				arctri(Line, L"arcsech", Quaternion::arcsech);
-				arctri(Line, L"arccoth", Quaternion::arccoth);
-			};
-			caught_t caught = +[](const std::exception& ex) -> void { Base::Exception(ex); };
-			evaluate(operate, caught);
+			evaluate(
+				[&]() -> void {
+					op(Line, L"=", operator ==);
+					op(Line, L"+", operator +);
+					op(Line, L"-", operator -);
+					op(Line, L"*", operator *);
+					op(Line, L"/", operator /);
+					/****/
+					power(Line, L"^", operator ^);
+					power(Line, L"power", Quaternion::power);
+					power(Line, L"root", Quaternion::root);
+					power(Line, L"log", Quaternion::log);
+					/****/
+					basic(Line, L"abs", Quaternion::abs);
+					basic(Line, L"arg", Quaternion::arg);
+					basic(Line, L"conjg", Quaternion::conjg);
+					basic(Line, L"sgn", Quaternion::sgn);
+					basic(Line, L"inverse", Quaternion::inverse);
+					basic(Line, L"exp", Quaternion::exp);
+					basic(Line, L"ln", Quaternion::ln);
+					multiple(Line, L"dot", Quaternion::dot);
+					multiple(Line, L"outer", Quaternion::outer);
+					multiple(Line, L"even", Quaternion::even);
+					multiple(Line, L"cross", Quaternion::cross);
+					/****/
+					tri(Line, L"sin", Quaternion::sin);
+					tri(Line, L"cos", Quaternion::cos);
+					tri(Line, L"tan", Quaternion::tan);
+					tri(Line, L"csc", Quaternion::csc);
+					tri(Line, L"sec", Quaternion::sec);
+					tri(Line, L"cot", Quaternion::cot);
+					tri(Line, L"sinh", Quaternion::sinh);
+					tri(Line, L"cosh", Quaternion::cosh);
+					tri(Line, L"tanh", Quaternion::tanh);
+					tri(Line, L"csch", Quaternion::csch);
+					tri(Line, L"sech", Quaternion::sech);
+					tri(Line, L"coth", Quaternion::coth);
+					arctri(Line, L"arcsin", Quaternion::arcsin);
+					arctri(Line, L"arccos", Quaternion::arccos);
+					arctri(Line, L"arctan", Quaternion::arctan);
+					arctri(Line, L"arccsc", Quaternion::arccsc);
+					arctri(Line, L"arcsec", Quaternion::arcsec);
+					arctri(Line, L"arccot", Quaternion::arccot);
+					arctri(Line, L"arcsinh", Quaternion::arcsinh);
+					arctri(Line, L"arccosh", Quaternion::arccosh);
+					arctri(Line, L"arctanh", Quaternion::arctanh);
+					arctri(Line, L"arccsch", Quaternion::arccsch);
+					arctri(Line, L"arcsech", Quaternion::arcsech);
+					arctri(Line, L"arccoth", Quaternion::arccoth);
+				},
+				[](const std::exception& ex) -> void { Base::Exception(ex); }
+			);
 		}
 	};
 }

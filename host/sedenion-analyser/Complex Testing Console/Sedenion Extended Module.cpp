@@ -139,67 +139,67 @@ namespace SedenBasis
 	};
 	void SedenConsole::Load() noexcept
 	{
-		static thread_local std::wstring Line;
 		Base::Startup(Base::GetTitle());
 		Base::Selection(L"=   +   -   *   /   ^   power()   root()   log()");
 		Base::Selection(L"abs   arg()   conjg   sgn   inverse   exp   ln()   dot   outer   even   cross");
 		Base::Selection(L"sin   cos   tan   csc   sec   cot   arcsin()   arccos()   arctan()   arccsc()   arcsec()   arccot()");
 		Base::Selection(L"sinh   cosh   tanh   csch   sech   coth   arcsinh()   arccosh()   arctanh()   arccsch()   arcsech()   arccoth()");
 		Base::Selection(Base::GetStartupLine());
-		for (Line = L""; !Base::IsSwitchTo(Line); Line = Base::Input())
+		for (std::wstring Line; !Base::IsSwitchTo(Line); Line = Base::Input())
 		{
 			if (Line.empty()) { continue; }
-			operate_t operate = +[]() -> void {
-				op(Line, L"=", operator ==);
-				op(Line, L"+", operator +);
-				op(Line, L"-", operator -);
-				op(Line, L"*", operator *);
-				op(Line, L"/", operator /);
-				/****/
-				power(Line, L"^", operator ^);
-				power(Line, L"power", Sedenion::power);
-				power(Line, L"root", Sedenion::root);
-				power(Line, L"log", Sedenion::log);
-				/****/
-				basic(Line, L"abs", Sedenion::abs);
-				basic(Line, L"arg", Sedenion::arg);
-				basic(Line, L"conjg", Sedenion::conjg);
-				basic(Line, L"sgn", Sedenion::sgn);
-				basic(Line, L"inverse", Sedenion::inverse);
-				basic(Line, L"exp", Sedenion::exp);
-				basic(Line, L"ln", Sedenion::ln);
-				multiple(Line, L"dot", Sedenion::dot);
-				multiple(Line, L"outer", Sedenion::outer);
-				multiple(Line, L"even", Sedenion::even);
-				multiple(Line, L"cross", Sedenion::cross);
-				/****/
-				tri(Line, L"sin", Sedenion::sin);
-				tri(Line, L"cos", Sedenion::cos);
-				tri(Line, L"tan", Sedenion::tan);
-				tri(Line, L"csc", Sedenion::csc);
-				tri(Line, L"sec", Sedenion::sec);
-				tri(Line, L"cot", Sedenion::cot);
-				tri(Line, L"sinh", Sedenion::sinh);
-				tri(Line, L"cosh", Sedenion::cosh);
-				tri(Line, L"tanh", Sedenion::tanh);
-				tri(Line, L"csch", Sedenion::csch);
-				tri(Line, L"sech", Sedenion::sech);
-				tri(Line, L"coth", Sedenion::coth);
-				arctri(Line, L"arcsin", Sedenion::arcsin);
-				arctri(Line, L"arccos", Sedenion::arccos);
-				arctri(Line, L"arctan", Sedenion::arctan);
-				arctri(Line, L"arccsc", Sedenion::arccsc);
-				arctri(Line, L"arcsec", Sedenion::arcsec);
-				arctri(Line, L"arccot", Sedenion::arccot);
-				arctri(Line, L"arcsinh", Sedenion::arcsinh);
-				arctri(Line, L"arccosh", Sedenion::arccosh);
-				arctri(Line, L"arctanh", Sedenion::arctanh);
-				arctri(Line, L"arccsch", Sedenion::arccsch);
-				arctri(Line, L"arcsech", Sedenion::arcsech);
-				arctri(Line, L"arccoth", Sedenion::arccoth);
-			};
-			caught_t caught = +[](const std::exception& ex) -> void { Base::Exception(ex); };
-			evaluate(operate, caught);
+			evaluate(
+				[&]() -> void {
+					op(Line, L"=", operator ==);
+					op(Line, L"+", operator +);
+					op(Line, L"-", operator -);
+					op(Line, L"*", operator *);
+					op(Line, L"/", operator /);
+					/****/
+					power(Line, L"^", operator ^);
+					power(Line, L"power", Sedenion::power);
+					power(Line, L"root", Sedenion::root);
+					power(Line, L"log", Sedenion::log);
+					/****/
+					basic(Line, L"abs", Sedenion::abs);
+					basic(Line, L"arg", Sedenion::arg);
+					basic(Line, L"conjg", Sedenion::conjg);
+					basic(Line, L"sgn", Sedenion::sgn);
+					basic(Line, L"inverse", Sedenion::inverse);
+					basic(Line, L"exp", Sedenion::exp);
+					basic(Line, L"ln", Sedenion::ln);
+					multiple(Line, L"dot", Sedenion::dot);
+					multiple(Line, L"outer", Sedenion::outer);
+					multiple(Line, L"even", Sedenion::even);
+					multiple(Line, L"cross", Sedenion::cross);
+					/****/
+					tri(Line, L"sin", Sedenion::sin);
+					tri(Line, L"cos", Sedenion::cos);
+					tri(Line, L"tan", Sedenion::tan);
+					tri(Line, L"csc", Sedenion::csc);
+					tri(Line, L"sec", Sedenion::sec);
+					tri(Line, L"cot", Sedenion::cot);
+					tri(Line, L"sinh", Sedenion::sinh);
+					tri(Line, L"cosh", Sedenion::cosh);
+					tri(Line, L"tanh", Sedenion::tanh);
+					tri(Line, L"csch", Sedenion::csch);
+					tri(Line, L"sech", Sedenion::sech);
+					tri(Line, L"coth", Sedenion::coth);
+					arctri(Line, L"arcsin", Sedenion::arcsin);
+					arctri(Line, L"arccos", Sedenion::arccos);
+					arctri(Line, L"arctan", Sedenion::arctan);
+					arctri(Line, L"arccsc", Sedenion::arccsc);
+					arctri(Line, L"arcsec", Sedenion::arcsec);
+					arctri(Line, L"arccot", Sedenion::arccot);
+					arctri(Line, L"arcsinh", Sedenion::arcsinh);
+					arctri(Line, L"arccosh", Sedenion::arccosh);
+					arctri(Line, L"arctanh", Sedenion::arctanh);
+					arctri(Line, L"arccsch", Sedenion::arccsch);
+					arctri(Line, L"arcsech", Sedenion::arcsech);
+					arctri(Line, L"arccoth", Sedenion::arccoth);
+				},
+				[](const std::exception& ex) -> void { Base::Exception(ex); }
+			);
 		}
 	};
 }

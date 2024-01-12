@@ -1,7 +1,8 @@
 ﻿#include <csetjmp>
 #include <stdexcept>
-using operate_t = void(*)();
-using caught_t = void(*)(const std::exception& ex);
+#include <functional>
+using operate_t = std::function<void()>;
+using caught_t = std::function<void(const std::exception& ex)>;
 enum ev_state : int
 {
 	before = -1,
@@ -15,11 +16,11 @@ private:
 	static thread_local eval* last;
 	static thread_local const std::exception* captured;
 	eval* previous;
-	caught_t handler;
+	const caught_t* handler;
 	std::jmp_buf sp;
 public:
-	eval(caught_t handler)
-		: previous{ last }, handler{ handler }, sp{}
+	eval(const caught_t& handler)
+		: previous{ last }, handler{ &handler }, sp{}
 	{
 		last = this;
 	};
@@ -33,7 +34,7 @@ public:
 		last = this->previous;
 		if (ex_ptr != nullptr) { captured = ex_ptr; }
 		else if (captured == nullptr) { captured = &unhandled; }
-		this->handler(*captured);
+		this->handler->operator()(*captured);
 		captured = nullptr;
 		return this->sp;
 	};
@@ -48,13 +49,13 @@ public:
 };
 thread_local eval* eval::last{ nullptr };
 thread_local const std::exception* eval::captured{ nullptr };
-void evaluate(operate_t operate, caught_t caught) noexcept
+void evaluate(const operate_t& operate, const caught_t& caught) noexcept
 {
 	eval local{ caught };
 	int jmp = setjmp(local.get_sp());
 	if (jmp == ev_state::operate)
 	{
-		operate();
+		operate.operator()();
 		eval::get_last()->success();
 	}
 	else if (jmp == ev_state::before)
