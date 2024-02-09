@@ -116,9 +116,10 @@ namespace CmplxConExt
 	};
 	namespace dom
 	{
-		struct client_t : public std::wstreambuf
+		struct client_stream : public std::wstreambuf
 		{
 		private:
+			static constexpr const std::size_t out_lm = 1024;
 			enum class state
 			{
 				write = 1,
@@ -128,11 +129,11 @@ namespace CmplxConExt
 			state state;
 			std::wstringstream out;
 			std::size_t out_l;
-			std::wstring in_buf;
+			std::wstring in;
 			std::wstring::const_iterator in_cur;
 			wchar_t in_pop;
 		public:
-			client_t() : state{ state::freeze }, out{}, out_l{}, in_buf{}, in_cur{}, in_pop{} {};
+			client_stream() : state{ state::freeze }, out{}, out_l{}, in{}, in_cur{}, in_pop{} {};
 		protected:
 			virtual int sync() override
 			{
@@ -149,28 +150,29 @@ namespace CmplxConExt
 		public:
 			int send()
 			{
-				state = state::write;
+				if (state == state::freeze) { state = state::write; }
 				return sync();
 			};
 		protected:
 			virtual int_type overflow(int_type c) override
 			{
-				if (out_l >= 1024) { send(); }
-				if (c == L'\n') { ++out_l; }
+				if (state == state::read) { return std::char_traits<wchar_t>::eof(); }
+				if (out_l >= out_lm) { send(); }
+				if (c == std::char_traits<wchar_t>::to_int_type(L'\n')) { ++out_l; }
 				out << std::char_traits<wchar_t>::to_char_type(c);
 				return c;
 			};
 			virtual int_type underflow() override
 			{
-				if (state == state::write || state == state::freeze)
+				send();
+				if (state == state::freeze)
 				{
-					send();
-					in_buf = ReadSync();
-					in_cur = in_buf.cbegin();
+					in = ReadSync();
+					in_cur = in.cbegin();
 					state = state::read;
 				}
 				setg(&in_pop, &in_pop, &in_pop + 1);
-				if (in_cur == in_buf.cend())
+				if (in_cur == in.cend())
 				{
 					in_pop = L'\n';
 					state = state::freeze;
@@ -183,7 +185,7 @@ namespace CmplxConExt
 				return std::char_traits<wchar_t>::to_int_type(in_pop);
 			};
 		};
-		static client_t client{};
+		static client_stream client{};
 		std::wistream wcin{ &client };
 		std::wostream wcout{ &client };
 	}
