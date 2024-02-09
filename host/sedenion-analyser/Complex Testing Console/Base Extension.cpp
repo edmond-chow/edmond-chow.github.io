@@ -126,23 +126,22 @@ namespace CmplxConExt
 				read = 3,
 			};
 			state state;
-			std::wstringstream output;
-			std::size_t output_lines;
-			std::wstring input;
-			std::wstring::const_iterator input_current;
-			std::wstring::const_iterator input_end;
-			wchar_t input_popped;
+			std::wstringstream out;
+			std::size_t out_l;
+			std::wstring in_buf;
+			std::wstring::const_iterator in_cur;
+			wchar_t in_pop;
 		public:
-			client_t() : state{ state::freeze }, output{}, output_lines{}, input{}, input_current{}, input_end{}, input_popped{} {};
+			client_t() : state{ state::freeze }, out{}, out_l{}, in_buf{}, in_cur{}, in_pop{} {};
 		protected:
 			virtual int sync() override
 			{
 				if (state == state::read) { return -1; }
 				if (state == state::write)
 				{
-					WriteSync(output.str());
-					output.str(L"");
-					output_lines = 0;
+					WriteSync(out.str());
+					out.str(L"");
+					out_l = 0;
 					state = state::freeze;
 				}
 				return 0;
@@ -156,9 +155,9 @@ namespace CmplxConExt
 		protected:
 			virtual int_type overflow(int_type c) override
 			{
-				if (output_lines >= 1024) { send(); }
-				if (c == L'\n') { ++output_lines; }
-				output << static_cast<wchar_t>(c);
+				if (out_l >= 1024) { send(); }
+				if (c == L'\n') { ++out_l; }
+				out << std::char_traits<wchar_t>::to_char_type(c);
 				return c;
 			};
 			virtual int_type underflow() override
@@ -166,23 +165,22 @@ namespace CmplxConExt
 				if (state == state::write || state == state::freeze)
 				{
 					send();
-					input = ReadSync();
-					input_current = input.cbegin();
-					input_end = input.cend();
+					in_buf = ReadSync();
+					in_cur = in_buf.cbegin();
 					state = state::read;
 				}
-				setg(&input_popped, &input_popped, &input_popped + 1);
-				if (input_current == input_end)
+				setg(&in_pop, &in_pop, &in_pop + 1);
+				if (in_cur == in_buf.cend())
 				{
-					input_popped = L'\n';
+					in_pop = L'\n';
 					state = state::freeze;
 				}
 				else
 				{
-					input_popped = *input_current;
-					++input_current;
+					in_pop = *in_cur;
+					++in_cur;
 				}
-				return static_cast<int_type>(input_popped);
+				return std::char_traits<wchar_t>::to_int_type(in_pop);
 			};
 		};
 		static client_t client{};
