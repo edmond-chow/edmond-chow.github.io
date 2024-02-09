@@ -494,21 +494,30 @@
 		}
 	].bindTo(Console.prototype);
 	/* { functionality } */
+	let getUTFString = (caller, converter, counter, width, fnScope, jsString) => {
+		[fnScope, jsString].constrainedWithAndThrow(Function.toNullable(), String.toNullable());
+		let myScope = fnScope == null ? caller : fnScope;
+		let stringObject = jsString == null ? "" : jsString;
+		let stringLength = counter(stringObject) + width;
+		if (!myScope.bufferSize || myScope.bufferSize < stringLength) {
+			if (myScope.bufferSize) {
+				_free(myScope.bufferData);
+			}
+			myScope.bufferData = _malloc(stringLength);
+			myScope.bufferSize = stringLength;
+		}
+		converter(stringObject, myScope.bufferData, myScope.bufferSize);
+		return myScope.bufferData;
+	};
 	[
 		function getUTF8String(fnScope, jsString) {
-			arguments.constrainedWithAndThrow(Function.toNullable(), String.toNullable());
-			let myScope = fnScope == null ? getUTF8String : fnScope;
-			let stringObject = jsString == null ? "" : jsString;
-			let stringLength = lengthBytesUTF8(stringObject) + 1;
-			if (!myScope.bufferSize || myScope.bufferSize < stringLength) {
-				if (myScope.bufferSize) {
-					_free(myScope.bufferData);
-				}
-				myScope.bufferData = _malloc(stringLength);
-				myScope.bufferSize = stringLength;
-			}
-			stringToUTF8(stringObject, myScope.bufferData, myScope.bufferSize);
-			return myScope.bufferData;
+			return getUTFString(getUTF8String, stringToUTF8, lengthBytesUTF8, 1, fnScope, jsString);
+		},
+		function getUTF16String(fnScope, jsString) {
+			return getUTFString(getUTF16String, stringToUTF16, lengthBytesUTF16, 2, fnScope, jsString);
+		},
+		function getUTF32String(fnScope, jsString) {
+			return getUTFString(getUTF32String, stringToUTF32, lengthBytesUTF32, 4, fnScope, jsString);
 		},
 		function getTitle() {
 			arguments.constrainedWithAndThrow();
