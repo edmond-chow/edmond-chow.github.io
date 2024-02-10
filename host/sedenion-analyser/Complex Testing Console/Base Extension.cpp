@@ -16,13 +16,13 @@ namespace CmplxConExt
 {
 	namespace Native
 	{
-		EM_ASYNC_JS(const char*, ReadSync, (), {
+		EM_ASYNC_JS(const wchar_t*, ReadSync, (), {
 			let line = await iostream.read();
 			await iostream.writeLine(line);
-			return getUTF8String(__asyncjs__ReadSync, line);
+			return getUTF32String(__asyncjs__ReadSync, line);
 		});
-		EM_ASYNC_JS(void, WriteSync, (const char* Content), {
-			await iostream.writeWithColorCodes(UTF8ToString(Content));
+		EM_ASYNC_JS(void, WriteSync, (const wchar_t* Content), {
+			await iostream.writeWithColorCodes(UTF32ToString(Content));
 		});
 		EM_ASYNC_JS(void, ClearSync, (), {
 			await iostream.clear();
@@ -36,31 +36,13 @@ namespace CmplxConExt
 		EM_JS(std::uint8_t, GetSyncBackground, (), {
 			return iostream.getBackgroundColor().toConsoleColor();
 		});
-		EM_JS(const char*, GetSyncTitle, (), {
-			return getUTF8String(GetSyncTitle, getTitle());
+		EM_JS(const wchar_t*, GetSyncTitle, (), {
+			return getUTF32String(GetSyncTitle, getTitle());
 		});
-		EM_JS(const char*, GetString, (std::uint8_t Color), {
-			return getUTF8String(GetString, Color.fromConsoleColor());
+		EM_JS(const wchar_t*, GetString, (std::uint8_t Color), {
+			return getUTF32String(GetString, Color.fromConsoleColor());
 		});
 	}
-	inline std::string ToMbsString(const std::wstring& String)
-	{
-		std::size_t Length = String.size() * sizeof(wchar_t) + 1;
-		char* Temporary = new char[Length] { '\0' };
-		std::wcstombs(Temporary, String.c_str(), Length);
-		std::string Converted = Temporary;
-		delete[] Temporary;
-		return Converted;
-	};
-	inline std::wstring ToWcsString(const std::string& String)
-	{
-		std::size_t Length = String.size() + 1;
-		wchar_t* Temporary = new wchar_t[Length] { L'\0' };
-		std::mbstowcs(Temporary, String.c_str(), Length);
-		std::wstring Converted = Temporary;
-		delete[] Temporary;
-		return Converted;
-	};
 	enum class ConsoleColor : std::uint8_t
 	{
 		Default = 0xff,
@@ -83,12 +65,11 @@ namespace CmplxConExt
 	};
 	std::wstring ReadSync()
 	{
-		return ToWcsString(Native::ReadSync());
+		return Native::ReadSync();
 	};
 	void WriteSync(const std::wstring& Content)
 	{
-		std::string temporary = ToMbsString(Content);
-		Native::WriteSync(temporary.c_str());
+		Native::WriteSync(Content.c_str());
 	};
 	void ClearSync()
 	{
@@ -108,11 +89,11 @@ namespace CmplxConExt
 	};
 	std::wstring GetSyncTitle()
 	{
-		return ToWcsString(Native::GetSyncTitle());
+		return Native::GetSyncTitle();
 	};
 	std::wstring GetString(ConsoleColor Color)
 	{
-		return ToWcsString(Native::GetString(static_cast<std::uint8_t>(Color)));
+		return Native::GetString(static_cast<std::uint8_t>(Color));
 	};
 	namespace dom
 	{
