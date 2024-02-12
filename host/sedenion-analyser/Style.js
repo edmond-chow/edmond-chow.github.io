@@ -530,6 +530,7 @@
 	].bindTo(window);
 	/* { event-dispatcher } */
 	let isLoaded = false;
+	let success = true;
 	let structuredTag = async () => {
 		/* [iostream] */
 		defineSharedField(window, 'iostream', new Console());
@@ -544,6 +545,12 @@
 				Module.__Z12abort_unwindv();
 			}
 		};
+		Object.defineProperty(window, '_exit', {
+			value: (code) => { throw code; },
+			writable: false,
+			enumerable: true,
+			configurable: false,
+		});
 		let scriptNode = document.createElement('script');
 		scriptNode.src = 'Sedenion.js';
 		scriptNode.defer = true;
@@ -554,19 +561,32 @@
 			}
 			resolve();
 		});
+		(function bind() {
+			Asyncify.asyncPromiseHandlers = {
+				reject: (code) => {
+					EXITSTATUS = code;
+					success = true;
+					bind();
+				},
+				resolve: (code) => {
+					EXITSTATUS = code;
+					success = false;
+					bind();
+				}
+			};
+		})();
 		/* .no-text */
 		document.body.classList.add('no-text');
 	};
 	let formedStyle = async () => {
 		/* [iostream] */
 		if (keepRuntimeAlive() == false) {
-			if (ABORT == false) {
+			if (success == false) {
 				await iostream.completed(EXITSTATUS);
-				Module._main();
 			} else {
 				await iostream.terminated(EXITSTATUS);
-				document.location = document.location;
 			}
+			Module._main();
 		}
 		/* .no-text */
 		await Array.from(document.getElementsByClassName('no-text')).map((value) => {
