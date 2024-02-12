@@ -477,12 +477,12 @@
 			await this.pressAnyKey();
 			await this.clear();
 		},
-		async function terminated(code) {
+		async function terminated() {
 			this.ConsoleNode.setAttribute('foreground', 'gray');
 			this.ConsoleNode.setAttribute('background', 'default');
 			await this.clear();
 			await this.writeLine('');
-			await this.writeLine('   The program terminated with a return code ' + code.toString() + '.');
+			await this.writeLine('   The program terminated with no return codes.');
 			await this.writeLine('');
 			await this.writeLine('      >> Press any key to continue with restart the program . . .   ');
 			await this.pressAnyKey();
@@ -530,7 +530,6 @@
 	].bindTo(window);
 	/* { event-dispatcher } */
 	let isLoaded = false;
-	let success = true;
 	let structuredTag = async () => {
 		/* [iostream] */
 		defineSharedField(window, 'iostream', new Console());
@@ -565,12 +564,10 @@
 			Asyncify.asyncPromiseHandlers = {
 				reject: (code) => {
 					EXITSTATUS = code;
-					success = true;
 					bind();
 				},
 				resolve: (code) => {
 					EXITSTATUS = code;
-					success = false;
 					bind();
 				}
 			};
@@ -581,10 +578,11 @@
 	let formedStyle = async () => {
 		/* [iostream] */
 		if (keepRuntimeAlive() == false) {
-			if (success == false) {
+			if (ABORT == false) {
 				await iostream.completed(EXITSTATUS);
 			} else {
-				await iostream.terminated(EXITSTATUS);
+				await iostream.terminated();
+				ABORT = false;
 			}
 			Module._main();
 		}
