@@ -568,11 +568,11 @@
 		(function bind() {
 			Asyncify.asyncPromiseHandlers = {
 				reject: (code) => {
-					EXITSTATUS = code instanceof Number ? code : (isAborted ? 1 : 0);
+					EXITSTATUS = [code].constrainedWith(Number) ? code : (isAborted ? 1 : 0);
 					bind();
 				},
 				resolve: (code) => {
-					EXITSTATUS = code instanceof Number ? code : (isAborted ? 1 : 0);
+					EXITSTATUS = [code].constrainedWith(Number) ? code : (isAborted ? 1 : 0);
 					bind();
 				}
 			};
@@ -583,7 +583,7 @@
 	let formedStyle = async () => {
 		/* [iostream] */
 		if (keepRuntimeAlive() == false) {
-			if (isAborted == false && EXITSTATUS instanceof Number) {
+			if (isAborted == false && [EXITSTATUS].constrainedWith(Number)) {
 				await iostream.completed(EXITSTATUS);
 			} else {
 				await iostream.terminated();
