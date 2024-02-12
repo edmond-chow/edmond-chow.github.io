@@ -467,6 +467,7 @@
 			}
 		},
 		async function completed(code) {
+			arguments.constrainedWithAndThrow(Number);
 			this.ConsoleNode.setAttribute('foreground', 'gray');
 			this.ConsoleNode.setAttribute('background', 'default');
 			await this.clear();
@@ -478,6 +479,7 @@
 			await this.clear();
 		},
 		async function terminated() {
+			arguments.constrainedWithAndThrow();
 			this.ConsoleNode.setAttribute('foreground', 'gray');
 			this.ConsoleNode.setAttribute('background', 'default');
 			await this.clear();
@@ -530,6 +532,7 @@
 	].bindTo(window);
 	/* { event-dispatcher } */
 	let isLoaded = false;
+	let isAborted = false;
 	let structuredTag = async () => {
 		/* [iostream] */
 		defineSharedField(window, 'iostream', new Console());
@@ -542,6 +545,8 @@
 			},
 			onAbort: () => {
 				Module.__Z12abort_unwindv();
+				isAborted = true;
+				throw 1;
 			}
 		};
 		Object.defineProperty(window, '_exit', {
@@ -563,11 +568,11 @@
 		(function bind() {
 			Asyncify.asyncPromiseHandlers = {
 				reject: (code) => {
-					EXITSTATUS = code;
+					EXITSTATUS = code instanceof Number ? code : (isAborted ? 1 : 0);
 					bind();
 				},
 				resolve: (code) => {
-					EXITSTATUS = code;
+					EXITSTATUS = code instanceof Number ? code : (isAborted ? 1 : 0);
 					bind();
 				}
 			};
@@ -578,11 +583,11 @@
 	let formedStyle = async () => {
 		/* [iostream] */
 		if (keepRuntimeAlive() == false) {
-			if (ABORT == false) {
+			if (isAborted == false && EXITSTATUS instanceof Number) {
 				await iostream.completed(EXITSTATUS);
 			} else {
 				await iostream.terminated();
-				ABORT = false;
+				isAborted = false;
 			}
 			Module._main();
 		}
