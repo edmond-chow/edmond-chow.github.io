@@ -534,6 +534,9 @@
 	let isLoaded = false;
 	let isAborted = false;
 	let endedAtSyncContext = false;
+	let checkIf = (value, type) => {
+		return value instanceof type || Object.getPrototypeOf(value) == type.prototype;
+	};
 	let structuredTag = async () => {
 		/* [iostream] */
 		defineSharedField(window, 'iostream', new Console());
@@ -541,7 +544,7 @@
 		iostream.InputNode.focus();
 		let initialized = false;
 		let bindedWithAsyncContext = false;
-		let exitWithThrow = (code) => {
+		let endWithThrow = (code) => {
 			if (bindedWithAsyncContext == false || endedAtSyncContext == true) {
 				endedAtSyncContext = true;
 				EXITSTATUS = code;
@@ -556,12 +559,12 @@
 			onAbort: () => {
 				Module.__Z12abort_unwindv();
 				isAborted = true;
-				exitWithThrow(1);
+				endWithThrow(1);
 			}
 		};
 		Object.defineProperty(window, '_exit', {
 			value: (code) => {
-				exitWithThrow(code);
+				endWithThrow(code);
 			},
 			writable: false,
 			enumerable: true,
@@ -580,11 +583,11 @@
 		(function bind() {
 			Asyncify.asyncPromiseHandlers = {
 				reject: (code) => {
-					EXITSTATUS = [code].constrainedWith(Number) ? code : (isAborted ? 1 : 0);
+					EXITSTATUS = checkIf(code, Number) ? code : (isAborted ? 1 : 0);
 					bind();
 				},
 				resolve: (code) => {
-					EXITSTATUS = [code].constrainedWith(Number) ? code : (isAborted ? 1 : 0);
+					EXITSTATUS = checkIf(code, Number) ? code : (isAborted ? 1 : 0);
 					bind();
 				}
 			};
@@ -596,8 +599,8 @@
 	let formedStyle = async () => {
 		/* [iostream] */
 		if (keepRuntimeAlive() == false) {
-			if (isAborted == false && [EXITSTATUS].constrainedWith(Number)) {
-				await iostream.completed(EXITSTATUS);
+			if (isAborted == false) {
+				await iostream.completed(checkIf(EXITSTATUS, Number) ? EXITSTATUS : 0);
 			} else {
 				await iostream.terminated();
 				isAborted = false;
