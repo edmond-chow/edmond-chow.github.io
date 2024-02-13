@@ -533,12 +533,22 @@
 	/* { event-dispatcher } */
 	let isLoaded = false;
 	let isAborted = false;
+	let endedAtSyncContext = false;
 	let structuredTag = async () => {
 		/* [iostream] */
 		defineSharedField(window, 'iostream', new Console());
 		window.iostream.bindTo(document.body);
 		iostream.InputNode.focus();
 		let initialized = false;
+		let bindedWithAsyncContext = false;
+		let exitWithThrow = (code) => {
+			if (bindedWithAsyncContext == false || endedAtSyncContext == true) {
+				endedAtSyncContext = true;
+				EXITSTATUS = code;
+				throw new ExitStatus(code);
+			}
+			throw code;
+		}
 		Module = {
 			onRuntimeInitialized: () => {
 				initialized = true;
@@ -546,11 +556,14 @@
 			onAbort: () => {
 				Module.__Z12abort_unwindv();
 				isAborted = true;
-				throw 1;
+				exitWithThrow(1);
 			}
 		};
 		Object.defineProperty(window, '_exit', {
-			value: (code) => { throw code; },
+			value: (code) =>
+			{
+				exitWithThrow(code);
+			},
 			writable: false,
 			enumerable: true,
 			configurable: false,
@@ -577,6 +590,7 @@
 				}
 			};
 		})();
+		bindedWithAsyncContext = true;
 		/* .no-text */
 		document.body.classList.add('no-text');
 	};
@@ -589,7 +603,7 @@
 				await iostream.terminated();
 				isAborted = false;
 			}
-			Module._main();
+			callMain();
 		}
 		/* .no-text */
 		await Array.from(document.getElementsByClassName('no-text')).map((value) => {
