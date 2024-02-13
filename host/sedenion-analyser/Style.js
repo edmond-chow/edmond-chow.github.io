@@ -560,8 +560,7 @@
 			}
 		};
 		Object.defineProperty(window, '_exit', {
-			value: (code) =>
-			{
+			value: (code) => {
 				exitWithThrow(code);
 			},
 			writable: false,
