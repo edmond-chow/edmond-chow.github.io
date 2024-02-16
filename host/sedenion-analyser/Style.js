@@ -1,4 +1,3 @@
-
 (async () => {
 	/* [Array.prototype.bindTo].bindTo(instance = window) */
 	(() => {
