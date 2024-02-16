@@ -1,3 +1,4 @@
+
 (async () => {
 	/* [Array.prototype.bindTo].bindTo(instance = window) */
 	(() => {
@@ -533,25 +534,12 @@
 	/* { event-dispatcher } */
 	let isLoaded = false;
 	let isAborted = false;
-	let endedAtSyncContext = false;
-	let checkIf = (value, type) => {
-		return value instanceof type || Object.getPrototypeOf(value) == type.prototype;
-	};
 	let structuredTag = async () => {
 		/* [iostream] */
 		defineSharedField(window, 'iostream', new Console());
 		window.iostream.bindTo(document.body);
 		iostream.InputNode.focus();
 		let initialized = false;
-		let bindedWithAsyncContext = false;
-		let endWithThrow = (code) => {
-			if (bindedWithAsyncContext == false || endedAtSyncContext == true) {
-				endedAtSyncContext = true;
-				EXITSTATUS = code;
-				throw new ExitStatus(code);
-			}
-			throw code;
-		}
 		Module = {
 			onRuntimeInitialized: () => {
 				initialized = true;
@@ -559,17 +547,12 @@
 			onAbort: () => {
 				Module.__Z12abort_unwindv();
 				isAborted = true;
-				endWithThrow(1);
+				throw new ExitStatus(1);
+			},
+			onExit: (code) => {
+				throw new ExitStatus(code);
 			}
 		};
-		Object.defineProperty(window, '_exit', {
-			value: (code) => {
-				endWithThrow(code);
-			},
-			writable: false,
-			enumerable: true,
-			configurable: false,
-		});
 		let scriptNode = document.createElement('script');
 		scriptNode.src = 'Sedenion.js';
 		scriptNode.defer = true;
@@ -582,17 +565,27 @@
 		});
 		(function bind() {
 			Asyncify.asyncPromiseHandlers = {
-				reject: (code) => {
-					EXITSTATUS = checkIf(code, Number) ? code : (isAborted ? 1 : 0);
+				reject: (e) => {
+					if (e instanceof ExitStatus) {
+						return handleException(e);
+					}
 					bind();
 				},
 				resolve: (code) => {
-					EXITSTATUS = checkIf(code, Number) ? code : (isAborted ? 1 : 0);
+					if (code instanceof Number || Object.getPrototypeOf(code) == Number.prototype) {
+						try {
+							var ret = code;
+							exitJS(ret, true);
+							return ret;
+						} catch (e) {
+							return handleException(e);
+						}
+					}
 					bind();
 				}
 			};
 		})();
-		bindedWithAsyncContext = true;
+		exitRuntime = () => { };
 		/* .no-text */
 		document.body.classList.add('no-text');
 	};
@@ -600,7 +593,7 @@
 		/* [iostream] */
 		if (keepRuntimeAlive() == false) {
 			if (isAborted == false) {
-				await iostream.completed(checkIf(EXITSTATUS, Number) ? EXITSTATUS : 0);
+				await iostream.completed(EXITSTATUS);
 			} else {
 				await iostream.terminated();
 				isAborted = false;
