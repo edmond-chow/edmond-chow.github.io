@@ -86,8 +86,8 @@ private:
 	fn_list* previous;
 	void (*func[count])(void*);
 	void* arg[count];
-	fn_list() : previous{ nullptr }, func{}, arg{} {};
-	static fn_list* get_last()
+	fn_list() = default;
+	static fn_list* get_default()
 	{
 		static fn_list list{};
 		return &list;
@@ -95,7 +95,7 @@ private:
 public:
 	static int push(void (*func)(void*), void* arg)
 	{
-		if (last == nullptr) { last = get_last(); }
+		if (empty()) { last = get_default(); }
 		if (slot == count)
 		{
 			fn_list* node = static_cast<fn_list*>(malloc(sizeof(fn_list)));
@@ -111,13 +111,13 @@ public:
 	};
 	static int pop()
 	{
-		if (last->previous == nullptr && slot == 0) { return 0; }
+		if (empty()) { return -1; }
 		--slot;
 		if (last->func[slot] != nullptr)
 		{
 			last->func[slot](last->arg[slot]);
 		}
-		if (last->previous != nullptr && slot == 0)
+		if (last != get_default() && slot == 0)
 		{
 			slot = count;
 			fn_list* node = last;
@@ -128,7 +128,8 @@ public:
 	};
 	static bool empty()
 	{
-		return last->previous == nullptr && slot == 0;
+		if (last == nullptr) { return true; }
+		return last == get_default() && slot == 0;
 	};
 };
 std::size_t fn_list::slot{ 0 };
