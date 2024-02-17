@@ -81,24 +81,27 @@ struct fn_list
 {
 private:
 	static const std::size_t count = 3;
-	static thread_local std::size_t slot;
-	static thread_local fn_list build_in;
-	static thread_local fn_list* last;
+	static std::size_t slot;
+	static fn_list* last;
 	fn_list* previous;
 	void (*func[count])(void*);
 	void* arg[count];
-	fn_list() : previous{ nullptr }, func{}, arg{}
+	fn_list() : previous{ nullptr }, func{}, arg{} {};
+	static fn_list* get_last()
 	{
-		last = this;
+		static fn_list list{};
+		return &list;
 	};
 public:
-	int push(void (*func)(void*), void* arg)
+	static int push(void (*func)(void*), void* arg)
 	{
+		if (last == nullptr) { last = get_last(); }
 		if (slot == count)
 		{
-			last = (fn_list*)calloc(sizeof(fn_list), 1);
-			if (last == nullptr) { return -1; }
-			last->previous = this;
+			fn_list* node = static_cast<fn_list*>(malloc(sizeof(fn_list)));
+			if (node == nullptr) { return -1; }
+			node->previous = last;
+			last = node;
 			slot = 0;
 		}
 		last->func[slot] = func;
@@ -106,7 +109,7 @@ public:
 		++slot;
 		return 0;
 	};
-	int pop()
+	static int pop()
 	{
 		if (last->previous == nullptr && slot == 0) { return 0; }
 		--slot;
@@ -117,8 +120,9 @@ public:
 		if (last->previous != nullptr && slot == 0)
 		{
 			slot = count;
-			last = this->previous;
-			free(this);
+			fn_list* node = last;
+			last = node->previous;
+			free(node);
 		}
 		return 0;
 	};
@@ -126,23 +130,17 @@ public:
 	{
 		return last->previous == nullptr && slot == 0;
 	};
-	static fn_list* get_last()
-	{
-		static fn_list list{};
-		return last;
-	};
 };
-thread_local std::size_t fn_list::slot{ 0 };
-thread_local fn_list fn_list::build_in{};
-thread_local fn_list* fn_list::last{ nullptr };
+std::size_t fn_list::slot{ 0 };
+fn_list* fn_list::last{ nullptr };
 extern "C" int __cxa_atexit(void (*func)(void*), void* arg, void* dso_handle)
 {
-	return fn_list::get_last()->push(func, arg);
+	return fn_list::push(func, arg);
 };
 void invoke_atexit()
 {
 	while (!fn_list::empty())
 	{
-		fn_list::get_last()->pop();
+		fn_list::pop();
 	}
 };
