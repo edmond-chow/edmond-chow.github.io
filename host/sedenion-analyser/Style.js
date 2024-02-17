@@ -533,6 +533,26 @@
 	/* { event-dispatcher } */
 	let isLoaded = false;
 	let isAborted = false;
+	let bindToAsyncify = () => {
+		Asyncify.asyncPromiseHandlers = {
+			reject: (e) => {
+				if (e instanceof ExitStatus) {
+					return handleException(e);
+				}
+			},
+			resolve: (code) => {
+				if (code instanceof Number || Object.getPrototypeOf(code) == Number.prototype) {
+					try {
+						var ret = code;
+						exitJS(ret, true);
+						return ret;
+					} catch (e) {
+						return handleException(e);
+					}
+				}
+			}
+		};
+	};
 	let structuredTag = async () => {
 		/* [iostream] */
 		defineSharedField(window, 'iostream', new Console());
@@ -562,28 +582,7 @@
 			}
 			resolve();
 		});
-		(function bind() {
-			Asyncify.asyncPromiseHandlers = {
-				reject: (e) => {
-					if (e instanceof ExitStatus) {
-						return handleException(e);
-					}
-					bind();
-				},
-				resolve: (code) => {
-					if (code instanceof Number || Object.getPrototypeOf(code) == Number.prototype) {
-						try {
-							var ret = code;
-							exitJS(ret, true);
-							return ret;
-						} catch (e) {
-							return handleException(e);
-						}
-					}
-					bind();
-				}
-			};
-		})();
+		bindToAsyncify();
 		exitRuntime = () => { };
 		/* .no-text */
 		document.body.classList.add('no-text');
@@ -597,6 +596,7 @@
 				await iostream.terminated();
 				isAborted = false;
 			}
+			bindToAsyncify();
 			callMain();
 		}
 		/* .no-text */
