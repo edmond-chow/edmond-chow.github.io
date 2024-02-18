@@ -113,11 +113,9 @@ public:
 	{
 		if (empty()) { return -1; }
 		--slot;
-		if (last->func[slot] != nullptr)
-		{
-			last->func[slot](last->arg[slot]);
-		}
-		if (slot == 0)
+		void (*fn_ptr)(void*) = last->func[slot];
+		if (fn_ptr != nullptr) { (*fn_ptr)(last->arg[slot]); }
+		if (!empty() && slot == 0)
 		{
 			slot = count;
 			fn_list* node = last;
