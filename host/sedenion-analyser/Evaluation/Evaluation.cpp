@@ -80,7 +80,7 @@ void abort_unwind() noexcept
 struct fn_list
 {
 private:
-	static const std::size_t count = 3;
+	static const std::size_t count = 32;
 	static std::size_t slot;
 	static fn_list* last;
 	fn_list* previous;
@@ -98,7 +98,7 @@ public:
 		if (empty()) { last = get_default(); }
 		if (slot == count)
 		{
-			fn_list* node = static_cast<fn_list*>(malloc(sizeof(fn_list)));
+			fn_list* node = new (std::nothrow) fn_list{};
 			if (node == nullptr) { return -1; }
 			node->previous = last;
 			last = node;
@@ -117,19 +117,18 @@ public:
 		{
 			last->func[slot](last->arg[slot]);
 		}
-		if (last != get_default() && slot == 0)
+		if (slot == 0)
 		{
 			slot = count;
 			fn_list* node = last;
 			last = node->previous;
-			free(node);
+			delete node;
 		}
 		return 0;
 	};
 	static bool empty()
 	{
-		if (last == nullptr) { return true; }
-		return last == get_default() && slot == 0;
+		return last == nullptr || (last == get_default() && slot == 0);
 	};
 };
 std::size_t fn_list::slot{ 0 };
