@@ -582,6 +582,7 @@
 			}
 			resolve();
 		});
+		exitRuntime = Module.__Z13invoke_atexitv;
 		bindToAsyncify();
 		/* .no-text */
 		document.body.classList.add('no-text');
