@@ -583,9 +583,6 @@
 			resolve();
 		});
 		bindToAsyncify();
-		exitRuntime = () => {
-			Module.__Z13invoke_atexitv();
-		};
 		/* .no-text */
 		document.body.classList.add('no-text');
 	};

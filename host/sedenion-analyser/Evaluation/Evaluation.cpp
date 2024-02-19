@@ -135,7 +135,7 @@ extern "C" int __cxa_atexit(void (*func)(void*), void* arg, void* dso_handle)
 {
 	return fn_list::push(func, arg);
 };
-void invoke_atexit()
+extern "C" void __funcs_on_exit()
 {
 	while (!fn_list::empty())
 	{
