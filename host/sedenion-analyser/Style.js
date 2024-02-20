@@ -582,7 +582,7 @@
 			}
 			resolve();
 		});
-		exitRuntime = Module.__Z13invoke_atexitv;
+		exitRuntime = new Function();
 		bindToAsyncify();
 		/* .no-text */
 		document.body.classList.add('no-text');
@@ -596,7 +596,6 @@
 				await iostream.terminated();
 				isAborted = false;
 			}
-			___wasm_call_ctors();
 			bindToAsyncify();
 			callMain();
 		}
