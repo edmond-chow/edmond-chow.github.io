@@ -533,6 +533,7 @@
 	/* { event-dispatcher } */
 	let isLoaded = false;
 	let isAborted = false;
+	let memorySlice = null;
 	let bindToAsyncify = () => {
 		Asyncify.asyncPromiseHandlers = {
 			reject: (e) => {
@@ -558,11 +559,15 @@
 		defineSharedField(window, 'iostream', new Console());
 		window.iostream.bindTo(document.body);
 		iostream.InputNode.focus();
-		let initialized = false;
+		let fetched = false;
 		Module = {
-			onRuntimeInitialized: () => {
+			preRun: () => {
 				exitRuntime = Module.__Z13invoke_atexitv;
-				initialized = true;
+				memorySlice = new Int8Array(wasmMemory);
+				fetched = true;
+			},
+			onRuntimeInitialized: () => {
+				bindToAsyncify();
 			},
 			onAbort: () => {
 				Module.__Z12abort_unwindv();
@@ -578,12 +583,11 @@
 		scriptNode.defer = true;
 		document.head.append(scriptNode);
 		await new Promise(async (resolve) => {
-			while (initialized == false) {
+			while (fetched == false) {
 				await defer(0);
 			}
 			resolve();
 		});
-		bindToAsyncify();
 		/* .no-text */
 		document.body.classList.add('no-text');
 	};
@@ -596,9 +600,7 @@
 				await iostream.terminated();
 				isAborted = false;
 			}
-			for (let ite = ___stop_em_js; ite < ___data_end; ite++) {
-				HEAP8[ite] = 0;
-			}
+			wasmMemory.buffer = new Int8Array(memorySlice).buffer;
 			___wasm_call_ctors();
 			bindToAsyncify();
 			callMain();
