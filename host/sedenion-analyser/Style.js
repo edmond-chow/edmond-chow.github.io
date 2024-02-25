@@ -596,7 +596,7 @@
 				await iostream.terminated();
 				isAborted = false;
 			}
-			for (let ite = ___stop_em_js, ite_end = Module.__Z8data_endv(); ite < ite_end; ite++) {
+			for (let ite = ___stop_em_js; ite < ___data_end; ite++) {
 				HEAP8[ite] = 0;
 			}
 			___wasm_call_ctors();

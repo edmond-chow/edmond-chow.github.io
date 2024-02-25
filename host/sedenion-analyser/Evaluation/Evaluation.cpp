@@ -142,8 +142,3 @@ void invoke_atexit()
 		fn_list::pop();
 	}
 };
-extern "C" { extern char __data_end; }
-void* data_end()
-{
-	return &__data_end;
-};
