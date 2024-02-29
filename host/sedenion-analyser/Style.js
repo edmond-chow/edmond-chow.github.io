@@ -553,6 +553,7 @@
 				}
 			}
 		};
+		EXITSTATUS = undefined;
 	};
 	let structuredTag = async () => {
 		/* [iostream] */
@@ -564,6 +565,7 @@
 			preRun: () => {
 				exitRuntime = Module.__Z13invoke_atexitv;
 				memorySlice = new Int8Array(wasmMemory);
+				quit_ = new Function();
 				fetched = true;
 			},
 			onRuntimeInitialized: () => {
@@ -595,7 +597,7 @@
 		/* [iostream] */
 		if (keepRuntimeAlive() == false) {
 			if (isAborted == false) {
-				await iostream.completed(EXITSTATUS);
+				await iostream.completed(EXITSTATUS != undefined ? EXITSTATUS : 0);
 			} else {
 				await iostream.terminated();
 				isAborted = false;
