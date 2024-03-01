@@ -454,7 +454,7 @@
 		},
 		async function clear() {
 			arguments.constrainedWithAndThrow();
-			iostream.BufferNode.innerHTML = '';
+			this.BufferNode.innerHTML = '';
 			await defer(0);
 		},
 		async function pressAnyKey() {
