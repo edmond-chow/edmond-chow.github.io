@@ -74,7 +74,7 @@
 			}
 		].bindTo(Object.prototype);
 		[
-			function defineField(instance, key, data, mutable = false) {
+			function defineField(instance, key, data, mutable = true) {
 				[instance, key].constrainedWithAndThrow(Object, String);
 				Object.defineProperty(instance, key, {
 					value: data,
@@ -171,8 +171,16 @@
 			this.ConsoleNode.setAttribute('foreground', 'gray');
 			this.ConsoleNode.setAttribute('background', 'default');
 			this.ConsoleNode.setAttribute('scheme', 'campbell');
-			defineSharedField(this, 'BufferNode', document.createElement('buffer'));
-			this.ConsoleNode.append(this.BufferNode);
+			let BufferNode = document.createElement('buffer');
+			this.ConsoleNode.prepend(BufferNode);
+			defineField(this, 'ClearBufferNode', () => {
+				document.createDocumentFragment().append(BufferNode);
+				BufferNode = document.createElement('buffer');
+				this.ConsoleNode.prepend(BufferNode);
+			}, false);
+			defineSharedProperty(this, 'BufferNode', () => {
+				return BufferNode;
+			});
 			defineSharedField(this, 'ControlNode', document.createElement('control'));
 			this.ConsoleNode.append(this.ControlNode);
 			defineProperty(this, 'CanType', () => {
@@ -191,7 +199,7 @@
 					this.InputNode.value = '';
 					this.CanType = false;
 				}
-			});
+			}, false);
 			defineField(this, 'ReadLineType', () => {
 				let value = this.InputNode.value;
 				if (value.substring(0, 8) == '$scheme ') {
@@ -205,7 +213,7 @@
 					this.InputNode.value = '';
 					this.CanType = false;
 				}
-			});
+			}, false);
 			defineSharedField(this, 'InputNode', document.createElement('input'));
 			this.InputNode.type = 'text';
 			this.InputNode.placeholder = 'type in something for interacting with the console . . . . .';
@@ -237,14 +245,14 @@
 			defineSharedProperty(this, 'LastLineNode', () => {
 				return this.LineNodes.length == 0 ? null : this.LineNodes[this.LineNodes.length - 1];
 			});
-			defineField(this, 'istream', [], true);
-			defineField(this, 'received', 0, true);
-			defineField(this, 'counted', 0, true);
-			defineField(this, 'scroll', false, true);
-			defineField(this, 'focused', false, true);
+			defineField(this, 'istream', []);
+			defineField(this, 'received', 0);
+			defineField(this, 'counted', 0);
+			defineField(this, 'scroll', false);
+			defineField(this, 'focused', false);
 			defineSharedProperty(this, 'Scheme', () => {
 				return this.ConsoleNode.getAttribute('scheme');
-			}, () => {
+			}, (Scheme) => {
 				this.ConsoleNode.setAttribute('scheme', Scheme);
 			});
 		}
@@ -454,7 +462,7 @@
 		},
 		async function clear() {
 			arguments.constrainedWithAndThrow();
-			this.BufferNode.innerHTML = '';
+			this.ClearBufferNode();
 			await defer(0);
 		},
 		async function pressAnyKey() {
