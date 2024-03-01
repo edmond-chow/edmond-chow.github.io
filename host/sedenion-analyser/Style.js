@@ -454,9 +454,8 @@
 		},
 		async function clear() {
 			arguments.constrainedWithAndThrow();
-			await this.LineNodes.forEachAsync((value) => {
-				value.Self.remove();
-			});
+			iostream.BufferNode.innerHTML = '';
+			await defer(0);
 		},
 		async function pressAnyKey() {
 			arguments.constrainedWithAndThrow();
