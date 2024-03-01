@@ -553,7 +553,6 @@
 				}
 			}
 		};
-		EXITSTATUS = undefined;
 	};
 	let structuredTag = async () => {
 		/* [iostream] */
@@ -603,6 +602,7 @@
 				isAborted = false;
 			}
 			wasmMemory.buffer = new Int8Array(memorySlice).buffer;
+			EXITSTATUS = undefined;
 			___wasm_call_ctors();
 			bindToAsyncify();
 			callMain();
