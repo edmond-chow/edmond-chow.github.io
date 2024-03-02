@@ -77,3 +77,68 @@ void abort_unwind() noexcept
 {
 	if (eval::get_last() != nullptr) { std::longjmp(eval::get_last()->get_sp(), ev_state::before); }
 };
+struct fn_list
+{
+private:
+	static const std::size_t count = 32;
+	static std::size_t slot;
+	static fn_list* last;
+	fn_list* previous;
+	void (*func[count])(void*);
+	void* arg[count];
+	fn_list() = default;
+	static fn_list* get_default()
+	{
+		static fn_list list{};
+		return &list;
+	};
+public:
+	static int push(void (*func)(void*), void* arg)
+	{
+		if (empty()) { last = get_default(); }
+		if (slot == count)
+		{
+			fn_list* node = new (std::nothrow) fn_list{};
+			if (node == nullptr) { return -1; }
+			node->previous = last;
+			last = node;
+			slot = 0;
+		}
+		last->func[slot] = func;
+		last->arg[slot] = arg;
+		++slot;
+		return 0;
+	};
+	static int pop()
+	{
+		if (empty()) { return -1; }
+		--slot;
+		void (*fn_ptr)(void*) = last->func[slot];
+		if (fn_ptr != nullptr) { (*fn_ptr)(last->arg[slot]); }
+		if (!empty() && slot == 0)
+		{
+			slot = count;
+			fn_list* node = last;
+			last = node->previous;
+			delete node;
+		}
+		return 0;
+	};
+	static bool empty()
+	{
+		return last == nullptr || (last == get_default() && slot == 0);
+	};
+};
+std::size_t fn_list::slot{ 0 };
+fn_list* fn_list::last{ nullptr };
+extern "C" int __cxa_atexit(void (*func)(void*), void* arg, void* dso_handle)
+{
+	return fn_list::push(func, arg);
+};
+void invoke_atexit()
+{
+	while (!fn_list::empty())
+	{
+		fn_list::pop();
+	}
+};
