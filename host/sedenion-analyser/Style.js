@@ -569,8 +569,8 @@
 		let fetched = false;
 		Module = {
 			preRun: () => {
-				exitRuntime = Module.__Z13invoke_atexitv;
 				memorySlice = new Int8Array(wasmMemory);
+				exitRuntime = ___funcs_on_exit;
 				quit_ = new Function();
 				fetched = true;
 			},
