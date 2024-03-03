@@ -29,7 +29,7 @@
 			async function forEachAsync(delegate) {
 				for (let i = 0; i < this.length; i++) {
 					delegate.call(null, this[i], i, this);
-					await defer(0);
+					await defer();
 				}
 			}
 		].bindTo(Array.prototype);
@@ -126,29 +126,27 @@
 					value.callback = null;
 				}
 			});
-		}, 5);
+		}, 0);
 		[
-			function send(callback, timeout) {
+			function send(callback, timeout = 0) {
 				arguments.constrainedWithAndThrow(Function, Number);
 				loop.push({
 					deferred: performance.now() + timeout,
 					callback: callback
 				});
 			},
-			function defer(timeout) {
+			function defer(timeout = 0) {
 				arguments.constrainedWithAndThrow(Number);
 				return new Promise((resolve) => {
 					loop.push({
 						deferred: performance.now() + timeout,
-						callback: () => {
-							resolve();
-						}
+						callback: resolve
 					});
 				});
 			}
 		].bindTo(window);
 	})();
-	await defer(0);
+	await defer(5);
 	/* constructor() */
 	function LineNodeWrapper(node) {
 		defineSharedField(this, 'Self', node);
@@ -446,7 +444,7 @@
 			this.counted++;
 			while (this.received >= this.istream.length || capturedCounted != this.received) {
 				this.CanType = true;
-				await defer(0);
+				await defer();
 			}
 			let output = this.istream[this.received++];
 			if (this.received == this.counted) {
@@ -463,14 +461,14 @@
 		async function clear() {
 			arguments.constrainedWithAndThrow();
 			this.ClearBufferNode();
-			await defer(0);
+			await defer();
 		},
 		async function pressAnyKey() {
 			arguments.constrainedWithAndThrow();
 			this.ConsoleNode.setAttribute('for-any-key', '');
 			this.CanType = true;
 			while (this.ConsoleNode.hasAttribute('for-any-key')) {
-				await defer(0);
+				await defer();
 			}
 		},
 		async function completed(code) {
@@ -592,7 +590,7 @@
 		document.head.append(scriptNode);
 		await new Promise(async (resolve) => {
 			while (fetched == false) {
-				await defer(0);
+				await defer();
 			}
 			resolve();
 		});
