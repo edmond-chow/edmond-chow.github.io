@@ -21,7 +21,7 @@ namespace CmplxConExt
 			return getUTF32String(__asyncjs__ReadSync, line);
 		});
 		EM_ASYNC_JS(void, WriteSync, (const wchar_t* Content), {
-			await iostream.writeWithColorCodes(UTF32ToString(Content));
+			await iostream.write(UTF32ToString(Content));
 		});
 		EM_ASYNC_JS(void, ClearSync, (), {
 			await iostream.clear();
@@ -38,8 +38,8 @@ namespace CmplxConExt
 		EM_JS(const wchar_t*, GetSyncTitle, (), {
 			return getUTF32String(GetSyncTitle, getTitle());
 		});
-		EM_JS(const wchar_t*, GetString, (std::uint8_t Color), {
-			return getUTF32String(GetString, Color.fromConsoleColor());
+		EM_JS(std::char_traits<wchar_t>::int_type, GetColorCharCode, (std::uint8_t code), {
+			return Console.GetColorCharCode(code);
 		});
 	}
 	enum class ConsoleColor : std::uint8_t
@@ -90,9 +90,9 @@ namespace CmplxConExt
 	{
 		return Native::GetSyncTitle();
 	};
-	std::wstring GetString(ConsoleColor Color)
+	std::char_traits<wchar_t>::char_type GetColorCharCode(std::uint8_t code)
 	{
-		return Native::GetString(static_cast<std::uint8_t>(Color));
+		return std::char_traits<wchar_t>::to_char_type(Native::GetColorCharCode(code));
 	};
 	namespace dom
 	{
@@ -187,17 +187,17 @@ namespace CmplxConExt
 	void SetForegroundColor(ConsoleColor Color)
 	{
 		ForegroundColor = Color;
-		dom::wcout << L"\\foreground:" << GetString(Color) << L"\\";
+		dom::wcout << L"\\f" << GetColorCharCode(static_cast<std::uint8_t>(Color)) << L"\\";
 	};
 	void SetBackgroundColor(ConsoleColor Color)
 	{
 		BackgroundColor = Color;
-		dom::wcout << L"\\background:" << GetString(Color) << L"\\";
+		dom::wcout << L"\\b" << GetColorCharCode(static_cast<std::uint8_t>(Color)) << L"\\";
 	};
 	void SetTitle(const std::wstring& Text)
 	{
 		Title = Text;
-		dom::wcout << L"\\title:" << Text << L"\\";
+		dom::wcout << L"\\t" << Text << L"\\";
 	};
 	void Clear()
 	{

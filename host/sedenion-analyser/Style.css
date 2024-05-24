@@ -526,6 +526,13 @@
 		word-break: break-all;
 		overflow-wrap: anywhere;
 	}
+	console > buffer > line > span:after {
+		content: ' ';
+		font-size: 0px;
+		display: inline-block;
+		width: 0px;
+		height: 0px;
+	}
 	console > buffer > line > span[foreground="default"] {
 		color: transparent;
 	}

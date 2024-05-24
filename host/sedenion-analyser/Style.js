@@ -198,14 +198,13 @@
 					this.CanType = false;
 				}
 			}, false);
-			defineField(this, 'ReadLineType', () => {
+			defineField(this, 'ReadLineType', async () => {
 				let value = this.InputNode.value;
 				if (value.substring(0, 8) == '$scheme ') {
 					this.Scheme = value.substring(8, value.length);
-					this.writeWithColorCodes('\n\\foreground:gray\\ &   \\foreground:white\\' + value).then(() => {
-						this.BufferNode.append(this.LastLineNode.Self.previousElementSibling);
-					});
 					this.InputNode.value = '';
+					await this.write('\n\\f7\\ &   \\ff\\' + value);
+					this.BufferNode.append(this.LastLineNode.Self.previousElementSibling);
 				} else if (this.CanType == true) {
 					this.pushInput(this.InputNode.value);
 					this.InputNode.value = '';
@@ -292,6 +291,18 @@
 		'vintage'
 	];
 	defineSharedField(Console, 'Themes', Themes);
+	let GetColorCharCode = (code) => {
+		if (code >= 0 && code <= 9) {
+			return code + 48;
+		} else if (code >= 10 && code <= 15) {
+			return code + 87;
+		} else if (code == 0xFF) {
+			return 120;
+		} else {
+			throw 'The code out of range!';
+		}
+	};
+	defineSharedField(Console, 'GetColorCharCode', GetColorCharCode);
 	Object.freeze(Console.Themes);
 	[
 		function fromConsoleColor() {
@@ -322,73 +333,42 @@
 			arguments.constrainedWithAndThrow(String);
 			return this.ConsoleNode.setAttribute('background', color);
 		},
-		async function write(content) {
-			arguments.constrainedWithAndThrow(String);
-			let Foreground = this.ConsoleNode.getAttribute('foreground');
-			let Background = this.ConsoleNode.getAttribute('background');
-			let Fragment = document.createDocumentFragment();
-			let LineNode = null;
-			let SpanNode = null;
-			let NoLineNodes = this.LineNodes.length == 0;
-			let Colorless = () => {
-				let SpanNode = this.LastLineNode.LastSpanNode;
-				return SpanNode == null ? false : SpanNode.getAttribute('foreground') == Foreground && SpanNode.getAttribute('background') == Background;
-			};
-			let pushNode = () => {
-				this.BufferNode.append(Fragment);
-				Fragment = document.createDocumentFragment();
-				let Lines = this.LineNodes;
-				for (let i = 0; i < Lines.length - 8192; i++) {
-					Lines[i].Self.remove();
-				}
-				this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
-			};
-			await content.split('\n').forEachAsync((value, index) => {
-				if ((NoLineNodes ? index : index - 1) % 512 == 0) {
-					pushNode();
-				}
-				let AddSpan = () => {
-					if (value != '') {
-						SpanNode = document.createElement('span');
-						SpanNode.setAttribute('foreground', Foreground);
-						SpanNode.setAttribute('background', Background);
-						SpanNode.textContent += value;
-						LineNode.append(SpanNode);
-					}
-				};
-				if (index > 0 || NoLineNodes) {
-					LineNode = document.createElement('line');
-					AddSpan();
-					Fragment.append(LineNode);
-				} else {
-					LineNode = this.LastLineNode.Self;
-					if (Colorless()) {
-						SpanNode = this.LastLineNode.LastSpanNode;
-						SpanNode.textContent += value;
-					} else {
-						AddSpan();
-					}
-				}
-			});
-			pushNode();
-		},
 		async function writeLine(content) {
 			arguments.constrainedWithAndThrow(String);
 			await this.write(content + '\n');
 		},
-		async function writeWithColorCodes(content) {
+		async function write(content) {
 			arguments.constrainedWithAndThrow(String);
-			let Foreground = this.ConsoleNode.getAttribute('foreground');
-			let Background = this.ConsoleNode.getAttribute('background');
-			let Title = getTitle();
+			let count = 0;
+			let config = false;
+			let pending = false;
+			let control = null;
+			let value = '';
+			let foreground = Console.Colors.indexOf(this.ConsoleNode.getAttribute('foreground'));
+			let background = Console.Colors.indexOf(this.ConsoleNode.getAttribute('background'));
+			let title = getTitle();
 			let Fragment = document.createDocumentFragment();
-			let LineNode = null;
-			let SpanNode = null;
-			let NoLineNodes = this.LineNodes.length == 0;
-			let Colorless = () => {
-				let SpanNode = this.LastLineNode.LastSpanNode;
-				return SpanNode == null ? false : SpanNode.getAttribute('foreground') == Foreground && SpanNode.getAttribute('background') == Background;
-			};
+			let LineNode = (() => {
+				if (this.LineNodes.length > 0) {
+					return this.LastLineNode.Self;
+				} else {
+					let NewLineNode = document.createElement('line');
+					Fragment.append(NewLineNode);
+					return NewLineNode;
+				}
+			})();
+			let SpanNode = (() => {
+				let Wrapper = new LineNodeWrapper(LineNode);
+				if (Wrapper.SpanNodes.length > 0) {
+					return Wrapper.LastSpanNode;
+				} else {
+					let NewSpanNode = document.createElement('span');
+					NewSpanNode.setAttribute('foreground', Console.Colors[foreground]);
+					NewSpanNode.setAttribute('background', Console.Colors[background]);
+					LineNode.append(NewSpanNode);
+					return NewSpanNode;
+				}
+			})();
 			let pushNode = () => {
 				this.BufferNode.append(Fragment);
 				Fragment = document.createDocumentFragment();
@@ -396,47 +376,129 @@
 				for (let i = 0; i < Lines.length - 8192; i++) {
 					Lines[i].Self.remove();
 				}
-				setTitle(Title);
+				this.ConsoleNode.setAttribute('foreground', Console.Colors[foreground]);
+				this.ConsoleNode.setAttribute('background', Console.Colors[background]);
+				setTitle(title);
 				this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
 			};
-			await content.split('\n').forEachAsync((value, index) => {
-				if ((NoLineNodes ? index : index - 1) % 512 == 0) {
-					pushNode();
-				}
-				let NonFirstLine = true;
-				if (index > 0 || NoLineNodes) {
-					LineNode = document.createElement('line');
-					Fragment.append(LineNode);
+			let pushSpan = () => {
+				if (value.length > 0) {
+					SpanNode.textContent = value;
+					value = '';
+					return true;
 				} else {
-					LineNode = this.LastLineNode.Self;
-					NonFirstLine = false;
+					return false;
 				}
-				if (value != '') {
-					value.split('\\').forEach((value, index) => {
-						if (index % 2 == 1) {
-							if (value.substring(0, 11) == 'foreground:') {
-								Foreground = value.substring(11, value.length);
-							} else if (value.substring(0, 11) == 'background:') {
-								Background = value.substring(11, value.length);
-							} else if (value.substring(0, 6) == 'title:') {
-								Title = value.substring(6, value.length);
-							}
-						} else if (NonFirstLine == false && index == 0 && Colorless()) {
-							SpanNode = this.LastLineNode.LastSpanNode;
-							SpanNode.textContent += value;
-						} else if (value != '') {
-							SpanNode = document.createElement('span');
-							SpanNode.setAttribute('foreground', Foreground);
-							SpanNode.setAttribute('background', Background);
-							SpanNode.textContent += value;
-							LineNode.append(SpanNode);
+			};
+			let newLine = () => {
+				pushSpan();
+				LineNode = document.createElement('line');
+				SpanNode = document.createElement('span');
+				SpanNode.setAttribute('foreground', Console.Colors[foreground]);
+				SpanNode.setAttribute('background', Console.Colors[background]);
+				LineNode.append(SpanNode);
+				Fragment.append(LineNode);
+			};
+			let newSpan = () => {
+				SpanNode = pushSpan() ? document.createElement('span') : SpanNode;
+				SpanNode.setAttribute('foreground', Console.Colors[foreground]);
+				SpanNode.setAttribute('background', Console.Colors[background]);
+				LineNode.append(SpanNode);
+			};
+			let throwNow = () => {
+				pushSpan();
+				pushNode();
+				throw 'The control code doesn\'t match up!';
+			};
+			let isColorChanged = () => {
+				return SpanNode.getAttribute('foreground') != Console.Colors[foreground] || SpanNode.getAttribute('background') != Console.Colors[background];
+			};
+			let getColorCode = (code) => {
+				if (code >= 48 && code <= 57) {
+					return code - 48;
+				} else if (code >= 65 && code <= 70) {
+					return code - 55;
+				} else if (code >= 97 && code <= 102) {
+					return code - 87;
+				} else if (code == 88 || code == 120) {
+					return 0xFF;
+				} else {
+					throwNow();
+				}
+			};
+			let BreakNow = (code) => {
+				let Unbreakables = [33, 34, 36, 39, 40, 41, 44, 46, 47, 58, 59, 63, 91, 92, 93, 123, 125];
+				for (let i = 0; i < Unbreakables.length; i++) {
+					if (Unbreakables[i] == code) {
+						return true;
+					}
+				}
+				return false;
+			};
+			let breaking = false;
+			for (let i = 0; i < content.length; i++) {
+				if (content[i] == '\n') {
+					if (config && pending) {
+						throwNow();
+					} else if (count >= 512) {
+						count = 0;
+						pushNode();
+						await defer();
+					} else {
+						count += 1;
+					}
+					newLine();
+					config = false;
+					control = null;
+					breaking = false;
+				} else if (content[i] == '\\') {
+					if (config) {
+						if (isColorChanged()) {
+							newSpan();
+						} else if (control == null) {
+							newSpan();
+							value = '\\';
+						} else if (pending) {
+							throwNow();
 						}
-					});
+					}
+					config = !config;
+					control = null;
+					breaking = value == '\\';
+				} else if (control != null) {
+					pending = false;
+					if (control == '+t') {
+						title += content[i];
+					} else if (control.toLowerCase() == 't') {
+						title = content[i];
+						control = '+t';
+					} else if (control.toLowerCase() == 'f') {
+						foreground = getColorCode(content.charCodeAt(i));
+						control = '';
+					} else if (control.toLowerCase() == 'b') {
+						background = getColorCode(content.charCodeAt(i));
+						control = '';
+					} else {
+						throwNow();
+					}
+				} else if (config) {
+					pending = true;
+					control = content[i];
+				} else {
+					let release = BreakNow(content.charCodeAt(i));
+					if (breaking || release) {
+						newSpan();
+						breaking = release;
+					}
+					value += content[i];
 				}
-			});
-			pushNode();
-			this.ConsoleNode.setAttribute('foreground', Foreground);
-			this.ConsoleNode.setAttribute('background', Background);
+			}
+			if (config && pending) {
+				throwNow();
+			} else {
+				pushSpan();
+				pushNode();
+			}
 		},
 		async function read() {
 			arguments.constrainedWithAndThrow();
