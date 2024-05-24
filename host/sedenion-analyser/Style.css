@@ -512,6 +512,7 @@
 	}
 	console > buffer > line {
 		text-align: left;
+		position: relative;
 		display: block;
 		font-size: 16px;
 		font-family: 'Menlo', 'consolas', 'monospace';
@@ -526,12 +527,57 @@
 		word-break: break-all;
 		overflow-wrap: anywhere;
 	}
-	console > buffer > line > span:after {
+	console > buffer > line > span:before {
 		content: ' ';
 		font-size: 0px;
 		display: inline-block;
 		width: 0px;
 		height: 0px;
+	}
+	@keyframes shining {
+		0% {
+			background-color: transparent;
+		}
+		20% {
+			background-color: transparent;
+		}
+		25% {
+			background-color: white;
+		}
+		45% {
+			background-color: white;
+		}
+		50% {
+			background-color: transparent;
+		}
+		70% {
+			background-color: transparent;
+		}
+		75% {
+			background-color: white;
+		}
+		95% {
+			background-color: white;
+		}
+		100% {
+			background-color: transparent;
+		}
+	}
+	console > buffer > line:last-of-type:after {
+		content: '';
+		position: absolute;
+		height: 2px;
+		width: 8px;
+		bottom: 0px;
+		animation: shining 2s infinite;
+	}
+	console > buffer > line:last-of-type > span:last-of-type:after {
+		content: attr(data-content);
+		display: inline;
+		white-space: pre-wrap;
+		word-break: break-all;
+		overflow-wrap: anywhere;
+		cursor: auto;
 	}
 	console > buffer > line > span[foreground="default"] {
 		color: transparent;

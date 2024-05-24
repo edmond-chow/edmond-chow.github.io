@@ -214,20 +214,33 @@
 			defineSharedField(this, 'InputNode', document.createElement('input'));
 			this.InputNode.type = 'text';
 			this.InputNode.placeholder = 'type in something for interacting with the console . . . . .';
-			this.InputNode.addEventListener('keydown', (e) => {
+			this.InputNode.addEventListener('keydown', async (e) => {
 				if (this.ConsoleNode.hasAttribute('for-any-key')) {
 					this.ForAnyKeyType();
 				} else if (e.code == 'Enter') {
-					this.ReadLineType();
+					await this.ReadLineType();
 				}
+			});
+			this.InputNode.addEventListener('input', () => {
+				let space = String.fromCharCode(0x200B);
+				let value = this.InputNode.value;
+				let content = '';
+				for (let i = 0; i < value.length; i++) {
+					content += value[i];
+					if (value.charCodeAt(i) >= 0xD800) {
+						content += value[++i];
+					}
+					content += space;
+				}
+				this.LastLineNode.LastSpanNode.setAttribute('data-content', content);
 			});
 			this.ControlNode.append(this.InputNode);
 			defineSharedField(this, 'ButtonNode', document.createElement('button'));
-			this.ButtonNode.addEventListener('click', () => {
+			this.ButtonNode.addEventListener('click', async () => {
 				if (this.ConsoleNode.hasAttribute('for-any-key')) {
 					this.ForAnyKeyType();
 				} else {
-					this.ReadLineType();
+					await this.ReadLineType();
 				}
 			});
 			this.ControlNode.append(this.ButtonNode);
