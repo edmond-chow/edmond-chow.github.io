@@ -181,18 +181,19 @@
 			});
 			defineSharedField(this, 'ControlNode', document.createElement('control'));
 			this.ConsoleNode.append(this.ControlNode);
+			let typing = false;
 			defineProperty(this, 'CanType', () => {
-				return !this.InputNode.readOnly;
+				return typing;
 			}, (value) => {
 				this.InputNode.readOnly = !value;
 				this.ButtonNode.disabled = !value;
-				if (value == true && this.focused == false) {
+				if (value && !typing) {
 					this.InputNode.focus();
 				}
-				this.focused = value;
+				typing = value;
 			});
 			defineField(this, 'ForAnyKeyType', () => {
-				if (this.CanType == true) {
+				if (this.CanType) {
 					this.ConsoleNode.removeAttribute('for-any-key');
 					this.InputNode.value = '';
 					this.CanType = false;
@@ -205,10 +206,10 @@
 					this.InputNode.value = '';
 					await this.write('\n\\f7\\ &   \\ff\\' + value);
 					this.BufferNode.append(this.LastLineNode.Self.previousElementSibling);
-				} else if (this.CanType == true) {
-					this.pushInput(this.InputNode.value);
-					this.InputNode.value = '';
+				} else if (this.CanType) {
+					this.pushInput(value + '\n');
 					this.CanType = false;
+					this.InputNode.value = '';
 				}
 			}, false);
 			defineSharedField(this, 'InputNode', document.createElement('input'));
@@ -227,7 +228,7 @@
 				let content = '';
 				for (let i = 0; i < value.length; i++) {
 					content += value[i];
-					if (value.charCodeAt(i) >= 0xD800) {
+					if (value.codePointAt(i) >= 0xFFFF) {
 						content += value[++i];
 					}
 					content += space;
@@ -255,11 +256,8 @@
 			defineSharedProperty(this, 'LastLineNode', () => {
 				return this.LineNodes.length == 0 ? null : this.LineNodes[this.LineNodes.length - 1];
 			});
-			defineField(this, 'istream', []);
-			defineField(this, 'received', 0);
-			defineField(this, 'counted', 0);
-			defineField(this, 'scroll', false);
-			defineField(this, 'focused', false);
+			defineField(this, 'istream', '');
+			defineField(this, 'icursor', '');
 			defineSharedProperty(this, 'Scheme', () => {
 				return this.ConsoleNode.getAttribute('scheme');
 			}, (Scheme) => {
@@ -513,25 +511,39 @@
 				pushNode();
 			}
 		},
-		async function read() {
+		async function readLine() {
 			arguments.constrainedWithAndThrow();
-			let capturedCounted = this.counted;
-			this.counted++;
-			while (this.received >= this.istream.length || capturedCounted != this.received) {
+			let result = '';
+			while (true) {
+				while (this.icursor < this.istream.length) {
+					let char = this.istream[this.icursor++];
+					if (char == '\n') {
+						return result;
+					} else {
+						result += char;
+					}
+				}
+				this.istream = '';
+				this.icursor = 0;
 				this.CanType = true;
 				await defer();
 			}
-			let output = this.istream[this.received++];
-			if (this.received == this.counted) {
-				this.istream = [];
-				this.received = 0;
-				this.counted = 0;
+		},
+		async function read() {
+			arguments.constrainedWithAndThrow();
+			while (true) {
+				if (this.icursor < this.istream.length) {
+					return this.istream[icursor++];
+				}
+				this.istream = '';
+				this.icursor = 0;
+				this.CanType = true;
+				await defer();
 			}
-			return output;
 		},
 		function pushInput(content) {
 			arguments.constrainedWithAndThrow(String);
-			this.istream.push(content);
+			this.istream += content;
 		},
 		async function clear() {
 			arguments.constrainedWithAndThrow();
