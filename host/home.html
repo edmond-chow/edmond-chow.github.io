@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="sources/style.css">
+<script src="sources/style.js" defer></script>
+<link rel="stylesheet" href="math-support/style.css">
+<script src="math-support/style.js" defer></script>
+<link rel="icon" href="notesheet.png">
+<title>真．數學支援</title>
+</head>
+<body id="blur" class="beautiful-math-style">
+<top>
+<a class="active" href="home.html">真．數學支援</a>
+<a class="external-link" href="home-2018-11.html">參考答案 ← 第一期</a>
+<a class="external-link" href="home-2018-12.html">參考答案 ← 第二期</a>
+<a class="external-link" href="home-2019-01.html">參考答案 ← 第三期</a>
+<a class="external-link" href="home-2019-02.html">參考答案 ← 第四期</a>
+<a class="external-link" href="home-2019-03.html">參考答案 ← 第五期</a>
+<a class="external-link" href="home-2019-04.html">參考答案 ← 第六期</a>
+<a class="external-link" href="home-2019-05.html">參考答案 ← 第七期</a>
+<a class="air-play" href="chung-space.html">Mr.Chung的數學天地</a>
+</top>
+<major marker-reversed="true true true true true" marker-started-with="1 1 1 1 1">
+<post hash-id="✮" headline="真．數學支援" as-is inner-class="top-post">
+<advance>
+<button class="advance browse-page" onclick="switchBlurredState();"></button>
+</advance>
+<style>
+.top-post {
+	overflow: hidden;
+	display: flex;
+	padding: 0px;
+	width: 100%;
+}
+.top-post > img {
+	display: inline-block;
+	-webkit-user-drag: none;
+}
+.top-post > img:nth-of-type(1) {
+	width: calc(100% * (673 / 353) / ((673 / 353) + (371 / 371)));
+}
+.top-post > img:nth-of-type(2) {
+	width: calc(100% * (371 / 371) / ((673 / 353) + (371 / 371)));
+}
+major.tiny > sub-major .top-post {
+	flex-direction: column-reverse;
+}
+major.tiny > sub-major .top-post > img {
+	width: 100%;
+}
+</style>
+<img deferred-src="home/rainbow.jpg">
+<img deferred-src="home/wk-claim.jpg">
+</post>
+<post headline="十六元數">
+<advance>
+<button class="advance external-link" onclick="window.open('sedenion-analyser/Sedenion.html', '_blank');"></button>
+</advance>
+<iframe deferred-src="sedenion-analyser/Sedenion.html"></iframe>
+</post>
+<post headline="多項式定理">
+<img deferred-src="home/multinomial-theorem.jpeg">
+</post>
+<post headline="線積分、面積分、體積分">
+<iframe deferred-src="home/integrals.pdf"></iframe>
+</post>
+<post headline="數系運算的標準">
+<iframe deferred-src="home/definding-numbes.pdf"></iframe>
+</post>
+</major>
+</body>
+</html>
