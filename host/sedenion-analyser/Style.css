@@ -527,12 +527,20 @@
 		word-break: break-all;
 		overflow-wrap: anywhere;
 	}
-	console > buffer > line > span:before {
+	console > buffer > line > span:after {
 		content: ' ';
 		font-size: 0px;
 		display: inline-block;
 		width: 0px;
 		height: 0px;
+	}
+	console > buffer > line > span > data-content {
+		display: inline;
+		white-space: pre-wrap;
+		word-break: break-all;
+		overflow-wrap: anywhere;
+		user-select: none;
+		cursor: default;
 	}
 	@keyframes shining {
 		0% {
@@ -570,14 +578,6 @@
 		width: 8px;
 		bottom: 0px;
 		animation: shining 2s infinite;
-	}
-	console > buffer > line:last-of-type > span:last-of-type:after {
-		content: attr(data-content);
-		display: inline;
-		white-space: pre-wrap;
-		word-break: break-all;
-		overflow-wrap: anywhere;
-		cursor: auto;
 	}
 	console > buffer > line > span[foreground="default"] {
 		color: transparent;

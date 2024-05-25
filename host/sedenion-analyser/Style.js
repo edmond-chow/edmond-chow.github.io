@@ -146,17 +146,17 @@
 			}
 		].bindTo(window);
 	})();
-	await defer(5);
+	await defer();
 	/* constructor() */
 	function LineNodeWrapper(node) {
 		defineSharedField(this, 'Self', node);
 		defineSharedProperty(this, 'SpanNodes', () => {
-			return Array.from(this.Self.childNodes).filter((value) => {
+			return node == null ? null : Array.from(this.Self.childNodes).filter((value) => {
 				return value.nodeName == 'span'.toUpperCase();
 			});
 		});
 		defineSharedProperty(this, 'LastSpanNode', () => {
-			return this.SpanNodes.length == 0 ? null : this.SpanNodes[this.SpanNodes.length - 1];
+			return node == null || this.SpanNodes.length == 0 ? null : this.SpanNodes[this.SpanNodes.length - 1];
 		});
 	}
 	[
@@ -199,6 +199,7 @@
 					this.CanType = false;
 				}
 			}, false);
+			let DataContentNode = document.createElement('data-content');
 			defineField(this, 'ReadLineType', async () => {
 				let value = this.InputNode.value;
 				if (value.substring(0, 8) == '$scheme ') {
@@ -207,9 +208,10 @@
 					await this.write('\n\\f7\\ &   \\ff\\' + value);
 					this.BufferNode.append(this.LastLineNode.Self.previousElementSibling);
 				} else if (this.CanType) {
+					document.createDocumentFragment().append(DataContentNode);
 					this.pushInput(value + '\n');
-					this.CanType = false;
 					this.InputNode.value = '';
+					this.CanType = false;
 				}
 			}, false);
 			defineSharedField(this, 'InputNode', document.createElement('input'));
@@ -222,7 +224,7 @@
 					await this.ReadLineType();
 				}
 			});
-			this.InputNode.addEventListener('input', () => {
+			this.InputNode.addEventListener('input', async () => {
 				let space = String.fromCharCode(0x200B);
 				let value = this.InputNode.value;
 				let content = '';
@@ -233,7 +235,8 @@
 					}
 					content += space;
 				}
-				this.LastLineNode.LastSpanNode.setAttribute('data-content', content);
+				this.LastLineNode.LastSpanNode.append(DataContentNode);
+				DataContentNode.textContent = content;
 			});
 			this.ControlNode.append(this.InputNode);
 			defineSharedField(this, 'ButtonNode', document.createElement('button'));
@@ -254,7 +257,7 @@
 				});
 			});
 			defineSharedProperty(this, 'LastLineNode', () => {
-				return this.LineNodes.length == 0 ? null : this.LineNodes[this.LineNodes.length - 1];
+				return this.LineNodes.length == 0 ? new LineNodeWrapper(null) : this.LineNodes[this.LineNodes.length - 1];
 			});
 			defineField(this, 'istream', '');
 			defineField(this, 'icursor', '');
@@ -350,36 +353,18 @@
 		},
 		async function write(content) {
 			arguments.constrainedWithAndThrow(String);
+			let value = '';
 			let count = 0;
 			let config = false;
 			let pending = false;
 			let control = null;
-			let value = '';
+			let breaking = false;
 			let foreground = Console.Colors.indexOf(this.ConsoleNode.getAttribute('foreground'));
 			let background = Console.Colors.indexOf(this.ConsoleNode.getAttribute('background'));
 			let title = getTitle();
 			let Fragment = document.createDocumentFragment();
-			let LineNode = (() => {
-				if (this.LineNodes.length > 0) {
-					return this.LastLineNode.Self;
-				} else {
-					let NewLineNode = document.createElement('line');
-					Fragment.append(NewLineNode);
-					return NewLineNode;
-				}
-			})();
-			let SpanNode = (() => {
-				let Wrapper = new LineNodeWrapper(LineNode);
-				if (Wrapper.SpanNodes.length > 0) {
-					return Wrapper.LastSpanNode;
-				} else {
-					let NewSpanNode = document.createElement('span');
-					NewSpanNode.setAttribute('foreground', Console.Colors[foreground]);
-					NewSpanNode.setAttribute('background', Console.Colors[background]);
-					LineNode.append(NewSpanNode);
-					return NewSpanNode;
-				}
-			})();
+			let LineNode = this.LastLineNode.Self;
+			let SpanNode = this.LastLineNode.LastSpanNode;
 			let pushNode = () => {
 				this.BufferNode.append(Fragment);
 				Fragment = document.createDocumentFragment();
@@ -394,7 +379,7 @@
 			};
 			let pushSpan = () => {
 				if (value.length > 0) {
-					SpanNode.textContent = value;
+					SpanNode.textContent += value;
 					value = '';
 					return true;
 				} else {
@@ -404,25 +389,33 @@
 			let newLine = () => {
 				pushSpan();
 				LineNode = document.createElement('line');
-				SpanNode = document.createElement('span');
-				SpanNode.setAttribute('foreground', Console.Colors[foreground]);
-				SpanNode.setAttribute('background', Console.Colors[background]);
-				LineNode.append(SpanNode);
 				Fragment.append(LineNode);
+				SpanNode = null;
 			};
 			let newSpan = () => {
-				SpanNode = pushSpan() ? document.createElement('span') : SpanNode;
+				if (SpanNode == null || pushSpan()) {
+					SpanNode = document.createElement('span');
+					LineNode.append(SpanNode);
+				}
 				SpanNode.setAttribute('foreground', Console.Colors[foreground]);
 				SpanNode.setAttribute('background', Console.Colors[background]);
-				LineNode.append(SpanNode);
 			};
-			let throwNow = () => {
+			let endUp = () => {
 				pushSpan();
 				pushNode();
+			};
+			let throwNow = () => {
+				endUp();
 				throw 'The control code doesn\'t match up!';
 			};
 			let isColorChanged = () => {
-				return SpanNode.getAttribute('foreground') != Console.Colors[foreground] || SpanNode.getAttribute('background') != Console.Colors[background];
+				if (SpanNode.getAttribute('foreground') != Console.Colors[foreground]) {
+					return true;
+				} else if (SpanNode.getAttribute('background') != Console.Colors[background]) {
+					return true;
+				} else {
+					return false;
+				}
 			};
 			let getColorCode = (code) => {
 				if (code >= 48 && code <= 57) {
@@ -446,7 +439,11 @@
 				}
 				return false;
 			};
-			let breaking = false;
+			if (LineNode == null) {
+				newLine();
+			} else if (SpanNode == null) {
+				newSpan();
+			}
 			for (let i = 0; i < content.length; i++) {
 				if (content[i] == '\n') {
 					if (config && pending) {
@@ -459,12 +456,13 @@
 						count += 1;
 					}
 					newLine();
+					newSpan();
 					config = false;
 					control = null;
 					breaking = false;
 				} else if (content[i] == '\\') {
 					if (config) {
-						if (isColorChanged()) {
+						if (SpanNode != null && isColorChanged()) {
 							newSpan();
 						} else if (control == null) {
 							newSpan();
@@ -507,8 +505,7 @@
 			if (config && pending) {
 				throwNow();
 			} else {
-				pushSpan();
-				pushNode();
+				endUp();
 			}
 		},
 		async function readLine() {
@@ -720,7 +717,7 @@
 		}
 	};
 	while (true) {
-		await defer(5);
 		await delegate();
+		await defer();
 	}
 })();
