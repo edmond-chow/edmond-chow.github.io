@@ -23,8 +23,8 @@ namespace CmplxConExt
 		EM_ASYNC_JS(void, WriteSync, (const wchar_t* Content), {
 			await iostream.write(UTF32ToString(Content));
 		});
-		EM_ASYNC_JS(void, ClearSync, (), {
-			await iostream.clear();
+		EM_JS(void, ClearSync, (), {
+			iostream.clear();
 		});
 		EM_ASYNC_JS(void, PressAnyKeySync, (), {
 			await iostream.pressAnyKey();

@@ -197,10 +197,10 @@
 				}
 				typing = value;
 			});
-			defineField(this, 'ForAnyKeyType', () => {
+			defineField(this, 'ForAnyKeyType', async () => {
 				if (this.CanType) {
-					this.ConsoleNode.removeAttribute('for-any-key');
 					this.InputNode.value = '';
+					this.keyfreeze = false;
 					this.CanType = false;
 				}
 			}, false);
@@ -222,7 +222,7 @@
 			this.InputNode.type = 'text';
 			this.InputNode.placeholder = 'type in something for interacting with the console . . . . .';
 			this.InputNode.addEventListener('keydown', async (e) => {
-				if (this.ConsoleNode.hasAttribute('for-any-key')) {
+				if (this.keyfreeze) {
 					this.ForAnyKeyType();
 				} else if (e.code == 'Enter') {
 					await this.ReadLineType();
@@ -246,7 +246,7 @@
 			this.ControlNode.append(this.InputNode);
 			defineSharedField(this, 'ButtonNode', document.createElement('button'));
 			this.ButtonNode.addEventListener('click', async () => {
-				if (this.ConsoleNode.hasAttribute('for-any-key')) {
+				if (this.keyfreeze) {
 					this.ForAnyKeyType();
 				} else {
 					await this.ReadLineType();
@@ -264,6 +264,8 @@
 			defineSharedProperty(this, 'LastLineNode', () => {
 				return this.LineNodes.length == 0 ? new LineNodeWrapper(null) : this.LineNodes[this.LineNodes.length - 1];
 			});
+			defineField(this, 'keyfreeze', false);
+			defineField(this, 'istream', '');
 			defineField(this, 'istream', '');
 			defineField(this, 'icursor', '');
 			defineSharedProperty(this, 'Scheme', () => {
@@ -373,9 +375,8 @@
 			let pushNode = () => {
 				this.BufferNode.append(Fragment);
 				Fragment = document.createDocumentFragment();
-				let Lines = this.LineNodes;
-				for (let i = 0; i < Lines.length - 8192; i++) {
-					Lines[i].Self.remove();
+				for (let i = 0; i < this.LineNodes.length - 8192; i++) {
+					this.LineNodes[i].Self.remove();
 				}
 				this.ConsoleNode.setAttribute('foreground', Console.Colors[foreground]);
 				this.ConsoleNode.setAttribute('background', Console.Colors[background]);
@@ -557,16 +558,15 @@
 			arguments.constrainedWithAndThrow(String);
 			this.istream += content;
 		},
-		async function clear() {
+		function clear() {
 			arguments.constrainedWithAndThrow();
 			this.ClearBufferNode();
-			await defer();
 		},
 		async function pressAnyKey() {
 			arguments.constrainedWithAndThrow();
-			this.ConsoleNode.setAttribute('for-any-key', '');
+			this.keyfreeze = true;
 			this.CanType = true;
-			while (this.ConsoleNode.hasAttribute('for-any-key')) {
+			while (this.keyfreeze) {
 				await defer();
 			}
 		},
@@ -574,25 +574,25 @@
 			arguments.constrainedWithAndThrow(Number);
 			this.ConsoleNode.setAttribute('foreground', 'gray');
 			this.ConsoleNode.setAttribute('background', 'default');
-			await this.clear();
+			this.clear();
 			await this.writeLine('');
 			await this.writeLine('   The program completed with a return code ' + code.toString() + '.');
 			await this.writeLine('');
 			await this.writeLine('      >> Press any key to continue with restart the program . . .   ');
 			await this.pressAnyKey();
-			await this.clear();
+			this.clear();
 		},
 		async function terminated() {
 			arguments.constrainedWithAndThrow();
 			this.ConsoleNode.setAttribute('foreground', 'gray');
 			this.ConsoleNode.setAttribute('background', 'default');
-			await this.clear();
+			this.clear();
 			await this.writeLine('');
 			await this.writeLine('   The program terminated with no return codes.');
 			await this.writeLine('');
 			await this.writeLine('      >> Press any key to continue with restart the program . . .   ');
 			await this.pressAnyKey();
-			await this.clear();
+			this.clear();
 		},
 		function bindTo(node) {
 			arguments.constrainedWithAndThrow(Element);
