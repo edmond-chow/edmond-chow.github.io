@@ -17,7 +17,7 @@ namespace CmplxConExt
 	{
 		EM_ASYNC_JS(const wchar_t*, ReadSync, (), {
 			let line = await iostream.readLine();
-			await iostream.writeLine(line.replaceAll('\\\\', '\\\\\\\\'));
+			await iostream.writeLine(line, false);
 			return getUTF32String(__asyncjs__ReadSync, line);
 		});
 		EM_ASYNC_JS(void, WriteSync, (const wchar_t* Content), {

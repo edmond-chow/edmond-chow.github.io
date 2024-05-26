@@ -182,13 +182,18 @@
 			defineSharedField(this, 'ControlNode', document.createElement('control'));
 			this.ConsoleNode.append(this.ControlNode);
 			let typing = false;
+			let DataContentNode = document.createElement('data-content');
 			defineProperty(this, 'CanType', () => {
 				return typing;
 			}, (value) => {
 				this.InputNode.readOnly = !value;
 				this.ButtonNode.disabled = !value;
 				if (value && !typing) {
+					this.LastLineNode.LastSpanNode.append(DataContentNode);
 					this.InputNode.focus();
+				} else if (!value && typing) {
+					document.createDocumentFragment().append(DataContentNode);
+					DataContentNode.textContent = '';
 				}
 				typing = value;
 			});
@@ -199,16 +204,15 @@
 					this.CanType = false;
 				}
 			}, false);
-			let DataContentNode = document.createElement('data-content');
 			defineField(this, 'ReadLineType', async () => {
 				let value = this.InputNode.value;
 				if (value.substring(0, 8) == '$scheme ') {
 					this.Scheme = value.substring(8, value.length);
 					this.InputNode.value = '';
-					await this.write('\n\\f7\\ &   \\ff\\' + value);
+					await this.write('\n\\f7\\ &   \\ff\\');
+					await this.write(value, false);
 					this.BufferNode.append(this.LastLineNode.Self.previousElementSibling);
 				} else if (this.CanType) {
-					document.createDocumentFragment().append(DataContentNode);
 					this.pushInput(value + '\n');
 					this.InputNode.value = '';
 					this.CanType = false;
@@ -235,8 +239,9 @@
 					}
 					content += space;
 				}
-				this.LastLineNode.LastSpanNode.append(DataContentNode);
+				await defer();
 				DataContentNode.textContent = content;
+				this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
 			});
 			this.ControlNode.append(this.InputNode);
 			defineSharedField(this, 'ButtonNode', document.createElement('button'));
@@ -347,12 +352,12 @@
 			arguments.constrainedWithAndThrow(String);
 			return this.ConsoleNode.setAttribute('background', color);
 		},
-		async function writeLine(content) {
-			arguments.constrainedWithAndThrow(String);
-			await this.write(content + '\n');
+		async function writeLine(content, controlized = true) {
+			arguments.constrainedWithAndThrow(String, Boolean);
+			await this.write(content + '\n', controlized);
 		},
-		async function write(content) {
-			arguments.constrainedWithAndThrow(String);
+		async function write(content, controlized = true) {
+			arguments.constrainedWithAndThrow(String, Boolean);
 			let value = '';
 			let count = 0;
 			let config = false;
@@ -460,7 +465,7 @@
 					config = false;
 					control = null;
 					breaking = false;
-				} else if (content[i] == '\\') {
+				} else if (content[i] == '\\' && controlized) {
 					if (config) {
 						if (SpanNode != null && isColorChanged()) {
 							newSpan();
