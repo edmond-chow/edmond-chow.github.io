@@ -234,7 +234,7 @@
 				let content = '';
 				for (let i = 0; i < value.length; i++) {
 					content += value[i];
-					if (value.codePointAt(i) >= 0xFFFF) {
+					if (value.codePointAt(i) > 0xFFFF) {
 						content += value[++i];
 					}
 					content += space;
@@ -465,7 +465,7 @@
 					config = false;
 					control = null;
 					breaking = false;
-				} else if (content[i] == '\\' && controlized) {
+				} else if (controlized && content[i] == '\\') {
 					if (config) {
 						if (SpanNode != null && isColorChanged()) {
 							newSpan();
@@ -531,17 +531,27 @@
 				await defer();
 			}
 		},
-		async function read() {
-			arguments.constrainedWithAndThrow();
+		async function read(unicode = true) {
+			arguments.constrainedWithAndThrow(Boolean);
+			let result = '';
 			while (true) {
 				if (this.icursor < this.istream.length) {
-					return this.istream[icursor++];
+					if (unicode && this.istream.codePointAt(this.icursor) > 0xFFFF) {
+						result += this.istream[this.icursor++];
+					}
+					result += this.istream[this.icursor++];
+					return result;
 				}
 				this.istream = '';
 				this.icursor = 0;
 				this.CanType = true;
 				await defer();
 			}
+		},
+		function putBack(content) {
+			arguments.constrainedWithAndThrow(String);
+			this.istream = content + this.istream.substring(this.icursor);
+			this.icursor = 0;
 		},
 		function pushInput(content) {
 			arguments.constrainedWithAndThrow(String);
