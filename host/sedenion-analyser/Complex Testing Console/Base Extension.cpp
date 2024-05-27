@@ -13,35 +13,6 @@
 #include "Base.h"
 namespace CmplxConExt
 {
-	namespace Native
-	{
-		EM_ASYNC_JS(const wchar_t*, ReadSync, (), {
-			let line = await iostream.readLine();
-			await iostream.writeLine(line, false);
-			return getUTF32String(__asyncjs__ReadSync, line);
-		});
-		EM_ASYNC_JS(void, WriteSync, (const wchar_t* Content), {
-			await iostream.write(UTF32ToString(Content));
-		});
-		EM_JS(void, ClearSync, (), {
-			iostream.clear();
-		});
-		EM_ASYNC_JS(void, PressAnyKeySync, (), {
-			await iostream.pressAnyKey();
-		});
-		EM_JS(std::uint8_t, GetSyncForeground, (), {
-			return iostream.getForegroundColor().toConsoleColor();
-		});
-		EM_JS(std::uint8_t, GetSyncBackground, (), {
-			return iostream.getBackgroundColor().toConsoleColor();
-		});
-		EM_JS(const wchar_t*, GetSyncTitle, (), {
-			return getUTF32String(GetSyncTitle, getTitle());
-		});
-		EM_JS(std::char_traits<wchar_t>::int_type, GetColorCharCode, (std::uint8_t code), {
-			return Console.GetColorCharCode(code);
-		});
-	}
 	enum class ConsoleColor : std::uint8_t
 	{
 		Default = 0xff,
@@ -62,44 +33,84 @@ namespace CmplxConExt
 		Yellow = 14,
 		White = 15,
 	};
-	std::wstring ReadSync()
-	{
-		return Native::ReadSync();
-	};
-	void WriteSync(const std::wstring& Content)
-	{
-		Native::WriteSync(Content.c_str());
-	};
-	void ClearSync()
-	{
-		Native::ClearSync();
-	};
-	void PressAnyKeySync()
-	{
-		Native::PressAnyKeySync();
-	};
-	ConsoleColor GetSyncForeground()
-	{
-		return static_cast<ConsoleColor>(Native::GetSyncForeground());
-	};
-	ConsoleColor GetSyncBackground()
-	{
-		return static_cast<ConsoleColor>(Native::GetSyncBackground());
-	};
-	std::wstring GetSyncTitle()
-	{
-		return Native::GetSyncTitle();
-	};
-	std::char_traits<wchar_t>::char_type GetColorCharCode(std::uint8_t code)
-	{
-		return std::char_traits<wchar_t>::to_char_type(Native::GetColorCharCode(code));
-	};
 	namespace dom
 	{
+		namespace native
+		{
+			EM_JS(std::uint8_t, foreground, (), {
+				return iostream.getForegroundColor().toConsoleColor();
+			});
+			EM_JS(std::uint8_t, background, (), {
+				return iostream.getBackgroundColor().toConsoleColor();
+			});
+			EM_JS(const wchar_t*, title, (), {
+				return getUTF32String(title, getTitle());
+			});
+			EM_JS(std::char_traits<wchar_t>::int_type, color_char_code, (std::uint8_t code), {
+				return Console.GetColorCharCode(code);
+			});
+			EM_ASYNC_JS(const wchar_t*, read_line, (), {
+				let line = await iostream.readLine();
+				await iostream.writeLine(line, false);
+				return getUTF32String(__asyncjs__read, line);
+			});
+			EM_ASYNC_JS(void, write_code, (const wchar_t* content), {
+				await iostream.write(UTF32ToString(content));
+			});
+			EM_ASYNC_JS(void, press_any_key, (), {
+				await iostream.pressAnyKey();
+			});
+			EM_JS(void, clear, (), {
+				iostream.clear();
+			});
+		}
+		struct js_console
+		{
+		private:
+			explicit js_console(const js_console&) = delete;
+			explicit js_console(js_console&&) = delete;
+			explicit js_console() = delete;
+		public:
+			static wchar_t color_char_code(std::uint8_t code)
+			{
+				return std::char_traits<wchar_t>::to_char_type(native::color_char_code(code));
+			};
+			static std::uint8_t* foreground()
+			{
+				static std::uint8_t data = native::foreground();
+				return &data;
+			};
+			static std::uint8_t* background()
+			{
+				static std::uint8_t data = native::background();
+				return &data;
+			};
+			static std::wstring* title()
+			{
+				static std::wstring data = native::title();
+				return &data;
+			};
+			static std::wstring read_line()
+			{
+				return native::read_line();
+			};
+			static void write_code(const std::wstring& content)
+			{
+				return native::write_code(content.c_str());
+			};
+			static void press_any_key()
+			{
+				return native::press_any_key();
+			};
+			static void clear()
+			{
+				native::clear();
+			};
+		};
 		struct client_stream : public std::wstreambuf
 		{
 		private:
-			static constexpr const std::size_t out_lm = 1024;
+			static constexpr const std::size_t out_lm = 32768;
 			enum class state
 			{
 				write = 1,
@@ -120,7 +131,7 @@ namespace CmplxConExt
 				if (state == state::read) { return -1; }
 				if (state == state::write)
 				{
-					WriteSync(out.str());
+					js_console::write_code(out.str());
 					out.str(L"");
 					out_l = 0;
 					state = state::freeze;
@@ -147,7 +158,7 @@ namespace CmplxConExt
 				send();
 				if (state == state::freeze)
 				{
-					in = ReadSync();
+					in = js_console::read_line();
 					in_cur = in.cbegin();
 					state = state::read;
 				}
@@ -169,45 +180,42 @@ namespace CmplxConExt
 		std::wistream wcin{ &client };
 		std::wostream wcout{ &client };
 	}
-	static ConsoleColor ForegroundColor{ GetSyncForeground() };
-	static ConsoleColor BackgroundColor{ GetSyncBackground() };
-	static std::wstring Title{ GetSyncTitle() };
 	ConsoleColor GetForegroundColor()
 	{
-		return ForegroundColor;
+		return static_cast<ConsoleColor>(*dom::js_console::foreground());
 	};
 	ConsoleColor GetBackgroundColor()
 	{
-		return BackgroundColor;
+		return static_cast<ConsoleColor>(*dom::js_console::background());
 	};
 	std::wstring GetTitle()
 	{
-		return Title;
+		return *dom::js_console::title();
 	};
 	void SetForegroundColor(ConsoleColor Color)
 	{
-		ForegroundColor = Color;
-		dom::wcout << L"\\f" << GetColorCharCode(static_cast<std::uint8_t>(Color)) << L"\\";
+		*dom::js_console::foreground() = static_cast<std::uint8_t>(Color);
+		dom::wcout << L"\\f" << dom::js_console::color_char_code(static_cast<std::uint8_t>(Color)) << L"\\";
 	};
 	void SetBackgroundColor(ConsoleColor Color)
 	{
-		BackgroundColor = Color;
-		dom::wcout << L"\\b" << GetColorCharCode(static_cast<std::uint8_t>(Color)) << L"\\";
+		*dom::js_console::background() = static_cast<std::uint8_t>(Color);
+		dom::wcout << L"\\b" << dom::js_console::color_char_code(static_cast<std::uint8_t>(Color)) << L"\\";
 	};
 	void SetTitle(const std::wstring& Text)
 	{
-		Title = Text;
+		*dom::js_console::title() = Text;
 		dom::wcout << L"\\t" << Text << L"\\";
-	};
-	void Clear()
-	{
-		dom::client.send();
-		ClearSync();
 	};
 	void PressAnyKey()
 	{
 		dom::client.send();
-		PressAnyKeySync();
+		dom::js_console::press_any_key();
+	};
+	void Clear()
+	{
+		dom::client.send();
+		dom::js_console::clear();
 	};
 }
 int main()
