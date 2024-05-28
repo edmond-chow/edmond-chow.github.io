@@ -189,7 +189,7 @@
 				this.InputNode.readOnly = !value;
 				this.ButtonNode.disabled = !value;
 				if (value && !typing) {
-					this.LastLineNode.LastSpanNode.append(DataContentNode);
+					this.LastLineNode.LastSpanNode?.append(DataContentNode);
 					this.InputNode.focus();
 				} else if (!value && typing) {
 					document.createDocumentFragment().append(DataContentNode);
