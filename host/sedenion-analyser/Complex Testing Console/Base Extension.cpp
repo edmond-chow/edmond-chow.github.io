@@ -3,10 +3,6 @@
 /*   Extension   */
 /*               */
 /* ============= */
-
-
-#include <iostream>
-
 #include <emscripten.h>
 #include <cstdlib>
 #include <cstdint>
