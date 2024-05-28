@@ -3,6 +3,10 @@
 /*   Extension   */
 /*               */
 /* ============= */
+
+
+#include <iostream>
+
 #include <emscripten.h>
 #include <cstdlib>
 #include <cstdint>
@@ -52,7 +56,7 @@ namespace CmplxConExt
 			EM_ASYNC_JS(const wchar_t*, read_line, (), {
 				let line = await iostream.readLine();
 				await iostream.writeLine(line, false);
-				return getUTF32String(__asyncjs__read, line);
+				return getUTF32String(__asyncjs__read_line, line);
 			});
 			EM_ASYNC_JS(void, write_code, (const wchar_t* content), {
 				await iostream.write(UTF32ToString(content));
