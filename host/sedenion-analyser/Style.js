@@ -508,6 +508,7 @@
 					value += content[i];
 				}
 			}
+			await defer();
 			if (config && pending) {
 				throwNow();
 			} else {

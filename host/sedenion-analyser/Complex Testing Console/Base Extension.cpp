@@ -49,7 +49,7 @@ namespace CmplxConExt
 			EM_JS(std::char_traits<wchar_t>::int_type, color_char_code, (std::uint8_t code), {
 				return Console.GetColorCharCode(code);
 			});
-			EM_ASYNC_JS(const wchar_t*, read_line, (), {
+			EM_ASYNC_JS(wchar_t*, read_line, (), {
 				let line = await iostream.readLine();
 				await iostream.writeLine(line, false);
 				return getUTF32String(__asyncjs__read_line, line);
@@ -64,12 +64,12 @@ namespace CmplxConExt
 				iostream.clear();
 			});
 		}
-		struct js_console
+		struct console
 		{
 		private:
-			explicit js_console(const js_console&) = delete;
-			explicit js_console(js_console&&) = delete;
-			explicit js_console() = delete;
+			explicit console(const console&) = delete;
+			explicit console(console&&) = delete;
+			explicit console() = delete;
 		public:
 			static wchar_t color_char_code(std::uint8_t code)
 			{
@@ -90,13 +90,13 @@ namespace CmplxConExt
 				static std::wstring data = native::title();
 				return &data;
 			};
-			static std::wstring read_line()
+			static wchar_t* read_line()
 			{
 				return native::read_line();
 			};
-			static void write_code(const std::wstring& content)
+			static void write_code(const wchar_t* content)
 			{
-				return native::write_code(content.c_str());
+				return native::write_code(content);
 			};
 			static void press_any_key()
 			{
@@ -107,115 +107,130 @@ namespace CmplxConExt
 				native::clear();
 			};
 		};
-		struct client_stream : public std::wstreambuf
+		struct stream : public std::wstreambuf
 		{
 		private:
-			static constexpr const std::size_t out_lm = 32768;
-			enum class state
+			struct builder : public std::wstreambuf
 			{
-				write = 1,
-				freeze = 2,
-				read = 3,
+			private:
+				static constexpr const std::size_t out_sz = 1048576;
+				char_type out[out_sz];
+				char_type* out_last;
+				bool end_slash;
+				bool can_sync;
+			public:
+				builder() : out{}, out_last{ nullptr }, end_slash{ false }, can_sync{ false }
+				{
+					setp(out, out + out_sz - 2);
+				};
+				friend class stream;
+			protected:
+
 			};
-			state state;
-			std::wstringstream out;
-			std::size_t out_l;
-			std::wstring in;
-			std::wstring::const_iterator in_cur;
-			wchar_t in_pop;
+			builder builder;
 		public:
-			client_stream() : state{ state::freeze }, out{}, out_l{}, in{}, in_cur{}, in_pop{} {};
+			stream() : builder{} {};
 		protected:
 			virtual int sync() override
 			{
-				if (state == state::read) { return -1; }
-				if (state == state::write)
+				if (builder.can_sync || builder.pptr() == builder.epptr())
 				{
-					js_console::write_code(out.str());
-					out.str(L"");
-					out_l = 0;
-					state = state::freeze;
+					char_type* pptr = builder.pptr();
+					if (builder.out_last == nullptr) { builder.out_last = pptr; }
+					else { ++builder.out_last; }
+					char_type out_last_poped = *builder.out_last;
+					*builder.out_last = L'\0';
+					console::write_code(builder.out);
+					*builder.out_last = out_last_poped;
+					std::copy(builder.out_last, pptr, builder.out);
+					builder.pbump(builder.out - pptr);
+					builder.out_last = nullptr;
+					builder.end_slash = false;
+					builder.can_sync = false;
 				}
 				return 0;
 			};
 		public:
 			int send()
 			{
-				if (state == state::freeze) { state = state::write; }
+				builder.can_sync = true;
 				return sync();
 			};
 		protected:
-			virtual int_type overflow(int_type c) override
+			virtual int_type overflow(int_type ch) override
 			{
-				if (state == state::read) { return std::char_traits<wchar_t>::eof(); }
-				if (out_l >= out_lm) { send(); }
-				if (c == std::char_traits<wchar_t>::to_int_type(L'\n')) { ++out_l; }
-				out << std::char_traits<wchar_t>::to_char_type(c);
-				return c;
+				if (ch != traits_type::eof())
+				{
+					char_type* pptr = builder.pptr();
+					*pptr = traits_type::to_char_type(ch);
+					if (traits_type::to_char_type(ch) == L'\n')
+					{
+						builder.out_last = pptr;
+						builder.end_slash = false;
+					}
+					else if (traits_type::to_char_type(ch) == L'\\')
+					{
+						if (builder.end_slash) { builder.out_last = pptr; }
+						builder.end_slash = !builder.end_slash;
+					}
+					builder.pbump(1);
+				}
+				sync();
+				return ch;
 			};
 			virtual int_type underflow() override
 			{
 				send();
-				if (state == state::freeze)
+				if (gptr() == egptr())
 				{
-					in = js_console::read_line();
-					in_cur = in.cbegin();
-					state = state::read;
+					char_type* in = console::read_line();
+					std::size_t in_sz = wcslen(in);
+					setg(in, in, in + in_sz + 1);
+					in[in_sz] = L'\n';
 				}
-				setg(&in_pop, &in_pop, &in_pop + 1);
-				if (in_cur == in.cend())
-				{
-					in_pop = L'\n';
-					state = state::freeze;
-				}
-				else
-				{
-					in_pop = *in_cur;
-					++in_cur;
-				}
-				return std::char_traits<wchar_t>::to_int_type(in_pop);
+				return traits_type::to_int_type(*gptr());
 			};
 		};
-		static client_stream client{};
-		std::wistream wcin{ &client };
-		std::wostream wcout{ &client };
+		static stream io{};
+		std::wistream wcin{ &io };
+		std::wostream wcout{ &io };
 	}
 	ConsoleColor GetForegroundColor()
 	{
-		return static_cast<ConsoleColor>(*dom::js_console::foreground());
+		return static_cast<ConsoleColor>(*dom::console::foreground());
 	};
 	ConsoleColor GetBackgroundColor()
 	{
-		return static_cast<ConsoleColor>(*dom::js_console::background());
+		return static_cast<ConsoleColor>(*dom::console::background());
 	};
 	std::wstring GetTitle()
 	{
-		return *dom::js_console::title();
+		return *dom::console::title();
 	};
 	void SetForegroundColor(ConsoleColor Color)
 	{
-		*dom::js_console::foreground() = static_cast<std::uint8_t>(Color);
-		dom::wcout << L"\\f" << dom::js_console::color_char_code(static_cast<std::uint8_t>(Color)) << L"\\";
+		*dom::console::foreground() = static_cast<std::uint8_t>(Color);
+		dom::wcout << L"\\f" << dom::console::color_char_code(static_cast<std::uint8_t>(Color)) << L"\\";
 	};
 	void SetBackgroundColor(ConsoleColor Color)
 	{
-		*dom::js_console::background() = static_cast<std::uint8_t>(Color);
-		dom::wcout << L"\\b" << dom::js_console::color_char_code(static_cast<std::uint8_t>(Color)) << L"\\";
+		*dom::console::background() = static_cast<std::uint8_t>(Color);
+		dom::wcout << L"\\b" << dom::console::color_char_code(static_cast<std::uint8_t>(Color)) << L"\\";
 	};
 	void SetTitle(const std::wstring& Text)
 	{
-		*dom::js_console::title() = Text;
+		*dom::console::title() = Text;
 		dom::wcout << L"\\t" << Text << L"\\";
 	};
 	void PressAnyKey()
 	{
-		dom::client.send();
-		dom::js_console::press_any_key();
+		dom::io.send();
+		dom::console::press_any_key();
 	};
 	void Clear()
 	{
-		dom::client.send();
-		dom::js_console::clear();
+		dom::io.send();
+		dom::console::clear();
 	};
 }
 int main()
