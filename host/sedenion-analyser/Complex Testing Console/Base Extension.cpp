@@ -112,38 +112,43 @@ namespace CmplxConExt
 		private:
 			struct builder : public std::wstreambuf
 			{
-			private:
+			public:
 				static constexpr const std::size_t out_sz = 1048576;
 				char_type out[out_sz];
 				char_type* out_last;
 				bool end_slash;
 				bool can_sync;
-			public:
-				builder() : out{}, out_last{ nullptr }, end_slash{ false }, can_sync{ false }
+				explicit builder(std::size_t out_reserved) : out{}, out_last{ nullptr }, end_slash{ false }, can_sync{ false }
 				{
-					setp(out, out + out_sz - 2);
+					if (out_reserved > out_sz) { out_reserved = out_sz; }
+					setp(out, out + out_sz - out_reserved);
 				};
-				friend class stream;
-			protected:
-
+				char_type* out_cur() const
+				{
+					return pptr();
+				};
+				void out_jmp(int offset)
+				{
+					pbump(offset);
+				};
 			};
 			builder builder;
 		public:
-			stream() : builder{} {};
+			explicit stream() : builder{ 1 } {};
 		protected:
 			virtual int sync() override
 			{
-				if (builder.can_sync || builder.pptr() == builder.epptr())
+				char_type* out_cur = builder.out_cur();
+				if (builder.can_sync || out_cur == builder.out + builder::out_sz)
 				{
-					char_type* pptr = builder.pptr();
-					if (builder.out_last == nullptr) { builder.out_last = pptr; }
+					if (builder.out_last == nullptr) { builder.out_last = out_cur; }
 					else { ++builder.out_last; }
 					char_type out_last_poped = *builder.out_last;
 					*builder.out_last = L'\0';
 					console::write_code(builder.out);
 					*builder.out_last = out_last_poped;
-					std::copy(builder.out_last, pptr, builder.out);
-					builder.pbump(builder.out - pptr);
+					std::copy(builder.out_last, out_cur, builder.out);
+					builder.out_jmp(builder.out - out_cur);
 					builder.out_last = nullptr;
 					builder.end_slash = false;
 					builder.can_sync = false;
@@ -159,23 +164,23 @@ namespace CmplxConExt
 		protected:
 			virtual int_type overflow(int_type ch) override
 			{
+				sync();
 				if (ch != traits_type::eof())
 				{
-					char_type* pptr = builder.pptr();
-					*pptr = traits_type::to_char_type(ch);
+					char_type* out_cur = builder.out_cur();
+					*out_cur = traits_type::to_char_type(ch);
 					if (traits_type::to_char_type(ch) == L'\n')
 					{
-						builder.out_last = pptr;
+						builder.out_last = out_cur;
 						builder.end_slash = false;
 					}
 					else if (traits_type::to_char_type(ch) == L'\\')
 					{
-						if (builder.end_slash) { builder.out_last = pptr; }
+						if (builder.end_slash) { builder.out_last = out_cur; }
 						builder.end_slash = !builder.end_slash;
 					}
-					builder.pbump(1);
+					builder.out_jmp(1);
 				}
-				sync();
 				return ch;
 			};
 			virtual int_type underflow() override
