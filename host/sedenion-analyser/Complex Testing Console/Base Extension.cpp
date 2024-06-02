@@ -43,7 +43,7 @@ namespace CmplxConExt
 			EM_JS(std::uint8_t, background, (), {
 				return iostream.getBackgroundColor().toConsoleColor();
 			});
-			EM_JS(const wchar_t*, title, (), {
+			EM_JS(wchar_t*, title, (), {
 				return getUTF32String(title, getTitle());
 			});
 			EM_JS(std::char_traits<wchar_t>::int_type, color_char_code, (std::uint8_t code), {
