@@ -3,6 +3,7 @@
 /*   Extension   */
 /*               */
 /* ============= */
+#include <iostream>
 #include <emscripten.h>
 #include <cstdlib>
 #include <cstdint>
@@ -120,9 +121,9 @@ namespace CmplxConExt
 				char_type* out_last;
 				char_type in[back_sz + in_sz];
 				const char_type* in_next;
-				bool end_slash;
+				bool in_slash;
 				bool flush_now;
-				explicit builder() : out{}, out_last{ nullptr }, in{}, in_next{ nullptr }, end_slash{ false }, flush_now{ false }
+				explicit builder() : out{}, out_last{ out }, in{}, in_next{ nullptr }, in_slash{ false }, flush_now{ false }
 				{
 					this->setp(out, out + out_sz);
 				};
@@ -138,17 +139,15 @@ namespace CmplxConExt
 			virtual int sync() override
 			{
 				char_type* pptr = builder.pptr();
-				if (builder.flush_now || pptr == builder.out + builder::out_sz)
+				if (pptr == builder.out + builder::out_sz || builder.flush_now)
 				{
-					if (builder.flush_now || builder.out_last == nullptr) { builder.out_last = pptr; }
-					else { ++builder.out_last; }
 					char_type out_char = *builder.out_last;
 					*builder.out_last = L'\0';
 					console::write_code(builder.out);
 					*builder.out_last = out_char;
 					std::copy(builder.out_last, pptr, builder.out);
 					builder.pbump(builder.out - builder.out_last);
-					builder.out_last = nullptr;
+					builder.out_last = builder.out;
 					builder.flush_now = false;
 				}
 				return 0;
@@ -166,17 +165,18 @@ namespace CmplxConExt
 				if (ch != traits_type::eof())
 				{
 					char_type* pptr = builder.pptr();
-					*pptr = traits_type::to_char_type(ch);
-					if (traits_type::to_char_type(ch) == L'\n')
+					*pptr++ = traits_type::to_char_type(ch);
+					if (traits_type::to_char_type(ch) == L'\\')
 					{
+						if (builder.in_slash) { builder.out_last = pptr; }
+						builder.in_slash = !builder.in_slash;
+					}
+					else if (traits_type::to_char_type(ch) == L'\n')
+					{
+						builder.in_slash = false;
 						builder.out_last = pptr;
-						builder.end_slash = false;
 					}
-					else if (traits_type::to_char_type(ch) == L'\\')
-					{
-						if (builder.end_slash) { builder.out_last = pptr; }
-						builder.end_slash = !builder.end_slash;
-					}
+					else if (builder.in_slash == false) { builder.out_last = pptr; }
 					builder.pbump(1);
 				}
 				return ch;
