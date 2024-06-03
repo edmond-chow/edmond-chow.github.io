@@ -384,9 +384,13 @@
 				this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
 			};
 			let pushSpan = () => {
-				if (value.length > 0) {
+				if (SpanNode == null) {
+					return true;
+				} else if (value.length > 0) {
 					SpanNode.textContent += value;
 					value = '';
+					return true;
+				} else if (SpanNode.textContent.length > 0) {
 					return true;
 				} else {
 					return false;
@@ -399,7 +403,7 @@
 				SpanNode = null;
 			};
 			let newSpan = () => {
-				if (SpanNode == null || pushSpan()) {
+				if (pushSpan()) {
 					SpanNode = document.createElement('span');
 					LineNode.append(SpanNode);
 				}
@@ -415,7 +419,9 @@
 				throw 'The control code doesn\'t match up!';
 			};
 			let isColorChanged = () => {
-				if (SpanNode.getAttribute('foreground') != Console.Colors[foreground]) {
+				if (SpanNode == null) {
+					return true;
+				} else if (SpanNode.getAttribute('foreground') != Console.Colors[foreground]) {
 					return true;
 				} else if (SpanNode.getAttribute('background') != Console.Colors[background]) {
 					return true;
@@ -447,7 +453,8 @@
 			};
 			if (LineNode == null) {
 				newLine();
-			} else if (SpanNode == null) {
+			} else if (isColorChanged()) {
+				SpanNode = null;
 				newSpan();
 			}
 			for (let i = 0; i < content.length; i++) {
