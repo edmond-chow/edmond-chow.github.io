@@ -92,21 +92,21 @@
 					configurable: false,
 				});
 			},
-			function defineSharedProperty(instance, key, getter, setter) {
-				[instance, key].constrainedWithAndThrow(Object, String);
-				Object.defineProperty(instance, key, {
-					get: getter,
-					set: setter,
-					enumerable: true,
-					configurable: false,
-				});
-			},
 			function defineProperty(instance, key, getter, setter) {
 				[instance, key].constrainedWithAndThrow(Object, String);
 				Object.defineProperty(instance, key, {
 					get: getter,
 					set: setter,
 					enumerable: false,
+					configurable: false,
+				});
+			},
+			function defineSharedProperty(instance, key, getter, setter) {
+				[instance, key].constrainedWithAndThrow(Object, String);
+				Object.defineProperty(instance, key, {
+					get: getter,
+					set: setter,
+					enumerable: true,
 					configurable: false,
 				});
 			}
