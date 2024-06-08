@@ -206,13 +206,53 @@
 			}, false);
 			defineField(this, 'ReadLineType', async () => {
 				let value = this.InputNode.value;
-				if (value.substring(0, 8) == '$scheme ') {
-					this.Scheme = value.substring(8, value.length);
-					this.InputNode.value = '';
+				if (value[0] == '$') {
+					let args = [];
+					let temp = '';
+					let wording = false;
+					let quoting = false;
+					let push = () => {
+						if (temp.length > 0) {
+							args.push(temp);
+							temp = '';
+						}
+					};
+					for (let i = 1; i < value.length; i++) {
+						if (value[i] == ' ' && !quoting) {
+							if (wording) {
+								push();
+								wording = false;
+							}
+							wording = false;
+						} else if (value[i] == '"' && !quoting) {
+							if (wording) {
+								push();
+								wording = false;
+							}
+							quoting = true;
+						} else if (value[i] == '"' && quoting) {
+							push();
+							quoting = false;
+						} else {
+							temp += value[i];
+							if (!quoting) {
+								wording = true;
+							}
+						}
+					}
+					push();
+					if (args[0] == 'scheme' && args.length == 2) {
+						this.Scheme = args[1];
+					}
 					await this.write('\n\\f7\\ &   \\ff\\');
 					await this.write(value, false);
 					this.BufferNode.append(this.LastLineNode.Self.previousElementSibling);
+					this.InputNode.value = '';
+					this.CanType = false;
 				} else if (this.CanType) {
+					if (value[0] == '\\' && value[1] == '$') {
+						value = value.substring(1);
+					}
 					this.pushInput(value + '\n');
 					this.InputNode.value = '';
 					this.CanType = false;
