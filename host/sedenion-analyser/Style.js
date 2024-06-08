@@ -263,8 +263,11 @@
 			this.InputNode.placeholder = 'type in something for interacting with the console . . . . .';
 			this.InputNode.addEventListener('keydown', async (e) => {
 				if (this.keyfreeze) {
-					this.ForAnyKeyType();
-				} else if (e.code == 'Enter') {
+					let EscapeKeys = ['ContextMenu', 'Backspace', 'CapsLock', 'Control', 'Escape', 'Shift', 'Meta', 'Alt', 'Tab'];
+					if (EscapeKeys.indexOf(e.key) == -1) {
+						this.ForAnyKeyType();
+					}
+				} else if (e.key == 'Enter') {
 					await this.ReadLineType();
 				}
 			});
