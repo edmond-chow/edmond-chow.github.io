@@ -197,16 +197,33 @@
 				}
 				typing = value;
 			});
-			defineField(this, 'ForAnyKeyType', async () => {
-				if (this.CanType) {
+			let freezing = false;
+			let keys = '';
+			defineProperty(this, 'KeyFreeze', () => {
+				return freezing;
+			}, (value) => {
+				this.CanType = value;
+				if (value && !freezing) {
+					keys = '';
+				}
+				freezing = value;
+			}, false);
+			defineProperty(this, 'Keys', () => {
+				return keys;
+			}, (value) => {
+				if (freezing) {
+					keys = value;
+				}
+			}, false);
+			defineField(this, 'ForAnyKeyType', () => {
+				if (this.KeyFreeze) {
 					this.InputNode.value = '';
-					this.keyfreeze = false;
-					this.CanType = false;
+					this.KeyFreeze = false;
 				}
 			}, false);
 			defineField(this, 'ReadLineType', async () => {
+				let value = this.InputNode.value;
 				if (this.CanType) {
-					let value = this.InputNode.value;
 					if (value.length > 0 && value[0] == '$') {
 						let args = [];
 						let temp = '';
@@ -262,36 +279,45 @@
 			this.InputNode.type = 'text';
 			this.InputNode.placeholder = 'type in something for interacting with the console . . . . .';
 			this.InputNode.addEventListener('keydown', async (e) => {
-				if (this.keyfreeze) {
+				if (this.KeyFreeze) {
 					let EscapeKeys = ['ContextMenu', 'Backspace', 'CapsLock', 'Control', 'Escape', 'Shift', 'Meta', 'Alt', 'Tab'];
 					if (EscapeKeys.indexOf(e.key) == -1) {
-						this.ForAnyKeyType();
+						if (e.key == 'Enter') {
+							this.Keys = '\n';
+							this.ForAnyKeyType();
+						}
 					}
-				} else if (e.key == 'Enter') {
+				} else if (this.CanType && e.key == 'Enter') {
 					await this.ReadLineType();
 				}
 			});
 			this.InputNode.addEventListener('input', async () => {
-				let space = String.fromCharCode(0x200B);
 				let value = this.InputNode.value;
-				let content = '';
-				for (let i = 0; i < value.length; i++) {
-					content += value[i];
-					if (value.codePointAt(i) > 0xFFFF) {
-						content += value[++i];
+				if (this.KeyFreeze) {
+					this.Keys = value;
+					this.ForAnyKeyType();
+				} else if (this.CanType) {
+					let space = String.fromCharCode(0x200B);
+					let content = '';
+					for (let i = 0; i < value.length; i++) {
+						content += value[i];
+						if (value.codePointAt(i) > 0xFFFF) {
+							content += value[++i];
+						}
+						content += space;
 					}
-					content += space;
+					await defer();
+					DataContentNode.textContent = content;
+					this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
 				}
-				await defer();
-				DataContentNode.textContent = content;
-				this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
 			});
 			this.ControlNode.append(this.InputNode);
 			defineSharedField(this, 'ButtonNode', document.createElement('button'));
 			this.ButtonNode.addEventListener('click', async () => {
-				if (this.keyfreeze) {
+				if (this.KeyFreeze) {
+					this.Keys = '\n';
 					this.ForAnyKeyType();
-				} else {
+				} else if (this.CanType) {
 					await this.ReadLineType();
 				}
 			});
@@ -307,8 +333,6 @@
 			defineSharedProperty(this, 'LastLineNode', () => {
 				return this.LineNodes.length == 0 ? new LineNodeWrapper(null) : this.LineNodes[this.LineNodes.length - 1];
 			});
-			defineField(this, 'keyfreeze', false);
-			defineField(this, 'istream', '');
 			defineField(this, 'istream', '');
 			defineField(this, 'icursor', '');
 			defineSharedProperty(this, 'Scheme', () => {
@@ -615,11 +639,11 @@
 		},
 		async function pressAnyKey() {
 			arguments.constrainedWithAndThrow();
-			this.keyfreeze = true;
-			this.CanType = true;
-			while (this.keyfreeze) {
+			this.KeyFreeze = true;
+			while (this.KeyFreeze) {
 				await defer();
 			}
+			return this.Keys;
 		},
 		async function completed(code) {
 			arguments.constrainedWithAndThrow(Number);
