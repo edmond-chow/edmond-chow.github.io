@@ -41,11 +41,11 @@
 	/* { functionality } */
 	[
 		function setCookie(property, value) {
-			arguments.constrainedWithAndThrow(String, String);
+			[property, value].constrainedWithAndThrow(String, String);
 			document.cookie = property + '=' + value;
 		},
 		function getCookie(property) {
-			arguments.constrainedWithAndThrow(String);
+			[property].constrainedWithAndThrow(String);
 			let cookie = '';
 			document.cookie.split('; ').every((value) => {
 				if (value.substring(0, property.length) == property) {
@@ -57,7 +57,6 @@
 			return cookie;
 		},
 		function switchBlurredState() {
-			arguments.constrainedWithAndThrow();
 			if (document.body.id == 'blur') {
 				document.body.id = '';
 				setCookie('non-blur', 'true');
@@ -66,18 +65,19 @@
 				setCookie('non-blur', 'false');
 			}
 		},
-		function isInstance(node) {
-			arguments.constrainedWithAndThrow(Node);
-			if (node.nodeName == '#comment') {
+		function isInstance(visualizedNode) {
+			[visualizedNode].constrainedWithAndThrow(Node);
+			if (visualizedNode.nodeName == '#comment') {
 				return false;
-			} else if (node.nodeName == '#text' && node.wholeText.removeSpace() == '') {
+			} else if (visualizedNode.nodeName == '#text' && visualizedNode.wholeText.removeSpace() == '') {
 				return false;
-			} else if (node instanceof Element && node.nodeName == 'br'.toUpperCase()) {
+			} else if (visualizedNode instanceof Element && visualizedNode.nodeName == 'br'.toUpperCase()) {
 				return false;
-			} else if (node instanceof Element && window.getComputedStyle(node).display == 'none') {
+			} else if (visualizedNode instanceof Element && window.getComputedStyle(visualizedNode).display == 'none') {
 				return false;
+			} else {
+				return true;
 			}
-			return true;
 		}
 	].bindTo(window);
 	/* { event-dispatcher } */
