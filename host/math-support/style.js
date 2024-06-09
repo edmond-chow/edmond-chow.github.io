@@ -1,4 +1,14 @@
 (() => {
+	/* { asynchronous } */
+	[
+		async function defer(timeout = 0) {
+			[timeout].constrainedWithAndThrow(Number);
+			let timespan = performance.now() + timeout;
+			await suspend(() => {
+				return performance.now() > timespan;
+			});
+		}
+	].bindTo(window);
 	/* { accessibility } */
 	[
 		function hasTitle(node) {
