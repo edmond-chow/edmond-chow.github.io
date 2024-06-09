@@ -80,18 +80,17 @@
 			return true;
 		}
 	].bindTo(window);
-	/* { binder } */
+	/* { event-dispatcher } */
 	let resizedCount = 0;
 	let rescrollState = 0;
 	let deferredImgNode = [];
 	let lastHash = '';
 	document.addEventListener('structuredTag', async function structuredTag() {
-		captureSpan();
 		/* switchBlurredState() */
 		if (getCookie('non-blur') == 'true') {
 			switchBlurredState();
 		}
-		await mustSuspend();
+		await suspend();
 		/* integrating the 'post-leader-date's by including the '[date-string]'s */
 		forAllTag('post').map((value) => {
 			return new Post(value);
@@ -262,7 +261,6 @@
 		});
 	});
 	document.addEventListener('formedStyle', async function formedStyle() {
-		captureSpan();
 		/* '[with-graphics, with-notice, with-inline-frame]' for the 'post's */
 		forAllTag('post').map((value) => {
 			return new Post(value);
@@ -324,7 +322,7 @@
 			await suspend();
 			operate(postValue.postNode, 'with-inline-frame', ':scope > sub-post > post-content > iframe:first-of-type:last-of-type');
 		});
-		await mustSuspend();
+		await suspend();
 		/* a stack machine for a scrolling coroutine */
 		let operate = (selector, scrollable, action) => {
 			forAll(selector).filter((value) => {
