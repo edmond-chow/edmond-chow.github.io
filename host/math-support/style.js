@@ -47,9 +47,13 @@
 		function getCookie(property) {
 			[property].constrainedWithAndThrow(String);
 			let cookie = '';
-			document.cookie.split('; ').every((value) => {
-				if (value.substring(0, property.length) == property) {
-					cookie = value.substring(property.length + 1, value.length);
+			document.cookie.split(';').every((value) => {
+				let pair = value.split('=');
+				pair = pair.map((value) => {
+					return value.trim();
+				});
+				if (pair[0] == property) {
+					cookie = pair[1];
 					return false;
 				}
 				return true;
