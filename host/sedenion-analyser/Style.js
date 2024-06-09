@@ -119,179 +119,59 @@
 	await suspend();
 	/* { property-definer } */
 	[
-		async function forEachAsync(delegate) {
-			for (let i = 0; i < this.length; i++) {
-				delegate.call(null, this[i], i, this);
-				await suspend();
+		function hardFreeze(type, instance = window) {
+			if (type instanceof Function && type.prototype instanceof Object) {
+				[type].bindTo(instance);
+				Object.freeze(type.prototype);
 			}
-		}
-	].bindTo(Array.prototype);
-	[
-		function defineField(instance, key, data, mutable = true) {
-			[instance, key].constrainedWithAndThrow(Object, String);
-			Object.defineProperty(instance, key, {
-				value: data,
-				writable: mutable,
-				enumerable: false,
-				configurable: false,
-			});
 		},
-		function defineSharedField(instance, key, data, mutable = false) {
-			[instance, key].constrainedWithAndThrow(Object, String);
-			Object.defineProperty(instance, key, {
-				value: data,
-				writable: mutable,
-				enumerable: true,
-				configurable: false,
-			});
+		function lockFields(instance, keys, mutable = true) {
+			if (instance instanceof Object && [mutable].constrainedWith(Boolean)) {
+				keys.forEach((key) => {
+					Object.defineProperty(instance, key, { writable: mutable, enumerable: !mutable, configurable: false });
+				});
+			}
 		},
-		function defineProperty(instance, key, getter, setter) {
-			[instance, key].constrainedWithAndThrow(Object, String);
-			Object.defineProperty(instance, key, {
-				get: getter,
-				set: setter,
-				enumerable: false,
-				configurable: false,
-			});
-		},
-		function defineSharedProperty(instance, key, getter, setter) {
-			[instance, key].constrainedWithAndThrow(Object, String);
-			Object.defineProperty(instance, key, {
-				get: getter,
-				set: setter,
-				enumerable: true,
-				configurable: false,
-			});
+		function shareProperties(type, keys) {
+			if (type instanceof Function && type.prototype instanceof Object) {
+				keys.forEach((key) => {
+					Object.defineProperty(type.prototype, key, { enumerable: true, configurable: false });
+				});
+			}
 		}
 	].bindTo(window);
 	/* { constructors } */
-	function LineNodeWrapper(node) {
-		defineSharedField(this, 'Self', node);
-		defineSharedProperty(this, 'SpanNodes', () => {
-			return node == null ? null : Array.from(this.Self.childNodes).filter((value) => {
+	class LineNodeWrapper {
+		constructor(head) {
+			this.Self = head;
+			lockFields(this, ['Self'], false);
+		}
+		get SpanNodes() {
+			return this.Self == null ? null : Array.from(this.Self.childNodes).filter((value) => {
 				return value.nodeName == 'span'.toUpperCase();
 			});
-		});
-		defineSharedProperty(this, 'LastSpanNode', () => {
-			return node == null || this.SpanNodes.length == 0 ? null : this.SpanNodes[this.SpanNodes.length - 1];
-		});
-	}
-	[
-		function Console() {
-			if (!new.target) {
-				return;
-			}
-			defineSharedField(this, 'ConsoleNode', document.createElement('console'));
+		}
+		get LastSpanNode() {
+			return this.Self == null || this.SpanNodes.length == 0 ? null : this.SpanNodes[this.SpanNodes.length - 1];
+		}
+	};
+	shareProperties(LineNodeWrapper, ['SpanNodes', 'LastSpanNode']);
+	hardFreeze(LineNodeWrapper, {});
+	class Console {
+		constructor() {
+			this.ConsoleNode = document.createElement('console');
 			this.ConsoleNode.setAttribute('foreground', 'gray');
 			this.ConsoleNode.setAttribute('background', 'default');
 			this.ConsoleNode.setAttribute('scheme', 'campbell');
-			let BufferNode = document.createElement('buffer');
-			this.ConsoleNode.prepend(BufferNode);
-			defineField(this, 'ClearBufferNode', () => {
-				document.createDocumentFragment().append(BufferNode);
-				BufferNode = document.createElement('buffer');
-				this.ConsoleNode.prepend(BufferNode);
-			}, false);
-			defineSharedProperty(this, 'BufferNode', () => {
-				return BufferNode;
-			});
-			defineSharedField(this, 'ControlNode', document.createElement('control'));
+			this.BufferNode = document.createElement('buffer');
+			this.ConsoleNode.prepend(this.BufferNode);
+			this.ControlNode = document.createElement('control');
 			this.ConsoleNode.append(this.ControlNode);
-			let typing = false;
-			let DataContentNode = document.createElement('data-content');
-			defineProperty(this, 'CanType', () => {
-				return typing;
-			}, (value) => {
-				this.InputNode.readOnly = !value;
-				this.ButtonNode.disabled = !value;
-				if (value && !typing) {
-					this.LastLineNode.LastSpanNode?.append(DataContentNode);
-					this.InputNode.focus();
-				} else if (!value && typing) {
-					document.createDocumentFragment().append(DataContentNode);
-					DataContentNode.textContent = '';
-				}
-				typing = value;
-			});
-			let freezing = false;
-			let keys = '';
-			defineProperty(this, 'KeyFreeze', () => {
-				return freezing;
-			}, (value) => {
-				this.CanType = value;
-				if (value && !freezing) {
-					keys = '';
-				}
-				freezing = value;
-			}, false);
-			defineProperty(this, 'Keys', () => {
-				return keys;
-			}, (value) => {
-				if (freezing) {
-					keys = value;
-				}
-			}, false);
-			defineField(this, 'ForAnyKeyType', () => {
-				if (this.KeyFreeze) {
-					this.InputNode.value = '';
-					this.KeyFreeze = false;
-				}
-			}, false);
-			defineField(this, 'ReadLineType', async () => {
-				let value = this.InputNode.value;
-				if (this.CanType) {
-					if (value.length > 0 && value[0] == '$') {
-						let args = [];
-						let temp = '';
-						let wording = false;
-						let quoting = false;
-						let push = () => {
-							if (temp.length > 0) {
-								args.push(temp);
-								temp = '';
-							}
-						};
-						for (let i = 1; i < value.length; i++) {
-							if (value[i] == ' ' && !quoting) {
-								if (wording) {
-									push();
-									wording = false;
-								}
-								wording = false;
-							} else if (value[i] == '"' && !quoting) {
-								if (wording) {
-									push();
-									wording = false;
-								}
-								quoting = true;
-							} else if (value[i] == '"' && quoting) {
-								push();
-								quoting = false;
-							} else {
-								temp += value[i];
-								if (!quoting) {
-									wording = true;
-								}
-							}
-						}
-						push();
-						if (args.length == 2 && args[0] == 'scheme') {
-							this.Scheme = args[1];
-						}
-						await this.write('\n\\f7\\ &   \\ff\\');
-						await this.write(value, false);
-						this.BufferNode.append(this.LastLineNode.Self.previousElementSibling);
-					} else {
-						if (value.length > 1 && value.substring(0, 2) == '\\$') {
-							value = value.substring(1);
-						}
-						this.pushInput(value + '\n');
-					}
-					this.InputNode.value = '';
-					this.CanType = false;
-				}
-			}, false);
-			defineSharedField(this, 'InputNode', document.createElement('input'));
+			this.DataContentNode = document.createElement('data-content');
+			this.typing = false;
+			this.freezing = false;
+			this.keys = '';
+			this.InputNode = document.createElement('input');
 			this.InputNode.type = 'text';
 			this.InputNode.placeholder = 'type in something for interacting with the console . . . . .';
 			this.InputNode.addEventListener('keydown', async (e) => {
@@ -323,12 +203,12 @@
 						content += space;
 					}
 					await suspend();
-					DataContentNode.textContent = content;
+					this.DataContentNode.textContent = content;
 					this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
 				}
 			});
 			this.ControlNode.append(this.InputNode);
-			defineSharedField(this, 'ButtonNode', document.createElement('button'));
+			this.ButtonNode = document.createElement('button');
 			this.ButtonNode.addEventListener('click', async () => {
 				if (this.KeyFreeze) {
 					this.Keys = '\n';
@@ -339,105 +219,186 @@
 			});
 			this.ControlNode.append(this.ButtonNode);
 			this.CanType = false;
-			defineSharedProperty(this, 'LineNodes', () => {
-				return Array.from(this.BufferNode.childNodes).filter((value) => {
-					return value.nodeName == 'line'.toUpperCase();
-				}).map((value) => {
-					return new LineNodeWrapper(value);
-				});
+			this.istream = '';
+			this.icursor = 0;
+			lockFields(this, ['typing', 'freezing', 'keys', 'istream', 'icursor'], true);
+			lockFields(this, ['ConsoleNode', 'BufferNode', 'ControlNode', 'DataContentNode', 'InputNode', 'ButtonNode'], false);
+		}
+		ClearBufferNode() {
+			this.BufferNode.innerText = '';
+		}
+		get CanType() {
+			return this.typing;
+		}
+		set CanType(value) {
+			this.InputNode.readOnly = !value;
+			this.ButtonNode.disabled = !value;
+			if (value && !this.typing) {
+				this.LastLineNode.LastSpanNode?.append(this.DataContentNode);
+				this.InputNode.focus();
+			} else if (!value && this.typing) {
+				document.createDocumentFragment().append(this.DataContentNode);
+				this.DataContentNode.textContent = '';
+			}
+			this.typing = value;
+		}
+		get KeyFreeze() {
+			return this.freezing;
+		}
+		set KeyFreeze(value) {
+			this.CanType = value;
+			if (value && !this.freezing) {
+				this.keys = '';
+			}
+			this.freezing = value;
+		}
+		get Keys() {
+			return this.keys;
+		}
+		set Keys(value) {
+			if (this.freezing) {
+				this.keys = value;
+			}
+		}
+		ForAnyKeyType() {
+			if (this.KeyFreeze) {
+				this.InputNode.value = '';
+				this.KeyFreeze = false;
+			}
+		}
+		async ReadLineType() {
+			let value = this.InputNode.value;
+			if (this.CanType) {
+				if (value.length > 0 && value[0] == '$') {
+					let args = [];
+					let temp = '';
+					let wording = false;
+					let quoting = false;
+					let push = () => {
+						if (temp.length > 0) {
+							args.push(temp);
+							temp = '';
+						}
+					};
+					for (let i = 1; i < value.length; i++) {
+						if (value[i] == ' ' && !quoting) {
+							if (wording) {
+								push();
+								wording = false;
+							}
+							wording = false;
+						} else if (value[i] == '"' && !quoting) {
+							if (wording) {
+								push();
+								wording = false;
+							}
+							quoting = true;
+						} else if (value[i] == '"' && quoting) {
+							push();
+							quoting = false;
+						} else {
+							temp += value[i];
+							if (!quoting) {
+								wording = true;
+							}
+						}
+					}
+					push();
+					if (args.length == 2 && args[0] == 'scheme') {
+						this.Scheme = args[1];
+					}
+					await this.write('\n\\f7\\ &   \\ff\\');
+					await this.write(value, false);
+					this.BufferNode.append(this.LastLineNode.Self.previousElementSibling);
+				} else {
+					if (value.length > 1 && value.substring(0, 2) == '\\$') {
+						value = value.substring(1);
+					}
+					this.pushInput(value + '\n');
+				}
+				this.InputNode.value = '';
+				this.CanType = false;
+			}
+		}
+		get LineNodes() {
+			return Array.from(this.BufferNode.childNodes).filter((value) => {
+				return value.nodeName == 'line'.toUpperCase();
+			}).map((value) => {
+				return new LineNodeWrapper(value);
 			});
-			defineSharedProperty(this, 'LastLineNode', () => {
-				return this.LineNodes.length == 0 ? new LineNodeWrapper(null) : this.LineNodes[this.LineNodes.length - 1];
-			});
-			defineField(this, 'istream', '');
-			defineField(this, 'icursor', '');
-			defineSharedProperty(this, 'Scheme', () => {
-				return this.ConsoleNode.getAttribute('scheme');
-			}, (Scheme) => {
-				this.ConsoleNode.setAttribute('scheme', Scheme);
-			});
 		}
-	].bindTo(window);
-	let Colors = [
-		'black',
-		'dark-blue',
-		'dark-green',
-		'dark-cyan',
-		'dark-red',
-		'dark-magenta',
-		'dark-yellow',
-		'gray',
-		'dark-gray',
-		'blue',
-		'green',
-		'cyan',
-		'red',
-		'magenta',
-		'yellow',
-		'white',
-	];
-	Colors[0xFF] = 'default';
-	defineSharedField(Console, 'Colors', Colors);
-	Object.freeze(Console.Colors);
-	let Themes = [
-		'campbell',
-		'campbell-powershell',
-		'solarized-dark',
-		'solarized',
-		'solarized-light',
-		'tango-dark',
-		'tango',
-		'tango-light',
-		'gnome',
-		'linux',
-		'xterm',
-		'rxvt',
-		'vintage'
-	];
-	defineSharedField(Console, 'Themes', Themes);
-	let GetColorCharCode = (code) => {
-		if (code >= 0 && code <= 9) {
-			return code + 48;
-		} else if (code >= 10 && code <= 15) {
-			return code + 87;
-		} else if (code == 0xFF) {
-			return 120;
-		} else {
-			throw 'The code out of range!';
+		get LastLineNode() {
+			return this.LineNodes.length == 0 ? new LineNodeWrapper(null) : this.LineNodes[this.LineNodes.length - 1];
 		}
-	};
-	defineSharedField(Console, 'GetColorCharCode', GetColorCharCode);
-	Object.freeze(Console.Themes);
-	[
-		function fromConsoleColor() {
-			return Console.Colors[this];
+		get Scheme() {
+			return this.ConsoleNode.getAttribute('scheme');
 		}
-	].bindTo(Number.prototype);
-	[
-		function toConsoleColor() {
-			return Console.Colors.indexOf(this.toString());
+		set Scheme(value) {
+			this.ConsoleNode.setAttribute('scheme', value);
 		}
-	].bindTo(String.prototype);
-	[
-		function getForegroundColor() {
+		static Colors = [
+			'black',
+			'dark-blue',
+			'dark-green',
+			'dark-cyan',
+			'dark-red',
+			'dark-magenta',
+			'dark-yellow',
+			'gray',
+			'dark-gray',
+			'blue',
+			'green',
+			'cyan',
+			'red',
+			'magenta',
+			'yellow',
+			'white',
+		]
+		static Themes = [
+			'campbell',
+			'campbell-powershell',
+			'solarized-dark',
+			'solarized',
+			'solarized-light',
+			'tango-dark',
+			'tango',
+			'tango-light',
+			'gnome',
+			'linux',
+			'xterm',
+			'rxvt',
+			'vintage'
+		]
+		static GetColorCharCode(code) {
+			if (code >= 0 && code <= 9) {
+				return code + 48;
+			} else if (code >= 10 && code <= 15) {
+				return code + 87;
+			} else if (code == 0xFF) {
+				return 120;
+			} else {
+				throw 'The code out of range!';
+			}
+		}
+		getForegroundColor() {
 			return this.ConsoleNode.getAttribute('foreground');
-		},
-		function getBackgroundColor() {
+		}
+		getBackgroundColor() {
 			return this.ConsoleNode.getAttribute('background');
-		},
-		function setForegroundColor(color) {
+		}
+		setForegroundColor(color) {
 			[color].constrainedWithAndThrow(String);
 			return this.ConsoleNode.setAttribute('foreground', color);
-		},
-		function setBackgroundColor(color) {
+		}
+		setBackgroundColor(color) {
 			[color].constrainedWithAndThrow(String);
 			return this.ConsoleNode.setAttribute('background', color);
-		},
-		async function writeLine(content, controlized = true) {
+		}
+		async writeLine(content, controlized = true) {
 			[content, controlized].constrainedWithAndThrow(String, Boolean);
 			await this.write(content + '\n', controlized);
-		},
-		async function write(content, controlized = true) {
+		}
+		async write(content, controlized = true) {
 			[content, controlized].constrainedWithAndThrow(String, Boolean);
 			let value = '';
 			let count = 0;
@@ -600,8 +561,8 @@
 			} else {
 				endUp();
 			}
-		},
-		async function readLine() {
+		}
+		async readLine() {
 			let result = '';
 			while (true) {
 				while (this.icursor < this.istream.length) {
@@ -617,8 +578,8 @@
 				this.CanType = true;
 				await suspend();
 			}
-		},
-		async function read(unicode = true) {
+		}
+		async read(unicode = true) {
 			[unicode].constrainedWithAndThrow(Boolean);
 			let result = '';
 			while (true) {
@@ -634,27 +595,27 @@
 				this.CanType = true;
 				await suspend();
 			}
-		},
-		function putBack(content) {
+		}
+		putBack(content) {
 			[content].constrainedWithAndThrow(String);
 			this.istream = content + this.istream.substring(this.icursor);
 			this.icursor = 0;
-		},
-		function pushInput(content) {
+		}
+		pushInput(content) {
 			[content].constrainedWithAndThrow(String);
 			this.istream += content;
-		},
-		function clear() {
+		}
+		clear() {
 			this.ClearBufferNode();
-		},
-		async function pressAnyKey() {
+		}
+		async pressAnyKey() {
 			this.KeyFreeze = true;
 			while (this.KeyFreeze) {
 				await suspend();
 			}
 			return this.Keys;
-		},
-		async function completed(code) {
+		}
+		async completed(code) {
 			[code].constrainedWithAndThrow(Number);
 			this.ConsoleNode.setAttribute('foreground', 'gray');
 			this.ConsoleNode.setAttribute('background', 'default');
@@ -665,8 +626,8 @@
 			await this.writeLine('      >> Press any key to continue with restart the program . . .   ');
 			await this.pressAnyKey();
 			this.clear();
-		},
-		async function terminated() {
+		}
+		async terminated() {
 			this.ConsoleNode.setAttribute('foreground', 'gray');
 			this.ConsoleNode.setAttribute('background', 'default');
 			this.clear();
@@ -676,12 +637,27 @@
 			await this.writeLine('      >> Press any key to continue with restart the program . . .   ');
 			await this.pressAnyKey();
 			this.clear();
-		},
-		function bindTo(node) {
+		}
+		bindTo(node) {
 			[node].constrainedWithAndThrow(Element);
 			node.append(this.ConsoleNode);
 		}
-	].bindTo(Console.prototype);
+	}
+	Console.Colors[0xFF] = 'default';
+	Object.freeze(Console.Colors);
+	Object.freeze(Console.Themes);
+	shareProperties(Console, ['LineNodes', 'LastLineNode', 'Scheme', 'getForegroundColor', 'getBackgroundColor', 'setForegroundColor', 'setBackgroundColor', 'writeLine', 'write', 'readLine', 'read', 'putBack', 'pushInput', 'clear', 'pressAnyKey', 'completed', 'terminated', 'bindTo']);
+	hardFreeze(Console);
+	[
+		function fromConsoleColor() {
+			return Console.Colors[this];
+		}
+	].bindTo(Number.prototype);
+	[
+		function toConsoleColor() {
+			return Console.Colors.indexOf(this.toString());
+		}
+	].bindTo(String.prototype);
 	/* { functionality } */
 	let getUTFString = (caller, converter, counter, width, fnScope, jsString) => {
 		[fnScope, jsString].constrainedWithAndThrow(Function.toNullable(), String.toNullable());
@@ -742,9 +718,10 @@
 	};
 	let structuredTag = async () => {
 		/* [iostream] */
-		defineSharedField(window, 'iostream', new Console());
-		window.iostream.bindTo(document.body);
+		let iostream = new Console();
+		iostream.bindTo(document.body);
 		iostream.InputNode.focus();
+		Object.defineProperty(window, 'iostream', { value: iostream, writable: false, enumerable: true, configurable: false });
 		let fetched = false;
 		Module = {
 			preRun: () => {
@@ -796,7 +773,7 @@
 		/* .no-text */
 		await Array.from(document.getElementsByClassName('no-text')).map((value) => {
 			return value.childNodes;
-		}).forEachAsync((value) => {
+		}).forEach((value) => {
 			value.forEach((value) => {
 				if (value.nodeName == '#text') {
 					value.textContent = '';
