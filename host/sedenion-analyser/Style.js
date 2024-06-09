@@ -1,153 +1,170 @@
 (async () => {
-	/* [Array.prototype.bindTo].bindTo(instance = window) */
-	(() => {
-		let lock = { configurable: false, writable: false };
-		Array.prototype.bindTo = function bindTo(instance = window) {
-			this.forEach((value) => {
-				if (value instanceof Function) {
-					instance[value.name] = value;
-					Object.defineProperty(instance, value.name, lock);
-					if (value.prototype instanceof Object) {
-						Object.defineProperty(value, 'prototype', lock);
-						value.prototype.constructor = value;
-						Object.defineProperty(value.prototype, 'constructor', lock);
-					}
+	/* { binder } */
+	let lock = { configurable: false, writable: false };
+	Array.prototype.bindTo = function bindTo(instance = window) {
+		this.forEach((value) => {
+			if (value instanceof Function) {
+				instance[value.name] = value;
+				Object.defineProperty(instance, value.name, lock);
+				if (value.prototype instanceof Object) {
+					Object.defineProperty(value, 'prototype', lock);
+					value.prototype.constructor = value;
+					Object.defineProperty(value.prototype, 'constructor', lock);
 				}
-			});
-		};
-		[Array.prototype.bindTo].bindTo(Array.prototype);
-		let Nullable = function Nullable(type) {
+			}
+		});
+	};
+	[Array.prototype.bindTo].bindTo(Array.prototype);
+	/* { reflection } */
+	class Nullable {
+		constructor(type) {
 			this.type = type;
-			Object.defineProperty(this, 'type', lock);
-		};
-		[
-			function toNullable() {
-				return new Nullable(this);
+			Object.freeze(this);
+		}
+	};
+	[Nullable].bindTo({});
+	[
+		function toNullable() {
+			return new Nullable(this);
+		}
+	].bindTo(Function.prototype);
+	[
+		function isNullable(container) {
+			return container instanceof Nullable;
+		},
+		function removeNullable(container) {
+			if (container instanceof Nullable) {
+				return container.type;
+			} else if (container instanceof Function) {
+				return container;
+			} else {
+				throw 'The \'container\' argument should be either a \'Nullable\' type or a \'Function\' type.';
 			}
-		].bindTo(Function.prototype);
-		[
-			async function forEachAsync(delegate) {
-				for (let i = 0; i < this.length; i++) {
-					delegate.call(null, this[i], i, this);
-					await defer();
-				}
-			}
-		].bindTo(Array.prototype);
-		[
-			function isNullable(container) {
-				return container instanceof Nullable;
-			},
-			function removeNullable(container) {
-				if (container instanceof Nullable) {
-					return container.type;
-				} else if (container instanceof Function) {
-					return container;
-				} else {
-					throw 'The \'container\' argument should be either a \'Nullable\' type or a \'Function\' type.';
-				}
-			}
-		].bindTo(window);
-		[
-			function constrainedWith(...types) {
-				if (!window.constrained) {
-					return true;
-				}
-				let arguments = Array.from(this);
-				if (arguments.length != types.length) {
-					return false;
-				}
-				let constrained = true;
-				arguments.forEach((value, index) => {
-					if (isNullable(types[index]) && value == null) {
-						return;
-					} else if (value instanceof removeNullable(types[index]) || Object.getPrototypeOf(value) == removeNullable(types[index]).prototype) {
-						return;
+		}
+	].bindTo(window);
+	[
+		function addCompleteState() {
+			this.complete = (() => {
+				let complete = true;
+				Object.keys(this).forEach((value) => {
+					if (this[value] == null) {
+						complete = false;
 					}
-					constrained = false;
 				});
-				return constrained;
-			},
-			function constrainedWithAndThrow(...types) {
-				if (window.constrained && !this.constrainedWith(...types)) {
-					throw 'The function arguments should match up the parameter types.';
+				return complete;
+			})();
+			Object.freeze(this);
+		},
+		function constrainedWith(...types) {
+			let arguments = Array.from(this);
+			if (arguments.length != types.length) {
+				return false;
+			}
+			let constrained = true;
+			arguments.forEach((value, index) => {
+				if (isNullable(types[index]) && value == null) {
+					return;
+				} else if (value instanceof removeNullable(types[index]) || Object.getPrototypeOf(value) == removeNullable(types[index]).prototype) {
+					return;
 				}
-			}
-		].bindTo(Object.prototype);
-		[
-			function defineField(instance, key, data, mutable = true) {
-				[instance, key].constrainedWithAndThrow(Object, String);
-				Object.defineProperty(instance, key, {
-					value: data,
-					writable: mutable,
-					enumerable: false,
-					configurable: false,
-				});
-			},
-			function defineSharedField(instance, key, data, mutable = false) {
-				[instance, key].constrainedWithAndThrow(Object, String);
-				Object.defineProperty(instance, key, {
-					value: data,
-					writable: mutable,
-					enumerable: true,
-					configurable: false,
-				});
-			},
-			function defineProperty(instance, key, getter, setter) {
-				[instance, key].constrainedWithAndThrow(Object, String);
-				Object.defineProperty(instance, key, {
-					get: getter,
-					set: setter,
-					enumerable: false,
-					configurable: false,
-				});
-			},
-			function defineSharedProperty(instance, key, getter, setter) {
-				[instance, key].constrainedWithAndThrow(Object, String);
-				Object.defineProperty(instance, key, {
-					get: getter,
-					set: setter,
-					enumerable: true,
-					configurable: false,
-				});
-			}
-		].bindTo(window);
-	})();
-	defineSharedField(window, 'constrained', false, true);
-	/* { control-flow } */
-	(() => {
-		let loop = [];
-		setInterval(() => {
-			loop = loop.filter((value) => {
-				return value.callback != null;
+				constrained = false;
 			});
-			loop.forEach((value) => {
-				if (value.deferred < performance.now()) {
-					value.callback.call(null);
-					value.callback = null;
-				}
-			});
-		}, 0);
-		[
-			function send(callback, timeout = 0) {
-				arguments.constrainedWithAndThrow(Function, Number);
-				loop.push({
-					deferred: performance.now() + timeout,
-					callback: callback
-				});
-			},
-			function defer(timeout = 0) {
-				arguments.constrainedWithAndThrow(Number);
-				return new Promise((resolve) => {
-					loop.push({
-						deferred: performance.now() + timeout,
-						callback: resolve
-					});
-				});
+			return constrained;
+		},
+		function constrainedWithAndThrow(...types) {
+			if (!this.constrainedWith(...types)) {
+				throw 'The function arguments should match up the parameter types.';
 			}
-		].bindTo(window);
-	})();
-	await defer();
-	/* constructor() */
+		}
+	].bindTo(Object.prototype);
+	/* { asynchronous } */
+	class Continuation {
+		constructor(resolve = null, condition = null) {
+			this.resolve = resolve;
+			this.condition = condition;
+			this.accomplished = false;
+		}
+		completed() {
+			return this.condition != null ? this.condition.call(null) : true;
+		}
+		pending() {
+			return !this.accomplished;
+		}
+		invoke() {
+			if (!this.accomplished) {
+				this.resolve?.call(null);
+				this.accomplished = true;
+			}
+		}
+	};
+	let continuations = [];
+	setInterval(() => {
+		continuations = continuations.filter((continuation) => {
+			return continuation.pending();
+		});
+		continuations.forEach((continuation) => {
+			if (continuation.completed()) {
+				continuation.invoke();
+			}
+		});
+	}, 0);
+	[
+		function suspend(condition = null) {
+			[condition].constrainedWithAndThrow(Function.toNullable());
+			return new Promise((resolve) => {
+				continuations.push(new Continuation(resolve, condition));
+			});
+		}
+	].bindTo(window);
+	await suspend();
+	/* { property-definer } */
+	[
+		async function forEachAsync(delegate) {
+			for (let i = 0; i < this.length; i++) {
+				delegate.call(null, this[i], i, this);
+				await suspend();
+			}
+		}
+	].bindTo(Array.prototype);
+	[
+		function defineField(instance, key, data, mutable = true) {
+			[instance, key].constrainedWithAndThrow(Object, String);
+			Object.defineProperty(instance, key, {
+				value: data,
+				writable: mutable,
+				enumerable: false,
+				configurable: false,
+			});
+		},
+		function defineSharedField(instance, key, data, mutable = false) {
+			[instance, key].constrainedWithAndThrow(Object, String);
+			Object.defineProperty(instance, key, {
+				value: data,
+				writable: mutable,
+				enumerable: true,
+				configurable: false,
+			});
+		},
+		function defineProperty(instance, key, getter, setter) {
+			[instance, key].constrainedWithAndThrow(Object, String);
+			Object.defineProperty(instance, key, {
+				get: getter,
+				set: setter,
+				enumerable: false,
+				configurable: false,
+			});
+		},
+		function defineSharedProperty(instance, key, getter, setter) {
+			[instance, key].constrainedWithAndThrow(Object, String);
+			Object.defineProperty(instance, key, {
+				get: getter,
+				set: setter,
+				enumerable: true,
+				configurable: false,
+			});
+		}
+	].bindTo(window);
+	/* { constructors } */
 	function LineNodeWrapper(node) {
 		defineSharedField(this, 'Self', node);
 		defineSharedProperty(this, 'SpanNodes', () => {
@@ -164,7 +181,6 @@
 			if (!new.target) {
 				return;
 			}
-			arguments.constrainedWithAndThrow();
 			defineSharedField(this, 'ConsoleNode', document.createElement('console'));
 			this.ConsoleNode.setAttribute('foreground', 'gray');
 			this.ConsoleNode.setAttribute('background', 'default');
@@ -306,7 +322,7 @@
 						}
 						content += space;
 					}
-					await defer();
+					await suspend();
 					DataContentNode.textContent = content;
 					this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
 				}
@@ -394,39 +410,35 @@
 	Object.freeze(Console.Themes);
 	[
 		function fromConsoleColor() {
-			arguments.constrainedWithAndThrow();
 			return Console.Colors[this];
 		}
 	].bindTo(Number.prototype);
 	[
 		function toConsoleColor() {
-			arguments.constrainedWithAndThrow();
 			return Console.Colors.indexOf(this.toString());
 		}
 	].bindTo(String.prototype);
 	[
 		function getForegroundColor() {
-			arguments.constrainedWithAndThrow();
 			return this.ConsoleNode.getAttribute('foreground');
 		},
 		function getBackgroundColor() {
-			arguments.constrainedWithAndThrow();
 			return this.ConsoleNode.getAttribute('background');
 		},
 		function setForegroundColor(color) {
-			arguments.constrainedWithAndThrow(String);
+			[color].constrainedWithAndThrow(String);
 			return this.ConsoleNode.setAttribute('foreground', color);
 		},
 		function setBackgroundColor(color) {
-			arguments.constrainedWithAndThrow(String);
+			[color].constrainedWithAndThrow(String);
 			return this.ConsoleNode.setAttribute('background', color);
 		},
 		async function writeLine(content, controlized = true) {
-			arguments.constrainedWithAndThrow(String, Boolean);
+			[content, controlized].constrainedWithAndThrow(String, Boolean);
 			await this.write(content + '\n', controlized);
 		},
 		async function write(content, controlized = true) {
-			arguments.constrainedWithAndThrow(String, Boolean);
+			[content, controlized].constrainedWithAndThrow(String, Boolean);
 			let value = '';
 			let count = 0;
 			let config = false;
@@ -531,7 +543,7 @@
 					} else if (count >= 512) {
 						count = 0;
 						pushNode();
-						await defer();
+						await suspend();
 					} else {
 						count += 1;
 					}
@@ -582,7 +594,7 @@
 					value += content[i];
 				}
 			}
-			await defer();
+			await suspend();
 			if (config && pending) {
 				throwNow();
 			} else {
@@ -590,7 +602,6 @@
 			}
 		},
 		async function readLine() {
-			arguments.constrainedWithAndThrow();
 			let result = '';
 			while (true) {
 				while (this.icursor < this.istream.length) {
@@ -604,11 +615,11 @@
 				this.istream = '';
 				this.icursor = 0;
 				this.CanType = true;
-				await defer();
+				await suspend();
 			}
 		},
 		async function read(unicode = true) {
-			arguments.constrainedWithAndThrow(Boolean);
+			[unicode].constrainedWithAndThrow(Boolean);
 			let result = '';
 			while (true) {
 				if (this.icursor < this.istream.length) {
@@ -621,32 +632,30 @@
 				this.istream = '';
 				this.icursor = 0;
 				this.CanType = true;
-				await defer();
+				await suspend();
 			}
 		},
 		function putBack(content) {
-			arguments.constrainedWithAndThrow(String);
+			[content].constrainedWithAndThrow(String);
 			this.istream = content + this.istream.substring(this.icursor);
 			this.icursor = 0;
 		},
 		function pushInput(content) {
-			arguments.constrainedWithAndThrow(String);
+			[content].constrainedWithAndThrow(String);
 			this.istream += content;
 		},
 		function clear() {
-			arguments.constrainedWithAndThrow();
 			this.ClearBufferNode();
 		},
 		async function pressAnyKey() {
-			arguments.constrainedWithAndThrow();
 			this.KeyFreeze = true;
 			while (this.KeyFreeze) {
-				await defer();
+				await suspend();
 			}
 			return this.Keys;
 		},
 		async function completed(code) {
-			arguments.constrainedWithAndThrow(Number);
+			[code].constrainedWithAndThrow(Number);
 			this.ConsoleNode.setAttribute('foreground', 'gray');
 			this.ConsoleNode.setAttribute('background', 'default');
 			this.clear();
@@ -658,7 +667,6 @@
 			this.clear();
 		},
 		async function terminated() {
-			arguments.constrainedWithAndThrow();
 			this.ConsoleNode.setAttribute('foreground', 'gray');
 			this.ConsoleNode.setAttribute('background', 'default');
 			this.clear();
@@ -670,7 +678,7 @@
 			this.clear();
 		},
 		function bindTo(node) {
-			arguments.constrainedWithAndThrow(Element);
+			[node].constrainedWithAndThrow(Element);
 			node.append(this.ConsoleNode);
 		}
 	].bindTo(Console.prototype);
@@ -701,11 +709,10 @@
 			return getUTFString(getUTF32String, stringToUTF32, lengthBytesUTF32, 4, fnScope, jsString);
 		},
 		function getTitle() {
-			arguments.constrainedWithAndThrow();
 			return document.title;
 		},
 		function setTitle(title) {
-			arguments.constrainedWithAndThrow(String);
+			[title].constrainedWithAndThrow(String);
 			document.title = title;
 		}
 	].bindTo(window);
@@ -764,7 +771,7 @@
 		document.head.append(scriptNode);
 		await new Promise(async (resolve) => {
 			while (fetched == false) {
-				await defer();
+				await suspend();
 			}
 			resolve();
 		});
@@ -808,6 +815,6 @@
 	};
 	while (true) {
 		await delegate();
-		await defer();
+		await suspend();
 	}
 })();
