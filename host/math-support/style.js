@@ -412,9 +412,9 @@
 		}
 		static ProceedStyle = ['onPost', 'imgDeferredSrc', 'iframeDeferredSrc', 'imgLoadingSrc', 'iframeLoadingSrc', 'firstScroll']
 		moveNext() {
-			let Proceeder = !this.isLoaded ? DispatcherStateMachine.ProceedTag : DispatcherStateMachine.ProceedStyle;
-			this[Proceeder[this.state++]]();
-			if (this.state == Proceeder.length) {
+			let proceeder = !this.isLoaded ? DispatcherStateMachine.ProceedTag : DispatcherStateMachine.ProceedStyle;
+			this[proceeder[this.state++]]();
+			if (this.state == proceeder.length) {
 				this.isLoaded = true;
 				this.state = 0;
 			}
