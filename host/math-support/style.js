@@ -95,186 +95,212 @@
 		}
 	].bindTo(window);
 	/* { event-dispatcher } */
-	let resizedCount = 0;
-	let hasScrolled = false;
-	document.addEventListener('structuredTag', async function structuredTag() {
+	document.addEventListener('structuredTag', () => {
 		/* switchBlurredState() */
 		if (getCookie('non-blur') == 'true') {
 			switchBlurredState();
 		}
-		await suspend();
-		/* integrating the 'post-leader-date's by including the '[date-string]'s */
-		forAllTag('post').map((value) => {
-			return new Post(value);
-		}).forEach((postValue) => {
-			if (postValue.postNode.hasAttribute('date-string')) {
-				let postLeaderDateNode = document.createElement('post-leader-date');
-				postLeaderDateNode.textContent = postValue.postNode.getAttribute('date-string');
-				postValue.postLeaderSectionNode.insertBefore(postLeaderDateNode, postValue.postLeaderOrderNode.nextSibling);
-			} else {
-				postValue.postLeaderSectionNode.getAll(':scope > post-leader-date').forEach((value) => {
-					value.remove();
-				});
-			}
-		});
-		await suspend();
-		/* 'onVisibleClick' events for the 'post > sub-post > post-leader > post-leader-advance > button.visibility's */
-		let onVisibleClickEvent = [];
-		forAll('post').map((value) => {
-			return new Post(value);
-		}).filter((value) => {
-			return value.complete;
-		}).forEach((postValue) => {
-			if (!postValue.postNode.hasAttribute('with-collapsed')) {
-				postValue.postLeaderAdvanceNode.getAll(':scope > button.advance.visibility').forEach((value) => {
-					value.remove();
-				});
-				return;
-			}
-			let buttonNode = (() => {
-				if (postValue.postLeaderAdvanceNode.has(':scope > button.advance.visibility')) {
-					return postValue.postLeaderAdvanceNode.get(':scope > button.advance.visibility');
+	});
+	class Event {
+		constructor(object, trigger) {
+			this.object = object;
+			this.trigger = trigger;
+		}
+	};
+	class DispatcherStateMachine {
+		constructor() {
+			this.state = 0;
+			this.isLoaded = false;
+			this.hasScrolled = false;
+			this.visibleClickEvents = [];
+			this.resizedCount = 0;
+		}
+		onPostDateString() {
+			/* integrating the 'post-leader-date's by including the '[date-string]'s */
+			forAllTag('post').map((value) => {
+				return new Post(value);
+			}).forEach((postValue) => {
+				if (postValue.postNode.hasAttribute('date-string')) {
+					let postLeaderDateNode = document.createElement('post-leader-date');
+					postLeaderDateNode.textContent = postValue.postNode.getAttribute('date-string');
+					postValue.postLeaderSectionNode.insertBefore(postLeaderDateNode, postValue.postLeaderOrderNode.nextSibling);
 				} else {
-					let buttonNode = document.createElement('button');
-					buttonNode.classList.add('advance');
-					buttonNode.classList.add('visibility');
-					postValue.postLeaderAdvanceNode.append(buttonNode);
-					return buttonNode;
-				}
-			})();
-			buttonNode.id = '';
-			buttonNode.classList.remove('up');
-			buttonNode.classList.add('down');
-			buttonNode.textContent = '展開';
-			async function onVisibleClick() {
-				if (!new Post(postValue.postNode).complete || this.parentElement != postValue.postLeaderAdvanceNode) {
-					return;
-				}
-				let freezer = (action) => {
-					Array.from(postValue.postContentNode.children).forEach((value) => {
-						if (value.tagName.toUpperCase() == 'img'.toUpperCase() || value.tagName.toUpperCase() == 'iframe'.toUpperCase()) {
-							action(value);
-						}
+					postValue.postLeaderSectionNode.getAll(':scope > post-leader-date').forEach((value) => {
+						value.remove();
 					});
-				};
-				freezer((node) => {
-					node.setAttribute('frozen', '');
-				});
-				this.classList.add('disabled');
-				if (this.id == 'visibled') {
-					this.classList.remove('up');
-					this.classList.add('down');
-					this.textContent = '展開';
-					postValue.postContentNode.style.aspectRatio = '';
-					postValue.postContentNode.classList.remove('no-scrollbar');
-				} else {
-					this.classList.add('up');
-					this.classList.remove('down');
-					this.textContent = '縮小';
-					postValue.postContentNode.style.aspectRatio = postValue.postContentNode.offsetWidth.toString() + ' / ' + postValue.postContentNode.scrollHeight.toString();
-					postValue.postContentNode.classList.remove('no-scrollbar');
 				}
-				await defer(1000);
-				freezer((node) => {
-					node.removeAttribute('frozen');
-				});
-				this.classList.remove('disabled');
-				if (this.id == 'visibled') {
-					postValue.postContentNode.classList.remove('no-scrollbar');
-					this.id = '';
-				} else {
-					postValue.postContentNode.classList.add('no-scrollbar');
-					this.id = 'visibled';
-				}
-			}
-			onVisibleClickEvent.push({ node: buttonNode, delegate: onVisibleClick });
-			buttonNode.addEventListener('click', onVisibleClick);
-		});
-		document.addEventListener('structuredTag', function lastOnVisibleClickRelease() {
-			onVisibleClickEvent.forEach((value) => {
-				value.node.removeEventListener('click', value.delegate);
 			});
-			document.removeEventListener('structuredTag', lastOnVisibleClickRelease);
-		});
-		/* an 'onResized' event for the 'post > sub-post > post-leader > post-leader-advance > button.visibility's */
-		async function onResized() {
-			resizedCount += 1;
-			let Perform = (action) => {
-				forAll('post[with-collapsed]').map((value) => {
-					return new Post(value);
-				}).filter((value) => {
-					return value.complete;
-				}).forEach((postValue) => {
-					if (postValue.postLeaderAdvanceNode.has(':scope > button.advance.visibility')) {
-						let buttonNode = postValue.postLeaderAdvanceNode.get(':scope > button.advance.visibility');
-						action.call(buttonNode, postValue.postContentNode);
-					}
-				});
-			};
-			Perform(function action(postContentNode) {
-				if (this.id == 'visibled') {
+		}
+		static VisibilitySelector = ':scope > button.advance.visibility'
+		onLazyFrozen(postContentNode, freeze) {
+			Array.from(postContentNode.childNodes).filter((value) => {
+				return value.nodeName == 'img'.toUpperCase() || value.nodeName == 'iframe'.toUpperCase();
+			}).forEach((value) => {
+				if (freeze) {
+					value.setAttribute('frozen', '');
+				} else {
+					value.removeAttribute('frozen');
+				}
+			});
+		}
+		newPostWithCollapsedButton(postLeaderAdvanceNode) {
+			if (postLeaderAdvanceNode.has(DispatcherStateMachine.VisibilitySelector)) {
+				return postLeaderAdvanceNode.get(DispatcherStateMachine.VisibilitySelector);
+			} else {
+				let buttonNode = document.createElement('button');
+				buttonNode.classList.add('advance', 'visibility');
+				postLeaderAdvanceNode.append(buttonNode);
+				return buttonNode;
+			}
+		}
+		sizePostWithCollapsedButton(postContentNode, visibled) {
+			if (visibled) {
+				postContentNode.style.aspectRatio = '';
+			} else {
+				postContentNode.style.aspectRatio = postContentNode.offsetWidth.toString() + ' / ' + postContentNode.scrollHeight.toString();
+			}
+		}
+		drawPostWithCollapsedButton(postContentNode, buttonNode, visibled) {
+			if (visibled) {
+				postContentNode.classList.remove('no-scrollbar');
+				buttonNode.classList.remove('up');
+				buttonNode.classList.add('down');
+				buttonNode.textContent = '展開';
+				buttonNode.id = '';
+			} else {
+				postContentNode.classList.add('no-scrollbar');
+				buttonNode.classList.add('up');
+				buttonNode.classList.remove('down');
+				buttonNode.textContent = '縮小';
+				buttonNode.id = 'visibled';
+			}
+		}
+		async onPostWithCollapsedVisibleClick(postNode, e) {
+			/* 'onVisibleClick' events for the 'post > sub-post > post-leader > post-leader-advance > button.visibility's */
+			let postValue = new Post(postNode);
+			if (postValue.complete && e.target.parentElement == postValue.postLeaderAdvanceNode) {
+				postValue.postContentNode.classList.remove('no-scrollbar');
+				let visibled = e.target.id == 'visibled';
+				this.onLazyFrozen(postValue.postContentNode, true);
+				e.target.classList.add('disabled');
+				this.sizePostWithCollapsedButton(postValue.postContentNode, visibled);
+				await defer(1000);
+				this.onLazyFrozen(postValue.postContentNode, false);
+				e.target.classList.remove('disabled');
+				this.drawPostWithCollapsedButton(postValue.postContentNode, e.target, visibled);
+			}
+		}
+		operatePostWithCollapsedResizingAgent(resizingOperation) {
+			forAll('post[with-collapsed]').map((value) => {
+				return new Post(value);
+			}).filter((value) => {
+				return value.complete;
+			}).filter((value) => {
+				return value.postLeaderAdvanceNode.has(DispatcherStateMachine.VisibilitySelector);
+			}).forEach((postValue) => {
+				let buttonNode = postValue.postLeaderAdvanceNode.get(DispatcherStateMachine.VisibilitySelector);
+				resizingOperation(buttonNode, postValue.postContentNode);
+			});
+		}
+		async onPostWithCollapsedResized() {
+			this.operatePostWithCollapsedResizingAgent((buttonNode, postContentNode) => {
+				if (buttonNode.id == 'visibled') {
 					postContentNode.style.aspectRatio = 'auto';
 				}
 				postContentNode.classList.add('resized');
-				this.classList.add('pseudo-disabled');
+				buttonNode.classList.add('pseudo-disabled');
 			});
+			++this.resizedCount;
 			await defer(250);
-			resizedCount -= 1;
-			if (resizedCount > 0) {
-				return;
+			if (--this.resizedCount == 0) {
+				this.operatePostWithCollapsedResizingAgent((buttonNode, postContentNode) => {
+					if (buttonNode.id == 'visibled') {
+						postContentNode.style.aspectRatio = postContentNode.offsetWidth.toString() + ' / ' + postContentNode.scrollHeight.toString();
+					}
+					postContentNode.classList.remove('resized');
+					buttonNode.classList.remove('pseudo-disabled');
+				});
 			}
-			Perform(function action(postContentNode) {
-				if (this.id == 'visibled') {
-					postContentNode.style.aspectRatio = postContentNode.offsetWidth.toString() + ' / ' + postContentNode.scrollHeight.toString();
+		}
+		onPostWithCollapsed() {
+			/* remove 'visibility' class name for the 'post:not([with-collapsed]) > sub-post > post-leader > post-leader-advance > button.visibility's */
+			forAll('post').map((value) => {
+				return new Post(value);
+			}).filter((value) => {
+				return value.complete && !value.postNode.hasAttribute('with-collapsed');
+			}).map((value) => {
+				return value.postLeaderAdvanceNode;
+			}).forEach((postLeaderAdvanceNode) => {
+				postLeaderAdvanceNode.getAll(DispatcherStateMachine.VisibilitySelector).forEach((value) => {
+					value.classList.remove('visibility');
+				});
+			});
+			/* 'onVisibleClick' events for the 'post[with-collapsed] > sub-post > post-leader > post-leader-advance > button.visibility's */
+			forAll('post').map((value) => {
+				return new Post(value);
+			}).filter((value) => {
+				return value.complete && value.postNode.hasAttribute('with-collapsed');
+			}).forEach((postValue) => {
+				let buttonNode = this.newPostWithCollapsedButton(postValue.postLeaderAdvanceNode);
+				this.drawPostWithCollapsedButton(postValue.postContentNode, buttonNode, true);
+				let onVisibleClick = this.onPostWithCollapsedVisibleClick.bind(this, postValue.postNode);
+				this.visibleClickEvents.push(new Event(buttonNode, onVisibleClick));
+				buttonNode.addEventListener('click', onVisibleClick);
+			});
+			document.addEventListener('structuredTag', () => {
+				this.visibleClickEvents.forEach((value) => {
+					value.object.removeEventListener('click', value.trigger);
+				});
+			}, { once: true });
+			/* an 'onResized' event for the 'post[with-collapsed] > sub-post > post-leader > post-leader-advance > button.visibility's */
+			let onResized = this.onPostWithCollapsedResized.bind(this);
+			document.addEventListener('structuredTag', () => {
+				window.removeEventListener('resize', onResized);
+			}, { once: true });
+			window.addEventListener('resize', onResized);
+		}
+		onPostWithNotice() {
+			/* '[with-notice]' for the 'post's */
+			insertSurround('post > sub-post > post-content > notice', 'sub-notice');
+			insertSurround('post > sub-post > post-content > notice > sub-notice', 'notice-content');
+		}
+		onImgAlt() {
+			/* '[alt]' for the 'img's */
+			forAllTag('img').forEach((value) => {
+				if (!hasAlt(value) && !hasAriaLabel(value) && !hasAriaLabelBy(value)) {
+					makeAlt(value);
 				}
-				postContentNode.classList.remove('resized');
-				this.classList.remove('pseudo-disabled');
 			});
 		}
-		document.addEventListener('structuredTag', function lastOnResizedRelease() {
-			window.removeEventListener('resize', onResized);
-			document.removeEventListener('structuredTag', lastOnResizedRelease);
-		});
-		window.addEventListener('resize', onResized);
-		await suspend();
-		/* '[with-notice]' for the 'post's */
-		insertSurround('post > sub-post > post-content > notice', 'sub-notice');
-		insertSurround('post > sub-post > post-content > notice > sub-notice', 'notice-content');
-		await suspend();
-		/* '[alt]' for the 'img's */
-		forAllTag('img').forEach((value) => {
-			if (!hasAlt(value) && !hasAriaLabel(value) && !hasAriaLabelBy(value)) {
-				makeAlt(value);
-			}
-		});
-		await suspend();
-		/* '[title]' for the 'iframe's */
-		forAllTag('iframe').forEach((value) => {
-			if (!hasTitle(value)) {
-				makeTitle(value);
-			}
-		});
-		await suspend();
-		/* '[aria-label]' for the 'button, [role="button"]'s */
-		forAll('button, [role="button"]').forEach((value) => {
-			if (!hasTitle(value) && !hasAriaLabel(value) && !hasAriaLabelBy(value)) {
-				makeAriaLabel(value);
-			}
-			if (!value.hasAttribute('type')) {
-				value.setAttribute('type', 'button');
-			}
-		});
-		await suspend();
-		/* '[aria-label]' for the 'a, [role="link"]'s */
-		forAll('a, [role="link"]').forEach((value) => {
-			if (value.hasAttribute('href') && !hasAriaLabel(value)) {
-				makeAriaLabel(value);
-			}
-		});
-	});
-	document.addEventListener('formedStyle', async function formedStyle() {
-		/* '[with-graphics, with-notice, with-inline-frame]' for the 'post's */
-		let operatePost = (node, attribute, selector, bind) => {
+		onIframeTitle() {
+			/* '[title]' for the 'iframe's */
+			forAllTag('iframe').forEach((value) => {
+				if (!hasTitle(value)) {
+					makeTitle(value);
+				}
+			});
+		}
+		onButtonRoleAriaLabel() {
+			/* '[aria-label]' for the 'button, [role="button"]'s */
+			forAll('button, [role="button"]').forEach((value) => {
+				if (!hasTitle(value) && !hasAriaLabel(value) && !hasAriaLabelBy(value)) {
+					makeAriaLabel(value);
+				}
+				if (!value.hasAttribute('type')) {
+					value.setAttribute('type', 'button');
+				}
+			});
+		}
+		onARoleAriaLabel() {
+			/* '[aria-label]' for the 'a, [role="link"]'s */
+			forAll('a, [role="link"]').forEach((value) => {
+				if (value.hasAttribute('href') && !hasAriaLabel(value)) {
+					makeAriaLabel(value);
+				}
+			});
+		}
+		static ProceedTag = ['onPostDateString', 'onPostWithCollapsed', 'onPostWithNotice', 'onImgAlt', 'onIframeTitle', 'onButtonRoleAriaLabel', 'onARoleAriaLabel']
+		operatePost(node, attribute, selector, bind = null) {
 			let original = !node.hasAttribute('as-is') && !node.hasAttribute('with-collapsed') && !node.has(':scope > sub-post > post-content > post');
 			let matched = (siblingProperty, classSelector) => {
 				let isMatched = true;
@@ -299,79 +325,103 @@
 			} else {
 				node.removeAttribute(attribute);
 			}
-		};
-		forAllTag('post').map((value) => {
-			return new Post(value);
-		}).filter((value) => {
-			return value.complete;
-		}).forEach((postValue) => {
-			operatePost(postValue.postNode, 'with-graphics', ':scope > sub-post > post-content > img:first-of-type:last-of-type');
-			operatePost(postValue.postNode, 'with-notice', ':scope > sub-post > post-content > notice', (node) => {
-				let noticeNode = node.get(':scope > sub-post > post-content > notice');
-				if (noticeNode.has(':scope > sub-notice > notice-content')) {
-					let noticeContentNode = noticeNode.get(':scope > sub-notice > notice-content');
-					noticeContentNode.classList.add('no-space');
-				}
+		}
+		onPost() {
+			/* '[with-graphics, with-notice, with-inline-frame]' for the 'post's */
+			forAllTag('post').map((value) => {
+				return new Post(value);
+			}).filter((value) => {
+				return value.complete;
+			}).forEach((postValue) => {
+				this.operatePost(postValue.postNode, 'with-graphics', ':scope > sub-post > post-content > img:first-of-type:last-of-type');
+				this.operatePost(postValue.postNode, 'with-notice', ':scope > sub-post > post-content > notice', (postNode) => {
+					let noticeNode = postNode.get(':scope > sub-post > post-content > notice');
+					if (noticeNode.has(':scope > sub-notice > notice-content')) {
+						let noticeContentNode = noticeNode.get(':scope > sub-notice > notice-content');
+						noticeContentNode.classList.add('no-space');
+					}
+				});
+				this.operatePost(postValue.postNode, 'with-inline-frame', ':scope > sub-post > post-content > iframe:first-of-type:last-of-type');
 			});
-			operatePost(postValue.postNode, 'with-inline-frame', ':scope > sub-post > post-content > iframe:first-of-type:last-of-type');
-		});
-		await suspend();
-		let operateLazy = (selector, scrollable, action) => {
+		}
+		operateLazy(selector, scrollable, action) {
 			forAll(selector).filter((value) => {
 				return scrollable ? inScrollable(value) : !inScrollable(value);
 			}).forEach(action);
-		};
-		/* '[deferred-src]' for the 'img's */
-		operateLazy('img[deferred-src]:not([frozen])', true, (value) => {
-			let url = new URL(value.getAttribute('deferred-src'), document.baseURI);
-			value.setAttribute('alt', url.href.substring(url.href.lastIndexOf('/') + 1));
-			value.setAttribute('src', value.getAttribute('deferred-src'));
-			value.removeAttribute('deferred-src');
-			function onError() {
-				this.setAttribute('pre-deferred-src', this.getAttribute('src'));
-				this.removeAttribute('src');
-				this.removeEventListener('error', onError);
-				this.removeEventListener('load', onLoad);
-			}
-			function onLoad() {
-				this.removeEventListener('error', onError);
-				this.removeEventListener('load', onLoad);
-			}
-			value.addEventListener('error', onError);
-			value.addEventListener('load', onLoad);
-		});
-		/* '[deferred-src]' for the 'iframe's */
-		operateLazy('iframe[deferred-src]:not([frozen])', true, (value) => {
-			let url = new URL(value.getAttribute('deferred-src'), document.baseURI);
-			if (document.location.origin == url.origin) {
-				let request = new XMLHttpRequest();
-				request.addEventListener('load', function onLoad() {
-					if (this.status >= 400 && this.status <= 599) {
-						value.setAttribute('referred', '');
-					}
-					this.removeEventListener('load', onLoad);
-				});
-				request.open('GET', url.href, true);
-				request.send();
-			}
-			value.setAttribute('src', value.getAttribute('deferred-src'));
-			value.removeAttribute('deferred-src');
-		});
-		/* '[pre-deferred-src]' for the 'img's */
-		operateLazy('img[pre-deferred-src]:not([frozen])', false, (value) => {
-			value.setAttribute('deferred-src', value.getAttribute('pre-deferred-src'));
-			value.removeAttribute('pre-deferred-src');
-		});
-		/* '[referred]' for the 'iframe's */
-		operateLazy('iframe[referred]:not([frozen])', false, (value) => {
-			value.setAttribute('deferred-src', value.getAttribute('src'));
-			value.removeAttribute('referred');
-			value.removeAttribute('src');
-		});
-		await suspend();
-		if (hasScrolled == false && scrolledInto()) {
-			rescrollView();
-			hasScrolled = true;
 		}
+		imgDeferredSrc() {
+			/* '[deferred-src]' for the 'img's */
+			this.operateLazy('img[deferred-src]:not([frozen])', true, (value) => {
+				let url = new URL(value.getAttribute('deferred-src'), document.baseURI);
+				value.setAttribute('alt', url.href.substring(url.href.lastIndexOf('/') + 1));
+				value.setAttribute('src', value.getAttribute('deferred-src'));
+				value.removeAttribute('deferred-src');
+				function onError() {
+					this.setAttribute('pre-deferred-src', this.getAttribute('src'));
+					this.removeAttribute('src');
+					this.removeEventListener('error', onError);
+					this.removeEventListener('load', onLoad);
+				}
+				function onLoad() {
+					this.removeEventListener('error', onError);
+					this.removeEventListener('load', onLoad);
+				}
+				value.addEventListener('error', onError);
+				value.addEventListener('load', onLoad);
+			});
+		}
+		iframeDeferredSrc() {
+			/* '[deferred-src]' for the 'iframe's */
+			this.operateLazy('iframe[deferred-src]:not([frozen])', true, (value) => {
+				let url = new URL(value.getAttribute('deferred-src'), document.baseURI);
+				if (document.location.origin == url.origin) {
+					let request = new XMLHttpRequest();
+					request.addEventListener('load', function onLoad() {
+						if (this.status >= 400 && this.status <= 599) {
+							value.setAttribute('referred', '');
+						}
+						this.removeEventListener('load', onLoad);
+					});
+					request.open('GET', url.href, true);
+					request.send();
+				}
+				value.setAttribute('src', value.getAttribute('deferred-src'));
+				value.removeAttribute('deferred-src');
+			});
+		}
+		imgLoadingSrc() {
+			/* '[pre-deferred-src]' for the 'img's */
+			this.operateLazy('img[pre-deferred-src]:not([frozen])', false, (value) => {
+				value.setAttribute('deferred-src', value.getAttribute('pre-deferred-src'));
+				value.removeAttribute('pre-deferred-src');
+			});
+		}
+		iframeLoadingSrc() {
+			/* '[referred]' for the 'iframe's */
+			this.operateLazy('iframe[referred]:not([frozen])', false, (value) => {
+				value.setAttribute('deferred-src', value.getAttribute('src'));
+				value.removeAttribute('referred');
+				value.removeAttribute('src');
+			});
+		}
+		firstScroll() {
+			if (this.hasScrolled == false && scrolledInto()) {
+				rescrollView();
+				this.hasScrolled = true;
+			}
+		}
+		static ProceedStyle = ['onPost', 'imgDeferredSrc', 'iframeDeferredSrc', 'imgLoadingSrc', 'iframeLoadingSrc', 'firstScroll']
+		moveNext() {
+			let Proceeder = !this.isLoaded ? DispatcherStateMachine.ProceedTag : DispatcherStateMachine.ProceedStyle;
+			this[Proceeder[this.state++]]();
+			if (this.state == Proceeder.length) {
+				this.isLoaded = true;
+				this.state = 0;
+			}
+		}
+	};
+	let dispatcher = new DispatcherStateMachine();
+	document.addEventListener('formedStyle',() => {
+		dispatcher.moveNext();
 	});
 })();
