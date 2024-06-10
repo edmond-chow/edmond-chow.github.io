@@ -421,7 +421,7 @@
 		}
 	};
 	let dispatcher = new DispatcherStateMachine();
-	document.addEventListener('formedStyle',() => {
+	document.addEventListener('formedStyle', () => {
 		dispatcher.moveNext();
 	});
 })();
