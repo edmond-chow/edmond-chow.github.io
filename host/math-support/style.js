@@ -96,10 +96,13 @@
 	].bindTo(window);
 	/* { event-dispatcher } */
 	let resizedCount = 0;
-	let rescrollState = 0;
-	let deferredImgNode = [];
-	let lastHash = '';
+	let hasScrolled = false;
+	let insideCriticalSection = false;
 	document.addEventListener('structuredTag', async function structuredTag() {
+		await suspend(() => {
+			return !insideCriticalSection;
+		});
+		insideCriticalSection = true;
 		/* switchBlurredState() */
 		if (getCookie('non-blur') == 'true') {
 			switchBlurredState();
@@ -273,168 +276,113 @@
 				makeAriaLabel(value);
 			}
 		});
+		insideCriticalSection = false;
 	});
 	document.addEventListener('formedStyle', async function formedStyle() {
+		await suspend(() => {
+			return !insideCriticalSection;
+		});
+		insideCriticalSection = true;
 		/* '[with-graphics, with-notice, with-inline-frame]' for the 'post's */
+		let operatePost = (node, attribute, selector, bind) => {
+			let original = !node.hasAttribute('as-is') && !node.hasAttribute('with-collapsed') && !node.has(':scope > sub-post > post-content > post');
+			let matched = (siblingProperty, classSelector) => {
+				let isMatched = true;
+				let siblingNode = node.get(selector)[siblingProperty];
+				while (siblingNode != null) {
+					if (isInstance(siblingNode)) {
+						isMatched = false;
+					}
+					siblingNode = siblingNode[siblingProperty];
+				}
+				if (original && isMatched) {
+					node.get(selector).classList.add(classSelector);
+				} else {
+					node.get(selector).classList.remove(classSelector);
+				}
+			};
+			if (original && node.has(selector)) {
+				node.setAttribute(attribute, '');
+				matched('previousSibling', 'first-visible-child');
+				matched('nextSibling', 'last-visible-child');
+				bind?.call(null, node);
+			} else {
+				node.removeAttribute(attribute);
+			}
+		};
 		forAllTag('post').map((value) => {
 			return new Post(value);
 		}).filter((value) => {
 			return value.complete;
-		}).forEach(async (postValue) => {
-			let operate = (node, attribute, selector, bind) => {
-				let is = (node, determiner) => {
-					if (node.hasAttribute('as-is') || node.hasAttribute('with-collapsed') || node.has(':scope > sub-post > post-content > post')) {
-						return false;
-					}
-					return determiner(node);
-				};
-				let getDeterminer = (selector) => {
-					return (node) => {
-						return node.has(selector);
-					};
-				};
-				let visibilityChecking = (node, selector) => {
-					let matched = (siblingProperty, classSelector) => {
-						let determiner = (selector) => {
-							return (node) => {
-								let siblingNode = node.get(selector)[siblingProperty];
-								while (siblingNode != null) {
-									if (isInstance(siblingNode)) {
-										return false;
-									}
-									siblingNode = siblingNode[siblingProperty];
-								}
-								return true;
-							};
-						};
-						if (is(node, determiner(selector))) {
-							node.get(selector).classList.add(classSelector);
-						} else {
-							node.get(selector).classList.remove(classSelector);
-						}
-					};
-					matched('previousSibling', 'first-visible-child');
-					matched('nextSibling', 'last-visible-child');
-				};
-				if (is(node, getDeterminer(selector))) {
-					node.setAttribute(attribute, '');
-					visibilityChecking(node, selector);
-					bind?.call(null, node);
-				} else {
-					node.removeAttribute(attribute);
-				}
-			};
-			operate(postValue.postNode, 'with-graphics', ':scope > sub-post > post-content > img:first-of-type:last-of-type');
-			await suspend();
-			operate(postValue.postNode, 'with-notice', ':scope > sub-post > post-content > notice', (node) => {
+		}).forEach((postValue) => {
+			operatePost(postValue.postNode, 'with-graphics', ':scope > sub-post > post-content > img:first-of-type:last-of-type');
+			operatePost(postValue.postNode, 'with-notice', ':scope > sub-post > post-content > notice', (node) => {
 				let noticeNode = node.get(':scope > sub-post > post-content > notice');
 				if (noticeNode.has(':scope > sub-notice > notice-content')) {
 					let noticeContentNode = noticeNode.get(':scope > sub-notice > notice-content');
 					noticeContentNode.classList.add('no-space');
 				}
 			});
-			await suspend();
-			operate(postValue.postNode, 'with-inline-frame', ':scope > sub-post > post-content > iframe:first-of-type:last-of-type');
+			operatePost(postValue.postNode, 'with-inline-frame', ':scope > sub-post > post-content > iframe:first-of-type:last-of-type');
 		});
 		await suspend();
-		/* a stack machine for a scrolling coroutine */
-		let operate = (selector, scrollable, action) => {
+		let operateLazy = (selector, scrollable, action) => {
 			forAll(selector).filter((value) => {
 				return scrollable ? inScrollable(value) : !inScrollable(value);
 			}).forEach(action);
 		};
-		if (rescrollState == 0 && scrolledInto()) {
-			/* initial state of '[deferred-src]' for the 'img's */
-			operate('img[deferred-src]:not([frozen])', true, (value) => {
-				deferredImgNode.push(value);
-				let url = new URL(value.getAttribute('deferred-src'), document.baseURI);
-				value.setAttribute('alt', url.href.substring(url.href.lastIndexOf('/') + 1));
-				value.setAttribute('src', value.getAttribute('deferred-src'));
-				value.removeAttribute('deferred-src');
-				function onError() {
-					this.setAttribute('pre-deferred-src', this.getAttribute('src'));
-					this.removeAttribute('src');
-					this.removeEventListener('error', onError);
-					this.removeEventListener('load', onLoad);
-					deferredImgNode = deferredImgNode.filter((value) => {
-						return value != this;
-					});
-				}
-				function onLoad() {
-					this.removeEventListener('error', onError);
-					this.removeEventListener('load', onLoad);
-					deferredImgNode = deferredImgNode.filter((value) => {
-						return value != this;
-					});
-				}
-				value.addEventListener('error', onError);
-				value.addEventListener('load', onLoad);
-			});
-			rescrollState = 1;
-		} else if (rescrollState == 1) {
-			deferredImgNode = deferredImgNode.filter((value) => {
-				return value.naturalWidth == 0;
-			});
-			if (deferredImgNode.length == 0) {
-				rescrollState = 2;
+		/* '[deferred-src]' for the 'img's */
+		operateLazy('img[deferred-src]:not([frozen])', true, (value) => {
+			let url = new URL(value.getAttribute('deferred-src'), document.baseURI);
+			value.setAttribute('alt', url.href.substring(url.href.lastIndexOf('/') + 1));
+			value.setAttribute('src', value.getAttribute('deferred-src'));
+			value.removeAttribute('deferred-src');
+			function onError() {
+				this.setAttribute('pre-deferred-src', this.getAttribute('src'));
+				this.removeAttribute('src');
+				this.removeEventListener('error', onError);
+				this.removeEventListener('load', onLoad);
 			}
-		} else if (rescrollState == 2) {
+			function onLoad() {
+				this.removeEventListener('error', onError);
+				this.removeEventListener('load', onLoad);
+			}
+			value.addEventListener('error', onError);
+			value.addEventListener('load', onLoad);
+		});
+		/* '[deferred-src]' for the 'iframe's */
+		operateLazy('iframe[deferred-src]:not([frozen])', true, (value) => {
+			let url = new URL(value.getAttribute('deferred-src'), document.baseURI);
+			if (document.location.origin == url.origin) {
+				let request = new XMLHttpRequest();
+				request.addEventListener('load', function onLoad() {
+					if (this.status >= 400 && this.status <= 599) {
+						value.setAttribute('referred', '');
+					}
+					this.removeEventListener('load', onLoad);
+				});
+				request.open('GET', url.href, true);
+				request.send();
+			}
+			value.setAttribute('src', value.getAttribute('deferred-src'));
+			value.removeAttribute('deferred-src');
+		});
+		/* '[pre-deferred-src]' for the 'img's */
+		operateLazy('img[pre-deferred-src]:not([frozen])', false, (value) => {
+			value.setAttribute('deferred-src', value.getAttribute('pre-deferred-src'));
+			value.removeAttribute('pre-deferred-src');
+		});
+		/* '[referred]' for the 'iframe's */
+		operateLazy('iframe[referred]:not([frozen])', false, (value) => {
+			value.setAttribute('deferred-src', value.getAttribute('src'));
+			value.removeAttribute('referred');
+			value.removeAttribute('src');
+		});
+		await suspend();
+		if (hasScrolled == false) {
 			rescroll();
-			lastHash = document.location.hash;
-			rescrollState = 3;
-		} else if (rescrollState == 3 && lastHash != document.location.hash) {
-			rescrollState = 0;
-		} else if (rescrollState == 3 && scrolledInto()) {
-			/* '[deferred-src]' for the 'img's */
-			operate('img[deferred-src]:not([frozen])', true, (value) => {
-				let url = new URL(value.getAttribute('deferred-src'), document.baseURI);
-				value.setAttribute('alt', url.href.substring(url.href.lastIndexOf('/') + 1));
-				value.setAttribute('src', value.getAttribute('deferred-src'));
-				value.removeAttribute('deferred-src');
-				function onError() {
-					this.setAttribute('pre-deferred-src', this.getAttribute('src'));
-					this.removeAttribute('src');
-					this.removeEventListener('error', onError);
-					this.removeEventListener('load', onLoad);
-				}
-				function onLoad() {
-					this.removeEventListener('error', onError);
-					this.removeEventListener('load', onLoad);
-				}
-				value.addEventListener('error', onError);
-				value.addEventListener('load', onLoad);
-			});
-			await suspend();
-			/* '[pre-deferred-src]' for the 'img's */
-			operate('img[pre-deferred-src]:not([frozen])', false, (value) => {
-				value.setAttribute('deferred-src', value.getAttribute('pre-deferred-src'));
-				value.removeAttribute('pre-deferred-src');
-			});
-			await suspend();
-			/* '[deferred-src]' for the 'iframe's */
-			operate('iframe[deferred-src]:not([frozen])', true, (value) => {
-				let url = new URL(value.getAttribute('deferred-src'), document.baseURI);
-				if (document.location.origin == url.origin) {
-					let request = new XMLHttpRequest();
-					request.addEventListener('load', function onLoad() {
-						if (this.status >= 400 && this.status <= 599) {
-							value.setAttribute('referred', '');
-						}
-						this.removeEventListener('load', onLoad);
-					});
-					request.open('GET', url.href, true);
-					request.send();
-				}
-				value.setAttribute('src', value.getAttribute('deferred-src'));
-				value.removeAttribute('deferred-src');
-			});
-			await suspend();
-			/* '[referred]' for the 'iframe's */
-			operate('iframe[referred]:not([frozen])', false, (value) => {
-				value.setAttribute('deferred-src', value.getAttribute('src'));
-				value.removeAttribute('referred');
-				value.removeAttribute('src');
-			});
+			hasScrolled = true;
 		}
+		insideCriticalSection = false;
 	});
 })();
