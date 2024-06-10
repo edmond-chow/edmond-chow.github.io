@@ -114,6 +114,7 @@
 			this.hasScrolled = false;
 			this.visibleClickEvents = [];
 			this.resizedCount = 0;
+			this.scrollingStarted = false;
 		}
 		onPostDateString() {
 			/* integrating the 'post-leader-date's by including the '[date-string]'s */
@@ -404,13 +405,19 @@
 				value.removeAttribute('src');
 			});
 		}
-		firstScroll() {
-			if (this.hasScrolled == false && scrolledInto()) {
+		beginScroll() {
+			if (!this.hasScrolled && scrolledInto()) {
 				rescrollView();
 				this.hasScrolled = true;
+				this.scrollingStarted = true;
 			}
 		}
-		static ProceedStyle = ['onPost', 'imgDeferredSrc', 'iframeDeferredSrc', 'imgLoadingSrc', 'iframeLoadingSrc', 'firstScroll']
+		endScroll() {
+			if (this.scrollingStarted && !scrolledInto()) {
+				this.state = DispatcherStateMachine.ProceedStyle.indexOf('endScroll');
+			}
+		}
+		static ProceedStyle = ['onPost', 'imgDeferredSrc', 'iframeDeferredSrc', 'imgLoadingSrc', 'iframeLoadingSrc', 'beginScroll', 'endScroll']
 		moveNext() {
 			let proceeder = !this.isLoaded ? DispatcherStateMachine.ProceedTag : DispatcherStateMachine.ProceedStyle;
 			this[proceeder[this.state++]]();
