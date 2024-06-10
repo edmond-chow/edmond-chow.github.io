@@ -97,12 +97,7 @@
 	/* { event-dispatcher } */
 	let resizedCount = 0;
 	let hasScrolled = false;
-	let insideCriticalSection = false;
 	document.addEventListener('structuredTag', async function structuredTag() {
-		await suspend(() => {
-			return !insideCriticalSection;
-		});
-		insideCriticalSection = true;
 		/* switchBlurredState() */
 		if (getCookie('non-blur') == 'true') {
 			switchBlurredState();
@@ -276,13 +271,8 @@
 				makeAriaLabel(value);
 			}
 		});
-		insideCriticalSection = false;
 	});
 	document.addEventListener('formedStyle', async function formedStyle() {
-		await suspend(() => {
-			return !insideCriticalSection;
-		});
-		insideCriticalSection = true;
 		/* '[with-graphics, with-notice, with-inline-frame]' for the 'post's */
 		let operatePost = (node, attribute, selector, bind) => {
 			let original = !node.hasAttribute('as-is') && !node.hasAttribute('with-collapsed') && !node.has(':scope > sub-post > post-content > post');
@@ -379,10 +369,9 @@
 			value.removeAttribute('src');
 		});
 		await suspend();
-		if (hasScrolled == false) {
-			rescroll();
+		if (hasScrolled == false && scrolledInto()) {
+			rescrollView();
 			hasScrolled = true;
 		}
-		insideCriticalSection = false;
 	});
 })();
