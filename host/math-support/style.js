@@ -102,19 +102,23 @@
 		}
 	});
 	class Event {
-		constructor(object, trigger) {
-			this.object = object;
-			this.trigger = trigger;
+		constructor(target, type, listener, options) {
+			this.target = target;
+			this.type = type;
+			this.listener = listener;
+			this.options = options;
+		}
+		add() {
+			this.target.addEventListener(this.type, this.listener, this.options);
+		}
+		remove() {
+			this.target.removeEventListener(this.type, this.listener, this.options);
 		}
 	};
 	class DispatcherStateMachine {
 		constructor() {
-			this.state = 0;
-			this.isLoaded = false;
-			this.hasScrolled = false;
-			this.visibleClickEvents = [];
-			this.resizedCount = 0;
-			this.scrollingStarted = false;
+			this.registeredEvents = [];
+			this.resetState();
 		}
 		onPostDateString() {
 			/* integrating the 'post-leader-date's by including the '[date-string]'s */
@@ -132,7 +136,6 @@
 				}
 			});
 		}
-		static VisibilitySelector = ':scope > button.advance.visibility'
 		onLazyFrozen(postContentNode, freeze) {
 			Array.from(postContentNode.childNodes).filter((value) => {
 				return value.nodeName == 'img'.toUpperCase() || value.nodeName == 'iframe'.toUpperCase();
@@ -145,8 +148,8 @@
 			});
 		}
 		newPostWithCollapsedButton(postLeaderAdvanceNode) {
-			if (postLeaderAdvanceNode.has(DispatcherStateMachine.VisibilitySelector)) {
-				return postLeaderAdvanceNode.get(DispatcherStateMachine.VisibilitySelector);
+			if (postLeaderAdvanceNode.has(':scope > button.advance.visibility')) {
+				return postLeaderAdvanceNode.get(':scope > button.advance.visibility');
 			} else {
 				let buttonNode = document.createElement('button');
 				buttonNode.classList.add('advance', 'visibility');
@@ -154,26 +157,26 @@
 				return buttonNode;
 			}
 		}
-		sizePostWithCollapsedButton(postContentNode, visibled) {
-			if (visibled) {
+		sizePostWithCollapsedButton(postContentNode, extensied) {
+			if (extensied) {
 				postContentNode.style.aspectRatio = '';
 			} else {
 				postContentNode.style.aspectRatio = postContentNode.offsetWidth.toString() + ' / ' + postContentNode.scrollHeight.toString();
 			}
 		}
-		drawPostWithCollapsedButton(postContentNode, buttonNode, visibled) {
-			if (visibled) {
+		drawPostWithCollapsedButton(postContentNode, buttonNode, extensied) {
+			if (extensied) {
 				postContentNode.classList.remove('no-scrollbar');
 				buttonNode.classList.remove('up');
 				buttonNode.classList.add('down');
+				buttonNode.classList.remove('extensied');
 				buttonNode.textContent = '展開';
-				buttonNode.id = '';
 			} else {
 				postContentNode.classList.add('no-scrollbar');
 				buttonNode.classList.add('up');
 				buttonNode.classList.remove('down');
+				buttonNode.classList.add('extensied');
 				buttonNode.textContent = '縮小';
-				buttonNode.id = 'visibled';
 			}
 		}
 		async onPostWithCollapsedVisibleClick(postNode, e) {
@@ -181,14 +184,14 @@
 			let postValue = new Post(postNode);
 			if (postValue.complete && e.target.parentElement == postValue.postLeaderAdvanceNode) {
 				postValue.postContentNode.classList.remove('no-scrollbar');
-				let visibled = e.target.id == 'visibled';
+				let extensied = e.target.classList.contains('extensied');
 				this.onLazyFrozen(postValue.postContentNode, true);
 				e.target.classList.add('disabled');
-				this.sizePostWithCollapsedButton(postValue.postContentNode, visibled);
+				this.sizePostWithCollapsedButton(postValue.postContentNode, extensied);
 				await defer(1000);
 				this.onLazyFrozen(postValue.postContentNode, false);
 				e.target.classList.remove('disabled');
-				this.drawPostWithCollapsedButton(postValue.postContentNode, e.target, visibled);
+				this.drawPostWithCollapsedButton(postValue.postContentNode, e.target, extensied);
 			}
 		}
 		operatePostWithCollapsedResizingAgent(resizingOperation) {
@@ -197,25 +200,25 @@
 			}).filter((value) => {
 				return value.complete;
 			}).filter((value) => {
-				return value.postLeaderAdvanceNode.has(DispatcherStateMachine.VisibilitySelector);
+				return value.postLeaderAdvanceNode.has(':scope > button.advance.visibility');
 			}).forEach((postValue) => {
-				let buttonNode = postValue.postLeaderAdvanceNode.get(DispatcherStateMachine.VisibilitySelector);
+				let buttonNode = postValue.postLeaderAdvanceNode.get(':scope > button.advance.visibility');
 				resizingOperation(buttonNode, postValue.postContentNode);
 			});
 		}
 		async onPostWithCollapsedResized() {
 			this.operatePostWithCollapsedResizingAgent((buttonNode, postContentNode) => {
-				if (buttonNode.id == 'visibled') {
+				if (buttonNode.classList.contains('extensied')) {
 					postContentNode.style.aspectRatio = 'auto';
 				}
 				postContentNode.classList.add('resized');
 				buttonNode.classList.add('pseudo-disabled');
 			});
-			++this.resizedCount;
+			++this.resizingAgentCounter;
 			await defer(250);
-			if (--this.resizedCount == 0) {
+			if (--this.resizingAgentCounter == 0) {
 				this.operatePostWithCollapsedResizingAgent((buttonNode, postContentNode) => {
-					if (buttonNode.id == 'visibled') {
+					if (buttonNode.classList.contains('extensied')) {
 						postContentNode.style.aspectRatio = postContentNode.offsetWidth.toString() + ' / ' + postContentNode.scrollHeight.toString();
 					}
 					postContentNode.classList.remove('resized');
@@ -232,7 +235,7 @@
 			}).map((value) => {
 				return value.postLeaderAdvanceNode;
 			}).forEach((postLeaderAdvanceNode) => {
-				postLeaderAdvanceNode.getAll(DispatcherStateMachine.VisibilitySelector).forEach((value) => {
+				postLeaderAdvanceNode.getAll(':scope > button.advance.visibility').forEach((value) => {
 					value.classList.remove('visibility');
 				});
 			});
@@ -245,20 +248,12 @@
 				let buttonNode = this.newPostWithCollapsedButton(postValue.postLeaderAdvanceNode);
 				this.drawPostWithCollapsedButton(postValue.postContentNode, buttonNode, true);
 				let onVisibleClick = this.onPostWithCollapsedVisibleClick.bind(this, postValue.postNode);
-				this.visibleClickEvents.push(new Event(buttonNode, onVisibleClick));
-				buttonNode.addEventListener('click', onVisibleClick);
+				this.pushEvent(buttonNode, 'click', onVisibleClick);
 			});
-			document.addEventListener('structuredTag', () => {
-				this.visibleClickEvents.forEach((value) => {
-					value.object.removeEventListener('click', value.trigger);
-				});
-			}, { once: true });
+			document.addEventListener('structuredTag', () => { console.log(123); }, { once: true });
 			/* an 'onResized' event for the 'post[with-collapsed] > sub-post > post-leader > post-leader-advance > button.visibility's */
 			let onResized = this.onPostWithCollapsedResized.bind(this);
-			document.addEventListener('structuredTag', () => {
-				window.removeEventListener('resize', onResized);
-			}, { once: true });
-			window.addEventListener('resize', onResized);
+			this.pushEvent(window, 'resize', onResized);
 		}
 		onPostWithNotice() {
 			/* '[with-notice]' for the 'post's */
@@ -300,7 +295,15 @@
 				}
 			});
 		}
-		static ProceedTag = ['onPostDateString', 'onPostWithCollapsed', 'onPostWithNotice', 'onImgAlt', 'onIframeTitle', 'onButtonRoleAriaLabel', 'onARoleAriaLabel']
+		static TagCorotinues = [
+			DispatcherStateMachine.prototype.onPostDateString,
+			DispatcherStateMachine.prototype.onPostWithCollapsed,
+			DispatcherStateMachine.prototype.onPostWithNotice,
+			DispatcherStateMachine.prototype.onImgAlt,
+			DispatcherStateMachine.prototype.onIframeTitle,
+			DispatcherStateMachine.prototype.onButtonRoleAriaLabel,
+			DispatcherStateMachine.prototype.onARoleAriaLabel
+		]
 		operatePost(node, attribute, selector, bind = null) {
 			let original = !node.hasAttribute('as-is') && !node.hasAttribute('with-collapsed') && !node.has(':scope > sub-post > post-content > post');
 			let matched = (siblingProperty, classSelector) => {
@@ -414,17 +417,41 @@
 		}
 		endScroll() {
 			if (this.scrollingStarted && !scrolledInto()) {
-				this.state = DispatcherStateMachine.ProceedStyle.indexOf('endScroll');
+				this.state = DispatcherStateMachine.StyleCoroutines.indexOf(this.endScroll);
 			}
 		}
-		static ProceedStyle = ['onPost', 'imgDeferredSrc', 'iframeDeferredSrc', 'imgLoadingSrc', 'iframeLoadingSrc', 'beginScroll', 'endScroll']
+		static StyleCoroutines = [
+			DispatcherStateMachine.prototype.onPost,
+			DispatcherStateMachine.prototype.imgDeferredSrc,
+			DispatcherStateMachine.prototype.iframeDeferredSrc,
+			DispatcherStateMachine.prototype.imgLoadingSrc,
+			DispatcherStateMachine.prototype.iframeLoadingSrc,
+			DispatcherStateMachine.prototype.beginScroll,
+			DispatcherStateMachine.prototype.endScroll
+		]
 		moveNext() {
-			let proceeder = !this.isLoaded ? DispatcherStateMachine.ProceedTag : DispatcherStateMachine.ProceedStyle;
-			this[proceeder[this.state++]]();
-			if (this.state == proceeder.length) {
+			let corotinues = !this.isLoaded ? DispatcherStateMachine.TagCorotinues : DispatcherStateMachine.StyleCoroutines;
+			corotinues[this.state++].call(this);
+			if (this.state == corotinues.length) {
 				this.isLoaded = true;
 				this.state = 0;
 			}
+		}
+		resetState() {
+			this.state = 0;
+			this.isLoaded = false;
+			this.hasScrolled = false;
+			this.scrollingStarted = false;
+			this.resizingAgentCounter = 0;
+			while (this.registeredEvents.length > 0) {
+				let event = this.registeredEvents.pop();
+				event.remove();
+			}
+		}
+		pushEvent(target, type, listener, options = undefined) {
+			let event = new Event(target, type, listener, options);
+			this.registeredEvents.push(event);
+			event.add();
 		}
 	};
 	let dispatcher = new DispatcherStateMachine();
