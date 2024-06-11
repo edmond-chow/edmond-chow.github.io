@@ -105,7 +105,7 @@
 					transition-duration: 1s;
 					transition-timing-function: ease-in-out;
 				}
-				post[with-collapsed] > sub-post > post-content.resized {
+				post[with-collapsed] > sub-post > post-content.resizing {
 					transition-duration: unset;
 				}
 				major.tiny > sub-major post[with-collapsed] > sub-post > post-content {

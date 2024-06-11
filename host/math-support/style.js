@@ -157,26 +157,26 @@
 				return buttonNode;
 			}
 		}
-		sizePostWithCollapsedButton(postContentNode, extensied) {
-			if (extensied) {
+		drawPostWithCollapsedButtonBegin(postContentNode, buttonNode, narrowFrame) {
+			if (narrowFrame) {
 				postContentNode.style.aspectRatio = '';
-			} else {
-				postContentNode.style.aspectRatio = postContentNode.offsetWidth.toString() + ' / ' + postContentNode.scrollHeight.toString();
-			}
-		}
-		drawPostWithCollapsedButton(postContentNode, buttonNode, extensied) {
-			if (extensied) {
-				postContentNode.classList.remove('no-scrollbar');
 				buttonNode.classList.remove('up');
 				buttonNode.classList.add('down');
-				buttonNode.classList.remove('extensied');
 				buttonNode.textContent = '展開';
 			} else {
-				postContentNode.classList.add('no-scrollbar');
+				postContentNode.style.aspectRatio = postContentNode.offsetWidth.toString() + ' / ' + postContentNode.scrollHeight.toString();
 				buttonNode.classList.add('up');
 				buttonNode.classList.remove('down');
-				buttonNode.classList.add('extensied');
 				buttonNode.textContent = '縮小';
+			}
+		}
+		drawPostWithCollapsedButtonEnd(postContentNode, buttonNode, narrowFrame) {
+			if (narrowFrame) {
+				postContentNode.classList.remove('no-scrollbar');
+				buttonNode.classList.remove('extensied');
+			} else {
+				postContentNode.classList.add('no-scrollbar');
+				buttonNode.classList.add('extensied');
 			}
 		}
 		async onPostWithCollapsedVisibleClick(postNode, e) {
@@ -185,13 +185,13 @@
 			if (postValue.complete && e.target.parentElement == postValue.postLeaderAdvanceNode) {
 				postValue.postContentNode.classList.remove('no-scrollbar');
 				let extensied = e.target.classList.contains('extensied');
+				this.drawPostWithCollapsedButtonBegin(postValue.postContentNode, e.target, extensied);
 				this.onLazyFrozen(postValue.postContentNode, true);
 				e.target.classList.add('disabled');
-				this.sizePostWithCollapsedButton(postValue.postContentNode, extensied);
 				await defer(1000);
+				this.drawPostWithCollapsedButtonEnd(postValue.postContentNode, e.target, extensied);
 				this.onLazyFrozen(postValue.postContentNode, false);
 				e.target.classList.remove('disabled');
-				this.drawPostWithCollapsedButton(postValue.postContentNode, e.target, extensied);
 			}
 		}
 		operatePostWithCollapsedResizingAgent(resizingOperation) {
@@ -203,25 +203,25 @@
 				return value.postLeaderAdvanceNode.has(':scope > button.advance.visibility');
 			}).forEach((postValue) => {
 				let buttonNode = postValue.postLeaderAdvanceNode.get(':scope > button.advance.visibility');
-				resizingOperation(buttonNode, postValue.postContentNode);
+				resizingOperation(postValue.postContentNode, buttonNode);
 			});
 		}
 		async onPostWithCollapsedResized() {
-			this.operatePostWithCollapsedResizingAgent((buttonNode, postContentNode) => {
+			this.operatePostWithCollapsedResizingAgent((postContentNode, buttonNode) => {
 				if (buttonNode.classList.contains('extensied')) {
 					postContentNode.style.aspectRatio = 'auto';
 				}
-				postContentNode.classList.add('resized');
+				postContentNode.classList.add('resizing');
 				buttonNode.classList.add('pseudo-disabled');
 			});
 			++this.resizingAgentCounter;
 			await defer(250);
 			if (--this.resizingAgentCounter == 0) {
-				this.operatePostWithCollapsedResizingAgent((buttonNode, postContentNode) => {
+				this.operatePostWithCollapsedResizingAgent((postContentNode, buttonNode) => {
 					if (buttonNode.classList.contains('extensied')) {
 						postContentNode.style.aspectRatio = postContentNode.offsetWidth.toString() + ' / ' + postContentNode.scrollHeight.toString();
 					}
-					postContentNode.classList.remove('resized');
+					postContentNode.classList.remove('resizing');
 					buttonNode.classList.remove('pseudo-disabled');
 				});
 			}
@@ -246,7 +246,8 @@
 				return value.complete && value.postNode.hasAttribute('with-collapsed');
 			}).forEach((postValue) => {
 				let buttonNode = this.newPostWithCollapsedButton(postValue.postLeaderAdvanceNode);
-				this.drawPostWithCollapsedButton(postValue.postContentNode, buttonNode, true);
+				this.drawPostWithCollapsedButtonBegin(postValue.postContentNode, buttonNode, true);
+				this.drawPostWithCollapsedButtonEnd(postValue.postContentNode, buttonNode, true);
 				let onVisibleClick = this.onPostWithCollapsedVisibleClick.bind(this, postValue.postNode);
 				this.pushEvent(buttonNode, 'click', onVisibleClick);
 			});
