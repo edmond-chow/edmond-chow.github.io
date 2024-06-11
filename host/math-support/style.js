@@ -70,14 +70,21 @@
 			});
 			return cookie;
 		},
+		function setFrameState(isDarkMode) {
+			document.body.id = !isDarkMode ? 'blur' : '';
+			setCookie('classical-black-mode', isDarkMode.toString());
+		},
+		function getFrameState() {
+			return document.body.id != 'blur';
+		},
+		function popFrameState() {
+			return getCookie('classical-black-mode') == 'true';
+		},
 		function switchBlurredState() {
-			if (document.body.id == 'blur') {
-				document.body.id = '';
-				setCookie('non-blur', 'true');
-			} else {
-				document.body.id = 'blur';
-				setCookie('non-blur', 'false');
-			}
+			setFrameState(!getFrameState());
+		},
+		function renderBlurredState() {
+			setFrameState(popFrameState());
 		},
 		function isInstance(visualizedNode) {
 			[visualizedNode].constrainedWithAndThrow(Node);
@@ -95,12 +102,6 @@
 		}
 	].bindTo(window);
 	/* { event-dispatcher } */
-	document.addEventListener('structuredTag', () => {
-		/* switchBlurredState() */
-		if (getCookie('non-blur') == 'true') {
-			switchBlurredState();
-		}
-	});
 	class Event {
 		constructor(target, type, listener, options) {
 			this.target = target;
@@ -119,6 +120,9 @@
 		constructor() {
 			this.registeredEvents = [];
 			this.resetState();
+		}
+		onDispatcherLoad() {
+			document.body.id = 'frame-state';
 		}
 		onPostDateString() {
 			/* integrating the 'post-leader-date's by including the '[date-string]'s */
@@ -296,7 +300,8 @@
 				}
 			});
 		}
-		static TagCorotinues = [
+		static TagCoroutines = [
+			DispatcherStateMachine.prototype.onDispatcherLoad,
 			DispatcherStateMachine.prototype.onPostDateString,
 			DispatcherStateMachine.prototype.onPostWithCollapsed,
 			DispatcherStateMachine.prototype.onPostWithNotice,
@@ -361,18 +366,16 @@
 				value.setAttribute('alt', url.href.substring(url.href.lastIndexOf('/') + 1));
 				value.setAttribute('src', value.getAttribute('deferred-src'));
 				value.removeAttribute('deferred-src');
-				function onError() {
-					this.setAttribute('pre-deferred-src', this.getAttribute('src'));
-					this.removeAttribute('src');
-					this.removeEventListener('error', onError);
-					this.removeEventListener('load', onLoad);
-				}
-				function onLoad() {
-					this.removeEventListener('error', onError);
-					this.removeEventListener('load', onLoad);
-				}
-				value.addEventListener('error', onError);
-				value.addEventListener('load', onLoad);
+				let listener = (e) => {
+					if (e.type == 'error') {
+						e.target.setAttribute('pre-deferred-src', e.target.getAttribute('src'));
+						e.target.removeAttribute('src');
+					}
+					e.target.removeEventListener('error', listener);
+					e.target.removeEventListener('load', listener);
+				};
+				value.addEventListener('error', listener);
+				value.addEventListener('load', listener);
 			});
 		}
 		iframeDeferredSrc() {
@@ -381,12 +384,13 @@
 				let url = new URL(value.getAttribute('deferred-src'), document.baseURI);
 				if (document.location.origin == url.origin) {
 					let request = new XMLHttpRequest();
-					request.addEventListener('load', function onLoad() {
-						if (this.status >= 400 && this.status <= 599) {
+					let listener = (e) => {
+						if (e.target.status >= 400 && e.target.status <= 599) {
 							value.setAttribute('referred', '');
 						}
-						this.removeEventListener('load', onLoad);
-					});
+						e.target.removeEventListener('load', listener);
+					};
+					request.addEventListener('load', listener);
 					request.open('GET', url.href, true);
 					request.send();
 				}
@@ -409,16 +413,25 @@
 				value.removeAttribute('src');
 			});
 		}
-		beginScroll() {
-			if (!this.hasScrolled && scrolledInto()) {
-				rescrollView();
-				this.hasScrolled = true;
-				this.scrollingStarted = true;
+		beginFrameState() {
+			if (!this.hasScrolled) {
+				if (scrolledInto()) {
+					renderBlurredState();
+					rescrollView();
+					this.hasScrolled = true;
+					this.scrollingStarted = true;
+				} else {
+					this.state = DispatcherStateMachine.StyleCoroutines.indexOf(this.beginFrameState);
+				}
 			}
 		}
-		endScroll() {
-			if (this.scrollingStarted && !scrolledInto()) {
-				this.state = DispatcherStateMachine.StyleCoroutines.indexOf(this.endScroll);
+		endFrameState() {
+			if (this.scrollingStarted) {
+				if (scrolledInto()) {
+					this.scrollingStarted = false;
+				} else {
+					this.state = DispatcherStateMachine.StyleCoroutines.indexOf(this.endFrameState);
+				}
 			}
 		}
 		static StyleCoroutines = [
@@ -427,13 +440,13 @@
 			DispatcherStateMachine.prototype.iframeDeferredSrc,
 			DispatcherStateMachine.prototype.imgLoadingSrc,
 			DispatcherStateMachine.prototype.iframeLoadingSrc,
-			DispatcherStateMachine.prototype.beginScroll,
-			DispatcherStateMachine.prototype.endScroll
+			DispatcherStateMachine.prototype.beginFrameState,
+			DispatcherStateMachine.prototype.endFrameState,
 		]
 		moveNext() {
-			let corotinues = !this.isLoaded ? DispatcherStateMachine.TagCorotinues : DispatcherStateMachine.StyleCoroutines;
-			corotinues[this.state++].call(this);
-			if (this.state == corotinues.length) {
+			let coroutines = !this.isLoaded ? DispatcherStateMachine.TagCoroutines : DispatcherStateMachine.StyleCoroutines;
+			coroutines[this.state++].call(this);
+			if (this.state == coroutines.length) {
 				this.isLoaded = true;
 				this.state = 0;
 			}
