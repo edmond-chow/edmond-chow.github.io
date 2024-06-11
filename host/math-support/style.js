@@ -52,23 +52,22 @@
 	[
 		function setCookie(property, value) {
 			[property, value].constrainedWithAndThrow(String, String);
-			document.cookie = property + '=' + value;
+			document.cookie = property + '=' + value + '; SameSite=Struct';
 		},
 		function getCookie(property) {
 			[property].constrainedWithAndThrow(String);
-			let cookie = '';
-			document.cookie.split(';').every((value) => {
-				let pair = value.split('=');
-				pair = pair.map((value) => {
+			let value = '';
+			document.cookie.split(';').every((cookie) => {
+				let pair = cookie.split('=').map((value) => {
 					return value.trim();
 				});
-				if (pair[0] == property) {
-					cookie = pair[1];
+				if (property.trim() == pair[0]) {
+					value = pair[1];
 					return false;
 				}
 				return true;
 			});
-			return cookie;
+			return value;
 		},
 		function setFrameState(isDarkMode) {
 			document.body.id = !isDarkMode ? 'blur' : '';
