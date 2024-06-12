@@ -136,7 +136,7 @@
 				major.tiny > sub-major post > sub-post > post-leader > post-leader-section > post-leader-date {
 					padding: 15px 15px 24px 15px;
 				}
-				body#blur post > sub-post > post-leader > post-leader-section > post-leader-date {
+				body.blur post > sub-post > post-leader > post-leader-section > post-leader-date {
 					color: rgba(0, 0, 0, 0.5);
 				}
 				/* button */
@@ -175,7 +175,7 @@
 				major.tiny > sub-major post[with-graphics] > sub-post > post-content > img.first-visible-child:last-of-type {
 					padding: 0px 0px 12px 0px;
 				}
-				body#blur post[with-graphics] > sub-post > post-content > img.first-visible-child.last-visible-child {
+				body.blur post[with-graphics] > sub-post > post-content > img.first-visible-child.last-visible-child {
 					border-bottom-left-radius: inherit;
 					border-bottom-right-radius: inherit;
 				}
@@ -192,7 +192,7 @@
 					background-color: rgba(0, 0, 0, .5);
 					text-align: center;
 				}
-				body#blur post[with-notice] > sub-post > post-content > notice > sub-notice {
+				body.blur post[with-notice] > sub-post > post-content > notice > sub-notice {
 					border: 0px;
 					border-radius: 5px;
 					box-shadow: 0 0 32px rgba(0, 0, 0, 0.5);
@@ -248,7 +248,7 @@
 					overflow: hidden;
 					width: 100%;
 				}
-				body#blur post[with-inline-frame] > sub-post > post-content > iframe:first-of-type.last-visible-child {
+				body.blur post[with-inline-frame] > sub-post > post-content > iframe:first-of-type.last-visible-child {
 					border-bottom-left-radius: inherit;
 					border-bottom-right-radius: inherit;
 				}
@@ -267,7 +267,7 @@
 					background-position: center;
 					background-size: cover;
 				}
-				body#blur.chung-style post[with-notice] > sub-post > post-content > notice.chung-notice > sub-notice {
+				body.blur.chung-style post[with-notice] > sub-post > post-content > notice.chung-notice > sub-notice {
 					border: #FFD54F 2px solid;
 					padding: 8px;
 				}
@@ -309,19 +309,19 @@
 	@layer /* backdrop */ {
 		@layer /* default */ {
 			/* background-image with 'basis-layer, backdrop-container > blurred-filter' */
-			body basis-layer, body#blur major > sub-major > post > sub-post > backdrop-container > blurred-filter {
+			body basis-layer, body.blur major > sub-major > post > sub-post > backdrop-container > blurred-filter {
 				background-image: var(--background-image, url('analysis.jpg'));
 			}
 		}
 		@layer /* beautiful-math-style */ {
 			/* background-image with 'basis-layer, backdrop-container > blurred-filter' */
-			body.beautiful-math-style basis-layer, body#blur.beautiful-math-style major > sub-major > post > sub-post > backdrop-container > blurred-filter {
+			body.beautiful-math-style basis-layer, body.blur.beautiful-math-style major > sub-major > post > sub-post > backdrop-container > blurred-filter {
 				background-image: var(--background-image, url('beautiful-math.jpg'));
 			}
 		}
 		@layer /* chung-style */ {
 			/* background-image with 'basis-layer, backdrop-container > blurred-filter' */
-			body.chung-style basis-layer, body#blur.chung-style major > sub-major > post > sub-post > backdrop-container > blurred-filter {
+			body.chung-style basis-layer, body.blur.chung-style major > sub-major > post > sub-post > backdrop-container > blurred-filter {
 				background-image: var(--background-image, url('chung-galaxy.jpg'));
 			}
 		}

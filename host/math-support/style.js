@@ -70,19 +70,23 @@
 			return value;
 		},
 		function setFrameState(isDarkMode) {
-			document.body.id = !isDarkMode ? 'blur' : '';
+			if (isDarkMode) {
+				document.body.classList.remove('blur');
+			} else {
+				document.body.classList.add('blur');
+			}
 			setCookie('classical-black-mode', isDarkMode.toString());
 		},
 		function getFrameState() {
-			return document.body.id != 'blur';
+			return !document.body.classList.contains('blur');
 		},
 		function popFrameState() {
 			return getCookie('classical-black-mode') == 'true';
 		},
-		function switchBlurredState() {
+		function switchFrameState() {
 			setFrameState(!getFrameState());
 		},
-		function renderBlurredState() {
+		function renderFrameState() {
 			setFrameState(popFrameState());
 		},
 		function isInstance(visualizedNode) {
@@ -121,7 +125,10 @@
 			this.resetState();
 		}
 		onDispatcherLoad() {
-			document.body.id = 'frame-state';
+			renderFrameState();
+			forAll('button#frame-state').forEach((value) => {
+				this.pushEvent(value, 'click', switchFrameState);
+			});
 		}
 		onPostDateString() {
 			/* integrating the 'post-leader-date's by including the '[date-string]'s */
@@ -412,24 +419,23 @@
 				value.removeAttribute('src');
 			});
 		}
-		beginFrameState() {
+		beginFrameScroll() {
 			if (!this.hasScrolled) {
 				if (scrolledInto()) {
-					renderBlurredState();
 					rescrollView();
 					this.hasScrolled = true;
 					this.scrollingStarted = true;
 				} else {
-					this.state = DispatcherStateMachine.StyleCoroutines.indexOf(this.beginFrameState);
+					this.state = DispatcherStateMachine.StyleCoroutines.indexOf(this.beginFrameScroll);
 				}
 			}
 		}
-		endFrameState() {
+		endFrameScroll() {
 			if (this.scrollingStarted) {
 				if (scrolledInto()) {
 					this.scrollingStarted = false;
 				} else {
-					this.state = DispatcherStateMachine.StyleCoroutines.indexOf(this.endFrameState);
+					this.state = DispatcherStateMachine.StyleCoroutines.indexOf(this.endFrameScroll);
 				}
 			}
 		}
@@ -439,8 +445,8 @@
 			DispatcherStateMachine.prototype.iframeDeferredSrc,
 			DispatcherStateMachine.prototype.imgLoadingSrc,
 			DispatcherStateMachine.prototype.iframeLoadingSrc,
-			DispatcherStateMachine.prototype.beginFrameState,
-			DispatcherStateMachine.prototype.endFrameState
+			DispatcherStateMachine.prototype.beginFrameScroll,
+			DispatcherStateMachine.prototype.endFrameScroll
 		]
 		moveNext() {
 			let coroutines = !this.isLoaded ? DispatcherStateMachine.TagCoroutines : DispatcherStateMachine.StyleCoroutines;
@@ -468,6 +474,9 @@
 		}
 	};
 	let dispatcher = new DispatcherStateMachine();
+	document.addEventListener('structuredTag', () => {
+		dispatcher.moveNext();
+	});
 	document.addEventListener('formedStyle', () => {
 		dispatcher.moveNext();
 	});
