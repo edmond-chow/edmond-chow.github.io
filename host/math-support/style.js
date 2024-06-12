@@ -440,7 +440,7 @@
 			DispatcherStateMachine.prototype.imgLoadingSrc,
 			DispatcherStateMachine.prototype.iframeLoadingSrc,
 			DispatcherStateMachine.prototype.beginFrameState,
-			DispatcherStateMachine.prototype.endFrameState,
+			DispatcherStateMachine.prototype.endFrameState
 		]
 		moveNext() {
 			let coroutines = !this.isLoaded ? DispatcherStateMachine.TagCoroutines : DispatcherStateMachine.StyleCoroutines;
