@@ -43,18 +43,6 @@
 		}
 	].bindTo(window);
 	[
-		function addCompleteState() {
-			this.complete = (() => {
-				let complete = true;
-				Object.keys(this).forEach((value) => {
-					if (this[value] == null) {
-						complete = false;
-					}
-				});
-				return complete;
-			})();
-			Object.freeze(this);
-		},
 		function constrainedWith(...types) {
 			let arguments = Array.from(this);
 			if (arguments.length != types.length) {
