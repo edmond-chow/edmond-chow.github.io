@@ -764,8 +764,9 @@
 			bindToAsyncify();
 			callMain();
 		}
+		await suspend();
 		/* .no-text */
-		await Array.from(document.getElementsByClassName('no-text')).map((value) => {
+		Array.from(document.getElementsByClassName('no-text')).map((value) => {
 			return value.childNodes;
 		}).forEach((value) => {
 			value.forEach((value) => {
