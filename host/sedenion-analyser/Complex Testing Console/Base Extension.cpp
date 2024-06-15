@@ -38,13 +38,13 @@ namespace CmplxConExt
 		namespace native
 		{
 			EM_JS(std::uint8_t, foreground, (), {
-				return iostream.getForegroundColor().toConsoleColor();
+				return Console.GetColorCode(iostream.ForegroundColor);
 			});
 			EM_JS(std::uint8_t, background, (), {
-				return iostream.getBackgroundColor().toConsoleColor();
+				return Console.GetColorCode(iostream.BackgroundColor);
 			});
 			EM_JS(const wchar_t*, title, (), {
-				return getUTF32String(title, getTitle());
+				return getUTF32String(title, Console.Title);
 			});
 			EM_JS(std::char_traits<wchar_t>::int_type, color_char_code, (std::uint8_t code), {
 				return Console.GetColorCharCode(code);

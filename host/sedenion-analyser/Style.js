@@ -107,9 +107,9 @@
 	await suspend();
 	/* { property-definer } */
 	[
-		function hardFreeze(type, instance = window) {
+		function hardFreeze(type, scope = window) {
 			if (type instanceof Function && type.prototype instanceof Object) {
-				[type].bindTo(instance);
+				[type].bindTo(scope);
 				Object.freeze(type.prototype);
 			}
 		},
@@ -120,10 +120,10 @@
 				});
 			}
 		},
-		function shareProperties(type, keys) {
+		function shareProperties(type, keys, static = false) {
 			if (type instanceof Function && type.prototype instanceof Object) {
 				keys.forEach((key) => {
-					Object.defineProperty(type.prototype, key, { enumerable: true, configurable: false });
+					Object.defineProperty(static ? type : type.prototype, key, { enumerable: true, configurable: false });
 				});
 			}
 		}
@@ -143,7 +143,7 @@
 			return this.Self == null || this.SpanNodes.length == 0 ? null : this.SpanNodes[this.SpanNodes.length - 1];
 		}
 	};
-	shareProperties(LineNodeWrapper, ['SpanNodes', 'LastSpanNode']);
+	shareProperties(LineNodeWrapper, ['SpanNodes', 'LastSpanNode'], false);
 	hardFreeze(LineNodeWrapper, {});
 	class Console {
 		constructor() {
@@ -357,6 +357,12 @@
 			'rxvt',
 			'vintage'
 		]
+		static GetColorCode(name) {
+			return Console.Colors.indexOf(name);
+		}
+		static GetColorName(code) {
+			return Console.Colors[code];
+		}
 		static GetColorCharCode(code) {
 			if (code >= 0 && code <= 9) {
 				return code + 48;
@@ -368,19 +374,19 @@
 				throw 'The code out of range!';
 			}
 		}
-		getForegroundColor() {
+		get ForegroundColor() {
 			return this.ConsoleNode.getAttribute('foreground');
 		}
-		getBackgroundColor() {
+		set ForegroundColor(value) {
+			[value].constrainedWithAndThrow(String);
+			return this.ConsoleNode.setAttribute('foreground', value);
+		}
+		get BackgroundColor() {
 			return this.ConsoleNode.getAttribute('background');
 		}
-		setForegroundColor(color) {
-			[color].constrainedWithAndThrow(String);
-			return this.ConsoleNode.setAttribute('foreground', color);
-		}
-		setBackgroundColor(color) {
-			[color].constrainedWithAndThrow(String);
-			return this.ConsoleNode.setAttribute('background', color);
+		set BackgroundColor(value) {
+			[value].constrainedWithAndThrow(String);
+			return this.ConsoleNode.setAttribute('background', value);
 		}
 		async writeLine(content, controlized = true) {
 			[content, controlized].constrainedWithAndThrow(String, Boolean);
@@ -394,9 +400,9 @@
 			let pending = false;
 			let control = null;
 			let breaking = false;
-			let foreground = Console.Colors.indexOf(this.ConsoleNode.getAttribute('foreground'));
-			let background = Console.Colors.indexOf(this.ConsoleNode.getAttribute('background'));
-			let title = getTitle();
+			let foreground = Console.GetColorCode(this.ForegroundColor);
+			let background = Console.GetColorCode(this.BackgroundColor);
+			let title = Console.Title;
 			let Fragment = document.createDocumentFragment();
 			let LineNode = this.LastLineNode.Self;
 			let SpanNode = this.LastLineNode.LastSpanNode;
@@ -406,9 +412,9 @@
 				for (let i = 0; i < this.LineNodes.length - 8192; i++) {
 					this.LineNodes[i].Self.remove();
 				}
-				this.ConsoleNode.setAttribute('foreground', Console.Colors[foreground]);
-				this.ConsoleNode.setAttribute('background', Console.Colors[background]);
-				setTitle(title);
+				this.ForegroundColor = Console.GetColorName(foreground);
+				this.BackgroundColor = Console.GetColorName(background);
+				Console.Title = title;
 				this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
 			};
 			let pushSpan = () => {
@@ -630,22 +636,20 @@
 			[node].constrainedWithAndThrow(Element);
 			node.append(this.ConsoleNode);
 		}
-	}
+		static get Title() {
+			return document.title;
+		}
+		static set Title(value) {
+			[value].constrainedWithAndThrow(String);
+			document.title = value;
+		}
+	};
 	Console.Colors[0xFF] = 'default';
 	Object.freeze(Console.Colors);
 	Object.freeze(Console.Themes);
-	shareProperties(Console, ['LineNodes', 'LastLineNode', 'Scheme', 'getForegroundColor', 'getBackgroundColor', 'setForegroundColor', 'setBackgroundColor', 'writeLine', 'write', 'readLine', 'read', 'putBack', 'pushInput', 'clear', 'pressAnyKey', 'completed', 'terminated', 'bindTo']);
-	hardFreeze(Console);
-	[
-		function fromConsoleColor() {
-			return Console.Colors[this];
-		}
-	].bindTo(Number.prototype);
-	[
-		function toConsoleColor() {
-			return Console.Colors.indexOf(this.toString());
-		}
-	].bindTo(String.prototype);
+	shareProperties(Console, ['LineNodes', 'LastLineNode', 'Scheme', 'ForegroundColor', 'BackgroundColor', 'writeLine', 'write', 'readLine', 'read', 'putBack', 'pushInput', 'clear', 'pressAnyKey', 'completed', 'terminated', 'bindTo'], false);
+	shareProperties(Console, ['Colors', 'Themes', 'GetColorCode', 'GetColorName', 'GetColorCharCode', 'Title'], true);
+	hardFreeze(Console, window);
 	/* { functionality } */
 	let getUTFString = (caller, converter, counter, width, fnScope, jsString) => {
 		[fnScope, jsString].constrainedWithAndThrow(Function.toNullable(), String.toNullable());
@@ -671,13 +675,6 @@
 		},
 		function getUTF32String(fnScope, jsString) {
 			return getUTFString(getUTF32String, stringToUTF32, lengthBytesUTF32, 4, fnScope, jsString);
-		},
-		function getTitle() {
-			return document.title;
-		},
-		function setTitle(title) {
-			[title].constrainedWithAndThrow(String);
-			document.title = title;
 		}
 	].bindTo(window);
 	/* { event-dispatcher } */
