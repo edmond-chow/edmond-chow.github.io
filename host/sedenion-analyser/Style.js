@@ -698,16 +698,17 @@
 			this.iostream.InputNode.focus();
 		}
 		async fetchModule() {
+			let captured = {};
 			let overrides = {
 				iostream: this.iostream,
 				getUTF8String: (fnScope, jsString) => {
-					return this.getUTFString({}, this.functionList['stringToUTF8'], this.functionList['lengthBytesUTF8'], 1, fnScope, jsString);
+					return this.getUTFString(captured, this.functionList['stringToUTF8'], this.functionList['lengthBytesUTF8'], 1, fnScope, jsString);
 				},
 				getUTF16String: (fnScope, jsString) => {
-					return this.getUTFString({}, this.functionList['stringToUTF16'], this.functionList['lengthBytesUTF16'], 2, fnScope, jsString);
+					return this.getUTFString(captured, this.functionList['stringToUTF16'], this.functionList['lengthBytesUTF16'], 2, fnScope, jsString);
 				},
 				getUTF32String: (fnScope, jsString) => {
-					return this.getUTFString({}, this.functionList['stringToUTF32'], this.functionList['lengthBytesUTF32'], 4, fnScope, jsString);
+					return this.getUTFString(captured, this.functionList['stringToUTF32'], this.functionList['lengthBytesUTF32'], 4, fnScope, jsString);
 				},
 				onRuntimeInitialized: () => {
 					this.abortState = false;
