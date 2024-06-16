@@ -38,10 +38,10 @@ namespace CmplxConExt
 		namespace native
 		{
 			EM_JS(std::uint8_t, foreground, (), {
-				return Console.GetColorCode(iostream.ForegroundColor);
+				return Console.GetColorCode(Module['iostream'].ForegroundColor);
 			});
 			EM_JS(std::uint8_t, background, (), {
-				return Console.GetColorCode(iostream.BackgroundColor);
+				return Console.GetColorCode(Module['iostream'].BackgroundColor);
 			});
 			EM_JS(const wchar_t*, title, (), {
 				return Module['getUTF32String'](title, Console.Title);
@@ -50,18 +50,18 @@ namespace CmplxConExt
 				return Console.GetColorCharCode(code);
 			});
 			EM_ASYNC_JS(const wchar_t*, read_line, (), {
-				let line = await iostream.readLine();
-				await iostream.writeLine(line, false);
+				let line = await Module['iostream'].readLine();
+				await Module['iostream'].writeLine(line, false);
 				return Module['getUTF32String'](__asyncjs__read_line, line);
 			});
 			EM_ASYNC_JS(void, write_code, (const wchar_t* content), {
-				await iostream.write(UTF32ToString(content));
+				await Module['iostream'].write(UTF32ToString(content));
 			});
 			EM_ASYNC_JS(void, press_any_key, (), {
-				await iostream.pressAnyKey();
+				await Module['iostream'].pressAnyKey();
 			});
 			EM_JS(void, clear, (), {
-				iostream.clear();
+				Module['iostream'].clear();
 			});
 		}
 		struct console

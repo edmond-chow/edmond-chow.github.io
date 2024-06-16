@@ -662,15 +662,19 @@
 	/* { event-dispatcher } */
 	class ModuleState {
 		/* { infrastructure } */
-		constructor() {
+		constructor(head) {
 			this.isLoaded = false;
+			this.headNode = head;
+			this.iostream = new Console();
+			lockFields(this, ['isLoaded', 'functionList', 'abortState', 'exitCode'], true);
+			lockFields(this, ['headNode', 'iostream'], false);
 		}
 		async structuredTag() {
 			this.initStream();
 			await this.fetchModule();
 		}
 		async formedStyle() {
-			this.noText();
+			this.clearText();
 			await this.monitorProcess();
 		}
 		startAsync() {
@@ -690,13 +694,12 @@
 		}
 		/* { processor } */
 		initStream() {
-			Object.defineProperty(window, 'iostream', getDescriptor(new Console(), true));
-			iostream.bindTo(document.body);
-			iostream.InputNode.focus();
-			document.body.classList.add('no-text');
+			this.iostream.bindTo(this.headNode);
+			this.iostream.InputNode.focus();
 		}
 		async fetchModule() {
 			let overrides = {
+				iostream: this.iostream,
 				getUTF8String: this.getUTF8String.bind(this),
 				getUTF16String: this.getUTF16String.bind(this),
 				getUTF32String: this.getUTF32String.bind(this),
@@ -726,23 +729,19 @@
 				}
 			};
 		}
-		noText() {
-			Array.from(document.getElementsByClassName('no-text')).map((value) => {
-				return value.childNodes;
-			}).forEach((value) => {
-				value.forEach((value) => {
-					if (value.nodeName == '#text') {
-						value.textContent = '';
-					}
-				});
-			});
+		clearText() {
+			this.headNode.childNodes.forEach((value) => {
+				if (value.nodeName == '#text') {
+					value.textContent = '';
+				}
+			});			
 		}
 		async monitorProcess() {
 			if (this.functionList['keepRuntimeAlive']() == false) {
 				if (!this.abortState) {
-					await iostream.completed(this.exitCode);
+					await this.iostream.completed(this.exitCode);
 				} else {
-					await iostream.terminated();
+					await this.iostream.terminated();
 				}
 				await this.fetchModule();
 			}
@@ -773,6 +772,8 @@
 			return this.getUTFString(this.getUTF32String, this.functionList['stringToUTF32'], this.functionList['lengthBytesUTF32'], 4, fnScope, jsString);
 		}
 	};
-	let state = new ModuleState();
-	state.startAsync();
+	shareProperties(ModuleState, ['startAsync'], false);
+	hardFreeze(ModuleState, window);
+	Object.defineProperty(window, 'dispatcher', getDescriptor(new ModuleState(document.body), true));
+	dispatcher.startAsync();
 })();
