@@ -659,135 +659,120 @@
 	shareProperties(Console, ['LineNodes', 'LastLineNode', 'Scheme', 'ForegroundColor', 'BackgroundColor', 'writeLine', 'write', 'readLine', 'read', 'putBack', 'pushInput', 'clear', 'pressAnyKey', 'completed', 'terminated', 'bindTo'], false);
 	shareProperties(Console, ['Colors', 'Themes', 'GetColorCode', 'GetColorName', 'GetColorCharCode', 'Title'], true);
 	hardFreeze(Console, window);
-	/* { functionality } */
-	let getUTFString = (caller, converter, counter, width, fnScope, jsString) => {
-		[fnScope, jsString].constrainedWithAndThrow(Function.toNullable(), String.toNullable());
-		let myScope = fnScope == null ? caller : fnScope;
-		let stringObject = jsString == null ? "" : jsString;
-		let stringLength = counter(stringObject) + width;
-		if (!myScope.bufferSize || myScope.bufferSize < stringLength) {
-			if (myScope.bufferSize) {
-				_free(myScope.bufferData);
-			}
-			myScope.bufferData = _malloc(stringLength);
-			myScope.bufferSize = stringLength;
-		}
-		converter(stringObject, myScope.bufferData, myScope.bufferSize);
-		return myScope.bufferData;
-	};
-	[
-		function getUTF8String(fnScope, jsString) {
-			return getUTFString(getUTF8String, stringToUTF8, lengthBytesUTF8, 1, fnScope, jsString);
-		},
-		function getUTF16String(fnScope, jsString) {
-			return getUTFString(getUTF16String, stringToUTF16, lengthBytesUTF16, 2, fnScope, jsString);
-		},
-		function getUTF32String(fnScope, jsString) {
-			return getUTFString(getUTF32String, stringToUTF32, lengthBytesUTF32, 4, fnScope, jsString);
-		}
-	].bindTo(window);
 	/* { event-dispatcher } */
-	let isLoaded = false;
-	let isAborted = false;
-	let memorySlice = null;
-	let bindToAsyncify = () => {
-		Asyncify.asyncPromiseHandlers = {
-			reject: (e) => {
-				if (e instanceof ExitStatus) {
-					return handleException(e);
-				}
-			},
-			resolve: (code) => {
-				if (code instanceof Number || Object.getPrototypeOf(code) == Number.prototype) {
-					try {
-						var ret = code;
-						exitJS(ret, true);
-						return ret;
-					} catch (e) {
-						return handleException(e);
+	class ModuleState {
+		/* { infrastructure } */
+		constructor() {
+			this.isLoaded = false;
+		}
+		async structuredTag() {
+			this.initStream();
+			await this.fetchModule();
+		}
+		async formedStyle() {
+			this.noText();
+			await this.monitorProcess();
+		}
+		startAsync() {
+			(async () => {
+				await suspend(() => {
+					return document.readyState == 'complete';
+				});
+				while (true) {
+					if (!this.isLoaded) {
+						await this.structuredTag();
+						this.isLoaded = true;
 					}
+					await this.formedStyle();
+					await suspend();
 				}
-			}
-		};
-	};
-	let structuredTag = async () => {
-		/* [iostream] */
-		let iostream = new Console();
-		iostream.bindTo(document.body);
-		iostream.InputNode.focus();
-		Object.defineProperty(window, 'iostream', { value: iostream, writable: false, enumerable: true, configurable: false });
-		let fetched = false;
-		Module = {
-			preRun: () => {
-				exitRuntime = Module.__Z13invoke_atexitv;
-				memorySlice = new Int8Array(wasmMemory);
-				quit_ = new Function();
-				fetched = true;
-			},
-			onRuntimeInitialized: () => {
-				bindToAsyncify();
-			},
-			onAbort: () => {
-				Module.__Z12abort_unwindv();
-				isAborted = true;
-				throw new ExitStatus(1);
-			},
-			onExit: (code) => {
-				throw new ExitStatus(code);
-			}
-		};
-		let scriptNode = document.createElement('script');
-		scriptNode.src = 'Sedenion.js';
-		scriptNode.defer = true;
-		document.head.append(scriptNode);
-		await new Promise(async (resolve) => {
-			while (fetched == false) {
-				await suspend();
-			}
-			resolve();
-		});
-		/* .no-text */
-		document.body.classList.add('no-text');
-	};
-	let formedStyle = async () => {
-		/* [iostream] */
-		if (keepRuntimeAlive() == false) {
-			if (isAborted == false) {
-				await iostream.completed(EXITSTATUS != undefined ? EXITSTATUS : 0);
-			} else {
-				await iostream.terminated();
-				isAborted = false;
-			}
-			wasmMemory.buffer = new Int8Array(memorySlice).buffer;
-			EXITSTATUS = undefined;
-			___wasm_call_ctors();
-			bindToAsyncify();
-			callMain();
+			})();
 		}
-		await suspend();
-		/* .no-text */
-		Array.from(document.getElementsByClassName('no-text')).map((value) => {
-			return value.childNodes;
-		}).forEach((value) => {
-			value.forEach((value) => {
-				if (value.nodeName == '#text') {
-					value.textContent = '';
+		/* { processor } */
+		initStream() {
+			Object.defineProperty(window, 'iostream', getDescriptor(new Console(), true));
+			iostream.bindTo(document.body);
+			iostream.InputNode.focus();
+			document.body.classList.add('no-text');
+		}
+		async fetchModule() {
+			let overrides = {
+				getUTF8String: this.getUTF8String.bind(this),
+				getUTF16String: this.getUTF16String.bind(this),
+				getUTF32String: this.getUTF32String.bind(this),
+				onRuntimeInitialized: () => {
+					this.abortState = false;
+					this.exitCode = 0;
+				},
+				onAbort: () => {
+					this.functionList['__Z12abort_unwindv']();
+					this.abortState = true;
+				},
+				onExit: (code) => {
+					this.exitCode = code;
 				}
+			};
+			this.functionList = await Module(overrides);
+			this.functionList.Asyncify.asyncPromiseHandlers = {
+				reject: (e) => {
+					if (e instanceof this.functionList['ExitStatus']) {
+						this.exitCode = e.status;
+					} else {
+						this.abortState = true;
+					}
+				},
+				resolve: (code) => {
+					this.exitCode = code;
+				}
+			};
+		}
+		noText() {
+			Array.from(document.getElementsByClassName('no-text')).map((value) => {
+				return value.childNodes;
+			}).forEach((value) => {
+				value.forEach((value) => {
+					if (value.nodeName == '#text') {
+						value.textContent = '';
+					}
+				});
 			});
-		});
-	};
-	let delegate = async () => {
-		if (isLoaded == false) {
-			await structuredTag();
-			isLoaded = true;
 		}
-		await formedStyle();
+		async monitorProcess() {
+			if (this.functionList['keepRuntimeAlive']() == false) {
+				if (!this.abortState) {
+					await iostream.completed(this.exitCode);
+				} else {
+					await iostream.terminated();
+				}
+				await this.fetchModule();
+			}
+		}
+		/* { functionality } */
+		getUTFString(caller, converter, counter, width, fnScope, jsString) {
+			[fnScope, jsString].constrainedWithAndThrow(Function.toNullable(), String.toNullable());
+			let myScope = fnScope == null ? caller : fnScope;
+			let stringObject = jsString == null ? "" : jsString;
+			let stringLength = counter(stringObject) + width;
+			if (!myScope.bufferSize || myScope.bufferSize < stringLength) {
+				if (myScope.bufferSize) {
+					this.functionList['_free'](myScope.bufferData);
+				}
+				myScope.bufferData = this.functionList['_malloc'](stringLength);
+				myScope.bufferSize = stringLength;
+			}
+			converter(stringObject, myScope.bufferData, myScope.bufferSize);
+			return myScope.bufferData;
+		}
+		getUTF8String(fnScope, jsString) {
+			return this.getUTFString(this.getUTF8String, this.functionList['stringToUTF8'], this.functionList['lengthBytesUTF8'], 1, fnScope, jsString);
+		}
+		getUTF16String(fnScope, jsString) {
+			return this.getUTFString(this.getUTF16String, this.functionList['stringToUTF16'], this.functionList['lengthBytesUTF16'], 2, fnScope, jsString);
+		}
+		getUTF32String(fnScope, jsString) {
+			return this.getUTFString(this.getUTF32String, this.functionList['stringToUTF32'], this.functionList['lengthBytesUTF32'], 4, fnScope, jsString);
+		}
 	};
-	await suspend(() => {
-		return document.readyState == 'complete';
-	});
-	while (true) {
-		await delegate();
-		await suspend();
-	}
+	let state = new ModuleState();
+	state.startAsync();
 })();

@@ -44,7 +44,7 @@ namespace CmplxConExt
 				return Console.GetColorCode(iostream.BackgroundColor);
 			});
 			EM_JS(const wchar_t*, title, (), {
-				return getUTF32String(title, Console.Title);
+				return Module['getUTF32String'](title, Console.Title);
 			});
 			EM_JS(std::char_traits<wchar_t>::int_type, color_char_code, (std::uint8_t code), {
 				return Console.GetColorCharCode(code);
@@ -52,7 +52,7 @@ namespace CmplxConExt
 			EM_ASYNC_JS(const wchar_t*, read_line, (), {
 				let line = await iostream.readLine();
 				await iostream.writeLine(line, false);
-				return getUTF32String(__asyncjs__read_line, line);
+				return Module['getUTF32String'](__asyncjs__read_line, line);
 			});
 			EM_ASYNC_JS(void, write_code, (const wchar_t* content), {
 				await iostream.write(UTF32ToString(content));
