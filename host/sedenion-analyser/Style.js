@@ -700,9 +700,15 @@
 		async fetchModule() {
 			let overrides = {
 				iostream: this.iostream,
-				getUTF8String: this.getUTF8String.bind(this),
-				getUTF16String: this.getUTF16String.bind(this),
-				getUTF32String: this.getUTF32String.bind(this),
+				getUTF8String: (fnScope, jsString) => {
+					return this.getUTFString({}, this.functionList['stringToUTF8'], this.functionList['lengthBytesUTF8'], 1, fnScope, jsString);
+				},
+				getUTF16String: (fnScope, jsString) => {
+					return this.getUTFString({}, this.functionList['stringToUTF16'], this.functionList['lengthBytesUTF16'], 2, fnScope, jsString);
+				},
+				getUTF32String: (fnScope, jsString) => {
+					return this.getUTFString({}, this.functionList['stringToUTF32'], this.functionList['lengthBytesUTF32'], 4, fnScope, jsString);
+				},
 				onRuntimeInitialized: () => {
 					this.abortState = false;
 					this.exitCode = 0;
@@ -747,29 +753,18 @@
 			}
 		}
 		/* { functionality } */
-		getUTFString(caller, converter, counter, width, fnScope, jsString) {
+		getUTFString(callerCaptured, converterCaptured, counterCaptured, sizeCaptured, fnScope, jsString) {
 			[fnScope, jsString].constrainedWithAndThrow(Function.toNullable(), String.toNullable());
-			let myScope = fnScope == null ? caller : fnScope;
-			let stringObject = jsString == null ? "" : jsString;
-			let stringLength = counter(stringObject) + width;
-			if (!myScope.bufferSize || myScope.bufferSize < stringLength) {
-				if (myScope.bufferSize) {
-					this.functionList['_free'](myScope.bufferData);
-				}
-				myScope.bufferData = this.functionList['_malloc'](stringLength);
-				myScope.bufferSize = stringLength;
+			let myScope = fnScope == null ? callerCaptured : fnScope;
+			let stringSource = jsString == null ? "" : jsString;
+			let sizeCapacity = counterCaptured(stringSource) + sizeCaptured;
+			if (!myScope.bufferData || myScope.bufferSize < sizeCapacity) {
+				this.functionList['_free'](myScope.bufferData);
+				myScope.bufferData = this.functionList['_malloc'](sizeCapacity);
+				myScope.bufferSize = sizeCapacity;
 			}
-			converter(stringObject, myScope.bufferData, myScope.bufferSize);
+			converterCaptured(stringSource, myScope.bufferData, myScope.bufferSize);
 			return myScope.bufferData;
-		}
-		getUTF8String(fnScope, jsString) {
-			return this.getUTFString(this.getUTF8String, this.functionList['stringToUTF8'], this.functionList['lengthBytesUTF8'], 1, fnScope, jsString);
-		}
-		getUTF16String(fnScope, jsString) {
-			return this.getUTFString(this.getUTF16String, this.functionList['stringToUTF16'], this.functionList['lengthBytesUTF16'], 2, fnScope, jsString);
-		}
-		getUTF32String(fnScope, jsString) {
-			return this.getUTFString(this.getUTF32String, this.functionList['stringToUTF32'], this.functionList['lengthBytesUTF32'], 4, fnScope, jsString);
 		}
 	};
 	shareProperties(ModuleState, ['startAsync'], false);
