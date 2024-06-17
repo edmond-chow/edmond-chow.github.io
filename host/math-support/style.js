@@ -481,10 +481,10 @@
 	shareProperties(DispatcherStateMachine, ['moveNext', 'resetState'], false);
 	hardFreeze(window, [DispatcherStateMachine], true);
 	Object.defineProperty(window, 'dispatcher', getSealed(new DispatcherStateMachine(), true));
-	document.addEventListener('structuredTag', () => {
-		dispatcher.moveNext();
-	});
-	document.addEventListener('formedStyle', () => {
-		dispatcher.moveNext();
+	document.addEventListener('structuredTag', async () => {
+		while (true) {
+			dispatcher.moveNext();
+			await suspend();
+		}
 	});
 })();
