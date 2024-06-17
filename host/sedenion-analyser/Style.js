@@ -3,7 +3,7 @@
 	let getSealed = (value, enumerable) => {
 		return { value: value, writable: false, enumerable: enumerable, configurable: false };
 	};
-	Array.prototype.bindTo = function bindTo(scope, extensible = false, protoize = true) {
+	Array.prototype.bindTo = function bindTo(scope, sealed = true, protoize = true) {
 		this.filter((value) => {
 			return value instanceof Function;
 		}).forEach((value) => {
@@ -16,8 +16,8 @@
 					Object.freeze(value.prototype);
 				}
 			}
-			if (!extensible) {
-				Object.preventExtensions(value);
+			if (sealed) {
+				Object.seal(value);
 			}
 		});
 	};
@@ -84,7 +84,7 @@
 	[
 		function hardFreeze(scope, types, protoize = true) {
 			[scope, types, protoize].constrainedWithAndThrow(Object, Array, Boolean);
-			types.bindTo(scope, false, protoize);
+			types.bindTo(scope, true, protoize);
 		},
 		function lockFields(instance, keys, mutable = true) {
 			[instance, keys, mutable].constrainedWithAndThrow(Object, Array, Boolean);
