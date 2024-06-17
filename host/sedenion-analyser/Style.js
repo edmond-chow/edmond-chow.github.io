@@ -98,9 +98,6 @@
 				let scope = static ? type : type.prototype;
 				if (Object.getOwnPropertyDescriptor(scope, key).hasOwnProperty('value')) {
 					Object.defineProperty(scope, key, { writable: false, enumerable: true, configurable: false });
-					if (scope.key instanceof Object) {
-						Object.freeze(scope.key);
-					}
 				} else {
 					Object.defineProperty(scope, key, { enumerable: true, configurable: false });
 				}
@@ -664,6 +661,8 @@
 		}
 	};
 	Console.Colors[0xFF] = 'default';
+	Object.freeze(Console.Colors);
+	Object.freeze(Console.Themes);
 	shareProperties(Console, ['LineNodes', 'LastLineNode', 'Scheme', 'ForegroundColor', 'BackgroundColor', 'writeLine', 'write', 'readLine', 'read', 'putBack', 'pushInput', 'clear', 'pressAnyKey', 'completed', 'terminated', 'bindTo'], false);
 	shareProperties(Console, ['Colors', 'Themes', 'GetColorCode', 'GetColorName', 'GetColorCharCode', 'Title'], true);
 	hardFreeze(window, [Console], true);
