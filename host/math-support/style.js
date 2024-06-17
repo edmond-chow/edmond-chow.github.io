@@ -479,6 +479,7 @@
 	shareProperties(Event, ['add', 'remove'], false);
 	hardFreeze(DispatcherStateMachine, [Event], true);
 	shareProperties(DispatcherStateMachine, ['moveNext', 'resetState'], false);
+	shareProperties(DispatcherStateMachine, ['TagCoroutines', 'StyleCoroutines'], true);
 	hardFreeze(window, [DispatcherStateMachine], true);
 	Object.defineProperty(window, 'dispatcher', getSealed(new DispatcherStateMachine(), true));
 	document.addEventListener('structuredTag', async () => {
