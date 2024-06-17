@@ -9,7 +9,7 @@
 		}).forEach((value) => {
 			Object.defineProperty(scope, value.name, getSealed(value, true));
 			Object.defineProperty(value, 'name', getSealed(value.name, false));
-			if (value.prototype instanceof Object) {
+			if (value.hasOwnProperty('prototype')) {
 				Object.defineProperty(value, 'prototype', getSealed(value.prototype, false));
 				Object.defineProperty(value.prototype, 'constructor', getSealed(value, false));
 				if (protoize) {
