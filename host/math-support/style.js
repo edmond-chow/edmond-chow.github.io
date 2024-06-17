@@ -107,10 +107,12 @@
 	/* { event-dispatcher } */
 	class Event {
 		constructor(target, type, listener, options) {
+			[target, type, listener, options].constrainedWithAndThrow(EventTarget, String, Function, Object.toNullable());
 			this.target = target;
 			this.type = type;
 			this.listener = listener;
 			this.options = options;
+			Object.freeze(this);
 		}
 		add() {
 			this.target.addEventListener(this.type, this.listener, this.options);
@@ -123,6 +125,7 @@
 		constructor() {
 			this.registeredEvents = [];
 			this.resetState();
+			lockFields(this, ['state', 'isLoaded', 'hasScrolled', 'scrollingStarted', 'resizingAgentCounter', 'registeredEvents'], true);
 		}
 		onDispatcherLoad() {
 			renderFrameState();
@@ -467,13 +470,17 @@
 				event.remove();
 			}
 		}
-		pushEvent(target, type, listener, options = undefined) {
+		pushEvent(target, type, listener, options = null) {
 			let event = new Event(target, type, listener, options);
 			this.registeredEvents.push(event);
 			event.add();
 		}
 	};
-	let dispatcher = new DispatcherStateMachine();
+	shareProperties(Event, ['add', 'remove'], false);
+	hardFreeze(DispatcherStateMachine, [Event], true);
+	shareProperties(DispatcherStateMachine, ['moveNext', 'resetState'], false);
+	hardFreeze(window, [DispatcherStateMachine], true);
+	Object.defineProperty(window, 'dispatcher', getSealed(new DispatcherStateMachine(), true));
 	document.addEventListener('structuredTag', () => {
 		dispatcher.moveNext();
 	});
