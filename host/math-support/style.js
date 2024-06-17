@@ -192,7 +192,7 @@
 		async onPostWithCollapsedVisibleClick(postNode, e) {
 			/* 'onVisibleClick' events for the 'post > sub-post > post-leader > post-leader-advance > button.visibility's */
 			let postValue = new Post(postNode);
-			if (postValue.complete && e.target.parentElement == postValue.postLeaderAdvanceNode) {
+			if (postValue.completed && e.target.parentElement == postValue.postLeaderAdvanceNode) {
 				postValue.postContentNode.classList.remove('no-scrollbar');
 				let extensied = e.target.classList.contains('extensied');
 				this.drawPostWithCollapsedButtonBegin(postValue.postContentNode, e.target, extensied);
@@ -208,7 +208,7 @@
 			forAll('post[with-collapsed]').map((value) => {
 				return new Post(value);
 			}).filter((value) => {
-				return value.complete;
+				return value.completed;
 			}).filter((value) => {
 				return value.postLeaderAdvanceNode.has(':scope > button.advance.visibility');
 			}).forEach((postValue) => {
@@ -241,7 +241,7 @@
 			forAll('post').map((value) => {
 				return new Post(value);
 			}).filter((value) => {
-				return value.complete && !value.postNode.hasAttribute('with-collapsed');
+				return value.completed && !value.postNode.hasAttribute('with-collapsed');
 			}).map((value) => {
 				return value.postLeaderAdvanceNode;
 			}).forEach((postLeaderAdvanceNode) => {
@@ -253,7 +253,7 @@
 			forAll('post').map((value) => {
 				return new Post(value);
 			}).filter((value) => {
-				return value.complete && value.postNode.hasAttribute('with-collapsed');
+				return value.completed && value.postNode.hasAttribute('with-collapsed');
 			}).forEach((postValue) => {
 				let buttonNode = this.newPostWithCollapsedButton(postValue.postLeaderAdvanceNode);
 				this.drawPostWithCollapsedButtonBegin(postValue.postContentNode, buttonNode, true);
@@ -347,7 +347,7 @@
 			forAllTag('post').map((value) => {
 				return new Post(value);
 			}).filter((value) => {
-				return value.complete;
+				return value.completed;
 			}).forEach((postValue) => {
 				this.operatePost(postValue.postNode, 'with-graphics', ':scope > sub-post > post-content > img:first-of-type:last-of-type');
 				this.operatePost(postValue.postNode, 'with-notice', ':scope > sub-post > post-content > notice', (postNode) => {
