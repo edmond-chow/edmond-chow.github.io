@@ -1,22 +1,28 @@
 (async () => {
 	/* { binder } */
-	let getDescriptor = (value, enumerable) => {
+	let getSealed = (value, enumerable) => {
 		return { value: value, writable: false, enumerable: enumerable, configurable: false };
 	};
-	Array.prototype.bindTo = function bindTo(scope = window) {
-		this.forEach((value) => {
-			if (value instanceof Function) {
-				Object.defineProperty(value, 'name', getDescriptor(value.name, true));
-				Object.defineProperty(scope, value.name, getDescriptor(value, true));
-				if (value.prototype instanceof Object) {
-					Object.defineProperty(value, 'prototype', getDescriptor(value.prototype, false));
-					Object.defineProperty(value.prototype, 'constructor', getDescriptor(value.prototype.constructor, false));
+	Array.prototype.bindTo = function bindTo(scope, extensible = false, protoize = true) {
+		this.filter((value) => {
+			return value instanceof Function;
+		}).forEach((value) => {
+			Object.defineProperty(scope, value.name, getSealed(value, true));
+			Object.defineProperty(value, 'name', getSealed(value.name, false));
+			if (value.prototype instanceof Object) {
+				Object.defineProperty(value, 'prototype', getSealed(value.prototype, false));
+				Object.defineProperty(value.prototype, 'constructor', getSealed(value, false));
+				if (protoize) {
+					Object.preventExtensions(value.prototype);
 				}
+			}
+			if (!extensible) {
+				Object.preventExtensions(value);
 			}
 		});
 	};
 	[Array.prototype.bindTo].bindTo(Array.prototype);
-	[getDescriptor].bindTo(window);
+	[getSealed].bindTo(window);
 	/* { reflection } */
 	class Nullable {
 		constructor(type) {
@@ -74,6 +80,25 @@
 			}
 		}
 	].bindTo(Object.prototype);
+	/* { property-definer } */
+	[
+		function hardFreeze(scope, types, protoize = true) {
+			[scope, types, protoize].constrainedWithAndThrow(Object, Array, Boolean);
+			types.bindTo(scope, false, protoize);
+		},
+		function lockFields(instance, keys, mutable = true) {
+			[instance, keys, mutable].constrainedWithAndThrow(Object, Array, Boolean);
+			keys.forEach((key) => {
+				Object.defineProperty(instance, key, { writable: mutable, enumerable: !mutable, configurable: false });
+			});
+		},
+		function shareProperties(type, keys, static = false) {
+			[type, keys, static, type.prototype].constrainedWithAndThrow(Function, Array, Boolean, Object);
+			keys.forEach((key) => {
+				Object.defineProperty(static ? type : type.prototype, key, { enumerable: true, configurable: false });
+			});
+		}
+	].bindTo(window);
 	/* { asynchronous } */
 	class Continuation {
 		constructor(resolve, condition) {
@@ -114,29 +139,6 @@
 		}
 	].bindTo(window);
 	await suspend();
-	/* { property-definer } */
-	[
-		function hardFreeze(type, scope = window) {
-			if (type instanceof Function && type.prototype instanceof Object) {
-				[type].bindTo(scope);
-				Object.freeze(type.prototype);
-			}
-		},
-		function lockFields(instance, keys, mutable = true) {
-			if (instance instanceof Object && [mutable].constrainedWith(Boolean)) {
-				keys.forEach((key) => {
-					Object.defineProperty(instance, key, { writable: mutable, enumerable: !mutable, configurable: false });
-				});
-			}
-		},
-		function shareProperties(type, keys, static = false) {
-			if (type instanceof Function && type.prototype instanceof Object) {
-				keys.forEach((key) => {
-					Object.defineProperty(static ? type : type.prototype, key, { enumerable: true, configurable: false });
-				});
-			}
-		}
-	].bindTo(window);
 	/* { constructors } */
 	class LineNodeWrapper {
 		constructor(head) {
@@ -153,7 +155,7 @@
 		}
 	};
 	shareProperties(LineNodeWrapper, ['SpanNodes', 'LastSpanNode'], false);
-	hardFreeze(LineNodeWrapper, {});
+	hardFreeze({}, [LineNodeWrapper], true);
 	class Console {
 		constructor() {
 			this.ConsoleNode = document.createElement('console');
@@ -658,7 +660,7 @@
 	Object.freeze(Console.Themes);
 	shareProperties(Console, ['LineNodes', 'LastLineNode', 'Scheme', 'ForegroundColor', 'BackgroundColor', 'writeLine', 'write', 'readLine', 'read', 'putBack', 'pushInput', 'clear', 'pressAnyKey', 'completed', 'terminated', 'bindTo'], false);
 	shareProperties(Console, ['Colors', 'Themes', 'GetColorCode', 'GetColorName', 'GetColorCharCode', 'Title'], true);
-	hardFreeze(Console, window);
+	hardFreeze(window, [Console], true);
 	/* { event-dispatcher } */
 	class ModuleState {
 		/* { infrastructure } */
@@ -769,7 +771,7 @@
 		}
 	};
 	shareProperties(ModuleState, ['startAsync'], false);
-	hardFreeze(ModuleState, window);
-	Object.defineProperty(window, 'dispatcher', getDescriptor(new ModuleState(document.body), true));
+	hardFreeze(window, [ModuleState], true);
+	Object.defineProperty(window, 'dispatcher', getSealed(new ModuleState(document.body), true));
 	dispatcher.startAsync();
 })();
