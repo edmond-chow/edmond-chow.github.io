@@ -478,6 +478,8 @@
 	};
 	shareProperties(Event, ['add', 'remove'], false);
 	hardFreeze(DispatcherStateMachine, [Event], true);
+	Object.freeze(DispatcherStateMachine.TagCoroutines);
+	Object.freeze(DispatcherStateMachine.StyleCoroutines);
 	shareProperties(DispatcherStateMachine, ['moveNext', 'resetState'], false);
 	shareProperties(DispatcherStateMachine, ['TagCoroutines', 'StyleCoroutines'], true);
 	hardFreeze(window, [DispatcherStateMachine], true);
