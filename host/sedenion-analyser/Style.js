@@ -661,8 +661,6 @@
 		}
 	};
 	Console.Colors[0xFF] = 'default';
-	Object.freeze(Console.Colors);
-	Object.freeze(Console.Themes);
 	shareProperties(Console, ['LineNodes', 'LastLineNode', 'Scheme', 'ForegroundColor', 'BackgroundColor', 'writeLine', 'write', 'readLine', 'read', 'putBack', 'pushInput', 'clear', 'pressAnyKey', 'completed', 'terminated', 'bindTo'], false);
 	shareProperties(Console, ['Colors', 'Themes', 'GetColorCode', 'GetColorName', 'GetColorCharCode', 'Title'], true);
 	hardFreeze(window, [Console], true);
