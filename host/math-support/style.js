@@ -477,12 +477,12 @@
 		}
 	};
 	shareProperties(Event, ['add', 'remove'], false);
-	hardFreeze(DispatcherStateMachine, [Event], true);
+	hardFreeze(DispatcherStateMachine, [Event], false);
 	Object.freeze(DispatcherStateMachine.TagCoroutines);
 	Object.freeze(DispatcherStateMachine.StyleCoroutines);
 	shareProperties(DispatcherStateMachine, ['moveNext', 'resetState'], false);
 	shareProperties(DispatcherStateMachine, ['TagCoroutines', 'StyleCoroutines'], true);
-	hardFreeze(window, [DispatcherStateMachine], true);
+	hardFreeze(window, [DispatcherStateMachine], false);
 	Object.defineProperty(window, 'dispatcher', getSealed(new DispatcherStateMachine(), true));
 	document.addEventListener('structuredTag', async () => {
 		while (true) {
