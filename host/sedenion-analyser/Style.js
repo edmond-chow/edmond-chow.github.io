@@ -147,20 +147,19 @@
 	/* { constructors } */
 	class LineNodeWrapper {
 		constructor(head) {
-			this.Self = head;
+			[head].constrainedWithAndThrow(Element.toNullable());
+			this.Self = head != null && head.nodeName == 'line'.toUpperCase() ? head : null;
 			lockFields(this, ['Self'], false);
 		}
 		get SpanNodes() {
-			return this.Self == null ? null : Array.from(this.Self.childNodes).filter((value) => {
+			return this.Self != null ? Array.from(this.Self.childNodes).filter((value) => {
 				return value.nodeName == 'span'.toUpperCase();
-			});
+			}) : null;
 		}
 		get LastSpanNode() {
-			return this.Self == null || this.SpanNodes.length == 0 ? null : this.SpanNodes[this.SpanNodes.length - 1];
+			return this.Self != null && this.SpanNodes.length > 0 ? this.SpanNodes.pop() : null;
 		}
 	};
-	shareProperties(LineNodeWrapper, ['SpanNodes', 'LastSpanNode'], false);
-	hardFreeze({}, [LineNodeWrapper], true);
 	class Console {
 		constructor() {
 			this.ConsoleNode = document.createElement('console');
@@ -332,7 +331,7 @@
 			});
 		}
 		get LastLineNode() {
-			return this.LineNodes.length == 0 ? new LineNodeWrapper(null) : this.LineNodes[this.LineNodes.length - 1];
+			return this.LineNodes.length > 0 ? this.LineNodes.pop() : new LineNodeWrapper(null);
 		}
 		get Scheme() {
 			return this.ConsoleNode.getAttribute('scheme');
@@ -660,6 +659,8 @@
 			document.title = value;
 		}
 	};
+	shareProperties(LineNodeWrapper, ['SpanNodes', 'LastSpanNode'], false);
+	hardFreeze(Console, [LineNodeWrapper], true);
 	Console.Colors[0xFF] = 'default';
 	Object.freeze(Console.Colors);
 	Object.freeze(Console.Themes);
