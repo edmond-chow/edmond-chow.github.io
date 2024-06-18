@@ -3,7 +3,7 @@
 	let getSealed = (value, enumerable) => {
 		return { value: value, writable: false, enumerable: enumerable, configurable: false };
 	};
-	Array.prototype.bindTo = function bindTo(scope, sealed = true, protoize = true) {
+	Array.prototype.bindTo = function bindTo(scope, sealed = true, protoize = false) {
 		this.filter((value) => {
 			return value instanceof Function;
 		}).forEach((value) => {
@@ -12,8 +12,16 @@
 			if (value.hasOwnProperty('prototype')) {
 				Object.defineProperty(value, 'prototype', getSealed(value.prototype, false));
 				Object.defineProperty(value.prototype, 'constructor', getSealed(value, false));
+				Object.getOwnPropertyNames(value.prototype).forEach((name) => {
+					let descriptor = Object.getOwnPropertyDescriptor(value.prototype, name);
+					if (descriptor.hasOwnProperty('value')) {
+						descriptor.writable = false;
+					}
+					descriptor.configurable = false;
+					Object.defineProperty(value.prototype, name, descriptor);
+				});
 				if (protoize) {
-					Object.freeze(value.prototype);
+					Object.preventExtensions(value.prototype);
 				}
 			}
 			if (sealed) {
@@ -58,7 +66,9 @@
 			}
 			for (let i = 0; i < arguments.length; i++) {
 				let typeDecayed = removeNullable(types[i]);
-				if (arguments[i] == null) {
+				if (arguments[i] === undefined) {
+					throw 'Some sort of function arguments should be exist.';
+				} else if (arguments[i] == null) {
 					if (isNullable(types[i])) {
 						continue;
 					} else {
@@ -660,13 +670,13 @@
 		}
 	};
 	shareProperties(LineNodeWrapper, ['SpanNodes', 'LastSpanNode'], false);
-	hardFreeze(Console, [LineNodeWrapper], true);
+	hardFreeze(Console, [LineNodeWrapper], false);
 	Console.Colors[0xFF] = 'default';
 	Object.freeze(Console.Colors);
 	Object.freeze(Console.Themes);
 	shareProperties(Console, ['LineNodes', 'LastLineNode', 'Scheme', 'ForegroundColor', 'BackgroundColor', 'writeLine', 'write', 'readLine', 'read', 'putBack', 'pushInput', 'clear', 'pressAnyKey', 'completed', 'terminated', 'bindTo'], false);
 	shareProperties(Console, ['Colors', 'Themes', 'GetColorCode', 'GetColorName', 'GetColorCharCode', 'Title'], true);
-	hardFreeze(window, [Console], true);
+	hardFreeze(window, [Console], false);
 	/* { event-dispatcher } */
 	class ModuleState {
 		/* { infrastructure } */
@@ -777,7 +787,7 @@
 		}
 	};
 	shareProperties(ModuleState, ['startAsync'], false);
-	hardFreeze(window, [ModuleState], true);
+	hardFreeze(window, [ModuleState], false);
 	Object.defineProperty(window, 'dispatcher', getSealed(new ModuleState(document.body), true));
 	dispatcher.startAsync();
 })();
