@@ -112,7 +112,7 @@
 			this.type = type;
 			this.listener = listener;
 			this.options = options;
-			Object.freeze(this);
+			freeze(this, true);
 		}
 		add() {
 			this.target.addEventListener(this.type, this.listener, this.options);
@@ -137,6 +137,8 @@
 			/* integrating the 'post-leader-date's by including the '[date-string]'s */
 			forAllTag('post').map((value) => {
 				return new Post(value);
+			}).filter((value) => {
+				return value.completed;
 			}).forEach((postValue) => {
 				if (postValue.postNode.hasAttribute('date-string')) {
 					let postLeaderDateNode = document.createElement('post-leader-date');
