@@ -112,7 +112,7 @@
 			this.type = type;
 			this.listener = listener;
 			this.options = options;
-			freeze(this, true);
+			makeFrozen(this, true);
 		}
 		add() {
 			this.target.addEventListener(this.type, this.listener, this.options);
