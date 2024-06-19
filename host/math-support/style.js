@@ -485,7 +485,7 @@
 	shareProperties(DispatcherStateMachine, ['moveNext', 'resetState'], false);
 	shareProperties(DispatcherStateMachine, ['TagCoroutines', 'StyleCoroutines'], true);
 	hardFreeze(window, [DispatcherStateMachine], false);
-	Object.defineProperty(window, 'dispatcher', getSealed(new DispatcherStateMachine(), true));
+	Object.defineProperty(window, 'dispatcher', makeDescriptor(new DispatcherStateMachine(), true));
 	document.addEventListener('structuredTag', async () => {
 		while (true) {
 			dispatcher.moveNext();
