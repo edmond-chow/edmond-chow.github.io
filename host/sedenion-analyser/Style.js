@@ -3,6 +3,31 @@
 	let getSealed = (value, enumerable) => {
 		return { value: value, writable: false, enumerable: enumerable, configurable: false };
 	};
+	let seal = (object, extensible) => {
+		Object.getOwnPropertyNames(object).forEach((name) => {
+			let descriptor = Object.getOwnPropertyDescriptor(object, name);
+			descriptor.configurable = false;
+			Object.defineProperty(object, name, descriptor);
+		});
+		if (!extensible) {
+			Object.preventExtensions(object);
+		}
+		return object;
+	};
+	let freeze = (object, extensible) => {
+		Object.getOwnPropertyNames(object).forEach((name) => {
+			let descriptor = Object.getOwnPropertyDescriptor(object, name);
+			if (descriptor.hasOwnProperty('value')) {
+				descriptor.writable = false;
+			}
+			descriptor.configurable = false;
+			Object.defineProperty(object, name, descriptor);
+		});
+		if (!extensible) {
+			Object.preventExtensions(object);
+		}
+		return object;
+	};
 	Array.prototype.bindTo = function bindTo(scope, sealed = true, protoize = false) {
 		this.filter((value) => {
 			return value instanceof Function;
@@ -14,17 +39,7 @@
 				let prototype = value['prototype'];
 				Object.defineProperty(value, 'prototype', getSealed(prototype, false));
 				Object.defineProperty(prototype, 'constructor', getSealed(value, false));
-				Object.getOwnPropertyNames(prototype).forEach((name) => {
-					let descriptor = Object.getOwnPropertyDescriptor(prototype, name);
-					if (descriptor.hasOwnProperty('value')) {
-						descriptor.writable = false;
-					}
-					descriptor.configurable = false;
-					Object.defineProperty(prototype, name, descriptor);
-				});
-				if (protoize) {
-					Object.preventExtensions(prototype);
-				}
+				freeze(prototype, !protoize);
 			}
 			if (sealed) {
 				Object.seal(value);
@@ -32,12 +47,12 @@
 		});
 	};
 	[Array.prototype.bindTo].bindTo(Array.prototype);
-	[getSealed].bindTo(window);
+	[getSealed, seal, freeze].bindTo(window);
 	/* { reflection } */
 	class Nullable {
 		constructor(type) {
 			this.type = type;
-			Object.freeze(this);
+			freeze(this, true);
 		}
 	};
 	[Nullable].bindTo({});
