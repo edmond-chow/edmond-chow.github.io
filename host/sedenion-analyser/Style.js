@@ -188,9 +188,6 @@
 	class Console {
 		constructor() {
 			this.ConsoleNode = document.createElement('console');
-			this.ConsoleNode.setAttribute('foreground', 'gray');
-			this.ConsoleNode.setAttribute('background', 'default');
-			this.ConsoleNode.setAttribute('scheme', 'campbell');
 			this.BufferNode = document.createElement('buffer');
 			this.ConsoleNode.prepend(this.BufferNode);
 			this.ControlNode = document.createElement('control');
@@ -232,7 +229,7 @@
 					}
 					await suspend();
 					this.DataContentNode.textContent = content;
-					this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
+					this.ScrollIntoBottom();
 				}
 			});
 			this.ControlNode.append(this.InputNode);
@@ -246,6 +243,9 @@
 				}
 			});
 			this.ControlNode.append(this.ButtonNode);
+			this.ForegroundColor = 'gray';
+			this.BackgroundColor = 'default';
+			this.Scheme = 'campbell';
 			this.CanType = false;
 			this.istream = '';
 			this.icursor = 0;
@@ -255,6 +255,9 @@
 		ClearBufferNode() {
 			this.BufferNode.innerText = '';
 		}
+		ScrollIntoBottom() {
+			this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
+		}
 		get CanType() {
 			return this.typing;
 		}
@@ -263,7 +266,10 @@
 			this.ButtonNode.disabled = !value;
 			if (value && !this.typing) {
 				this.LastLineNode.LastSpanNode?.append(this.DataContentNode);
-				this.InputNode.focus();
+				console.log(window.top);
+				if (window == window.top) {
+					this.InputNode.focus();
+				}
 			} else if (!value && this.typing) {
 				document.createDocumentFragment().append(this.DataContentNode);
 				this.DataContentNode.textContent = '';
@@ -455,7 +461,7 @@
 				this.ForegroundColor = Console.GetColorName(foreground);
 				this.BackgroundColor = Console.GetColorName(background);
 				Console.Title = title;
-				this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
+				this.ScrollIntoBottom();
 			};
 			let pushSpan = () => {
 				if (SpanNode == null) {
@@ -481,8 +487,8 @@
 					SpanNode = document.createElement('span');
 					LineNode.append(SpanNode);
 				}
-				SpanNode.setAttribute('foreground', Console.Colors[foreground]);
-				SpanNode.setAttribute('background', Console.Colors[background]);
+				SpanNode.setAttribute('foreground', Console.GetColorName(foreground));
+				SpanNode.setAttribute('background', Console.GetColorName(background));
 			};
 			let endUp = () => {
 				pushSpan();
@@ -495,9 +501,9 @@
 			let isColorChanged = () => {
 				if (SpanNode == null) {
 					return true;
-				} else if (SpanNode.getAttribute('foreground') != Console.Colors[foreground]) {
+				} else if (SpanNode.getAttribute('foreground') != Console.GetColorName(foreground)) {
 					return true;
-				} else if (SpanNode.getAttribute('background') != Console.Colors[background]) {
+				} else if (SpanNode.getAttribute('background') != Console.GetColorName(background)) {
 					return true;
 				} else {
 					return false;
@@ -651,8 +657,8 @@
 		}
 		async completed(code) {
 			[code].constrainedWithAndThrow(Number);
-			this.ConsoleNode.setAttribute('foreground', 'gray');
-			this.ConsoleNode.setAttribute('background', 'default');
+			this.ForegroundColor = 'gray';
+			this.BackgroundColor = 'default';
 			this.clear();
 			await this.writeLine('');
 			await this.writeLine('   The program completed with a return code ' + code.toString() + '.');
@@ -662,8 +668,8 @@
 			this.clear();
 		}
 		async terminated() {
-			this.ConsoleNode.setAttribute('foreground', 'gray');
-			this.ConsoleNode.setAttribute('background', 'default');
+			this.ForegroundColor = 'gray';
+			this.BackgroundColor = 'default';
 			this.clear();
 			await this.writeLine('');
 			await this.writeLine('   The program terminated with no return codes.');
@@ -728,7 +734,6 @@
 		/* { processor } */
 		initStream() {
 			this.iostream.bindTo(this.headNode);
-			this.iostream.InputNode.focus();
 		}
 		async fetchModule() {
 			let captured = {};
