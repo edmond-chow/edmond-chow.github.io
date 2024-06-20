@@ -112,7 +112,7 @@
 			this.type = type;
 			this.listener = listener;
 			this.options = options;
-			makeFrozen(this, true);
+			lockFields(this, ['target', 'type', 'listener', 'options'], false);
 		}
 		add() {
 			this.target.addEventListener(this.type, this.listener, this.options);
