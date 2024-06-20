@@ -266,7 +266,6 @@
 			this.ButtonNode.disabled = !value;
 			if (value && !this.typing) {
 				this.LastLineNode.LastSpanNode?.append(this.DataContentNode);
-				console.log(window.top);
 				if (window == window.top) {
 					this.InputNode.focus();
 				}
