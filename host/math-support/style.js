@@ -266,7 +266,6 @@
 				let onVisibleClick = this.onPostWithCollapsedVisibleClick.bind(this, postValue.postNode);
 				this.pushEvent(buttonNode, 'click', onVisibleClick);
 			});
-			document.addEventListener('structuredTag', () => { console.log(123); }, { once: true });
 			/* an 'onResized' event for the 'post[with-collapsed] > sub-post > post-leader > post-leader-advance > button.visibility's */
 			let onResized = this.onPostWithCollapsedResized.bind(this);
 			this.pushEvent(window, 'resize', onResized);
