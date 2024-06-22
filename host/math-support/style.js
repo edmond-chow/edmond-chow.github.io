@@ -481,14 +481,24 @@
 	hardFreeze(DispatcherStateMachine, [Event], false);
 	Object.freeze(DispatcherStateMachine.TagCoroutines);
 	Object.freeze(DispatcherStateMachine.StyleCoroutines);
-	shareProperties(DispatcherStateMachine, ['moveNext', 'resetState'], false);
+	shareProperties(DispatcherStateMachine, ['moveNext', 'resetState', 'pushEvent'], false);
 	shareProperties(DispatcherStateMachine, ['TagCoroutines', 'StyleCoroutines'], true);
 	hardFreeze(window, [DispatcherStateMachine], false);
-	Object.defineProperty(window, 'dispatcher', makeDescriptor(new DispatcherStateMachine(), true));
-	document.addEventListener('structuredTag', async () => {
-		while (true) {
-			dispatcher.moveNext();
-			await suspend();
+	let activatedStructured = false;
+	document.addEventListener('dispatcherInitialized', () => {
+		Object.defineProperty(window, 'dispatcher', makeDescriptor(new DispatcherStateMachine(), true));
+	});
+	document.addEventListener('structuredTag', () => {
+		if (!activatedStructured) {
+			(async () => {
+				while (true) {
+					dispatcher.moveNext();
+					await suspend();
+				}
+			})();
+		} else {
+			dispatcher.resetState();
 		}
+		activatedStructured = true;
 	});
 })();
