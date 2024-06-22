@@ -127,8 +127,10 @@
 			this.resetState();
 			lockFields(this, ['state', 'isLoaded', 'hasScrolled', 'scrollingStarted', 'resizingAgentCounter', 'registeredEvents'], true);
 		}
-		onDispatcherLoad() {
+		onLoadFrameState() {
 			renderFrameState();
+		}
+		onButtonFrameState() {
 			forAll('button#frame-state').forEach((value) => {
 				this.pushEvent(value, 'click', switchFrameState);
 			});
@@ -311,7 +313,8 @@
 			});
 		}
 		static TagCoroutines = [
-			DispatcherStateMachine.prototype.onDispatcherLoad,
+			DispatcherStateMachine.prototype.onLoadFrameState,
+			DispatcherStateMachine.prototype.onButtonFrameState,
 			DispatcherStateMachine.prototype.onPostDateString,
 			DispatcherStateMachine.prototype.onPostWithCollapsed,
 			DispatcherStateMachine.prototype.onPostWithNotice,
@@ -485,10 +488,10 @@
 	shareProperties(DispatcherStateMachine, ['TagCoroutines', 'StyleCoroutines'], true);
 	hardFreeze(window, [DispatcherStateMachine], false);
 	Object.defineProperty(window, 'dispatcher', makeDescriptor(new DispatcherStateMachine(), true));
-	document.addEventListener('structuredTag', async () => {
+	(async () => {
 		while (true) {
 			dispatcher.moveNext();
 			await suspend();
 		}
-	});
+	})();
 })();
