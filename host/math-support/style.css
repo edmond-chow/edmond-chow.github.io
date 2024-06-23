@@ -239,10 +239,6 @@
 				post[with-notice] > sub-post > post-content > notice > sub-notice > notice-content > p:last-of-type {
 					padding: 0px;
 				}
-				post[with-notice] > sub-post > post-content > notice > sub-notice > notice-content number {
-					display: inline;
-					font-weight: 500;
-				}
 				/* post[with-inline-frame] */
 				post[with-inline-frame] > sub-post > post-content > iframe:first-of-type.last-visible-child {
 					overflow: hidden;
