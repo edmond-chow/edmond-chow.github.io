@@ -150,6 +150,9 @@
 				}
 			});
 		}
+		getAspectRatioFor(postContentNode) {
+			return postContentNode.offsetWidth.toString() + ' / ' + Math.ceil(postContentNode.scrollHeight).toString();
+		}
 		onLazyFrozen(postContentNode, freeze) {
 			Array.from(postContentNode.childNodes).filter((value) => {
 				return value.nodeName == 'img'.toUpperCase() || value.nodeName == 'iframe'.toUpperCase();
@@ -178,7 +181,7 @@
 				buttonNode.classList.add('down');
 				buttonNode.textContent = '展開';
 			} else {
-				postContentNode.style.aspectRatio = postContentNode.offsetWidth.toString() + ' / ' + postContentNode.scrollHeight.toString();
+				postContentNode.style.aspectRatio = this.getAspectRatioFor(postContentNode);
 				buttonNode.classList.add('up');
 				buttonNode.classList.remove('down');
 				buttonNode.textContent = '縮小';
@@ -233,7 +236,7 @@
 			if (--this.resizingAgentCounter == 0) {
 				this.operatePostWithCollapsedResizingAgent((postContentNode, buttonNode) => {
 					if (buttonNode.classList.contains('extensied')) {
-						postContentNode.style.aspectRatio = postContentNode.offsetWidth.toString() + ' / ' + postContentNode.scrollHeight.toString();
+						postContentNode.style.aspectRatio = this.getAspectRatioFor(postContentNode);
 					}
 					postContentNode.classList.remove('resizing');
 					buttonNode.classList.remove('pseudo-disabled');
