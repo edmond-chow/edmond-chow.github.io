@@ -38,17 +38,21 @@
 	display: inline-block;
 	-webkit-user-drag: none;
 }
-.top-post > img:nth-of-type(1) {
-	width: calc(100% * (673 / 353) / ((673 / 353) + (371 / 371)));
+@media only screen and (width >= 650px) {
+	.top-post > img:nth-of-type(1) {
+		width: calc(100% * (673 / 353) / ((673 / 353) + (371 / 371)));
+	}
+	.top-post > img:nth-of-type(2) {
+		width: calc(100% * (371 / 371) / ((673 / 353) + (371 / 371)));
+	}
 }
-.top-post > img:nth-of-type(2) {
-	width: calc(100% * (371 / 371) / ((673 / 353) + (371 / 371)));
-}
-major.tiny > sub-major .top-post {
-	flex-direction: column-reverse;
-}
-major.tiny > sub-major .top-post > img {
-	width: 100%;
+@media only screen and (width < 650px) {
+	.top-post {
+		flex-direction: column-reverse;
+	}
+	.top-post > img {
+		width: 100%;
+	}
 }
 </style>
 <img deferred-src="home/rainbow.jpg">
