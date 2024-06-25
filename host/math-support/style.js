@@ -151,7 +151,7 @@
 			});
 		}
 		getAspectRatioFor(postContentNode) {
-			return postContentNode.offsetWidth.toString() + ' / ' + Math.ceil(postContentNode.scrollHeight).toString();
+			return postContentNode.offsetWidth.toString() + ' / ' + postContentNode.scrollHeight.toString();
 		}
 		onLazyFrozen(postContentNode, freeze) {
 			Array.from(postContentNode.childNodes).filter((value) => {

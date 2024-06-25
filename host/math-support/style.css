@@ -100,6 +100,7 @@
 				post[with-collapsed] > sub-post > post-content {
 					aspect-ratio: 16 / 9;
 					overflow-y: scroll;
+					scrollbar-gutter: stable;
 					padding: 0px 0px 16px 16px;
 					box-sizing: border-box;
 					transition-duration: 1s;
@@ -107,6 +108,9 @@
 				}
 				post[with-collapsed] > sub-post > post-content.resizing {
 					transition-duration: unset;
+				}
+				post[with-collapsed] > sub-post > post-content.no-scrollbar {
+					overflow-y: hidden;
 				}
 				major.tiny > sub-major post[with-collapsed] > sub-post > post-content {
 					padding: 0px 0px 12px 12px;
