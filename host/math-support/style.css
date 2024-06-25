@@ -150,11 +150,6 @@
 			}
 			@layer /* constrained-container */ {
 				/* post[with-collapsed] */
-				@supports selector(::-webkit-scrollbar) {
-					post[with-collapsed] > sub-post > post-content.no-scrollbar::-webkit-scrollbar-thumb {
-						background-color: transparent;
-					}
-				}
 				post[with-collapsed] > sub-post > post-content > img {
 					overflow: hidden;
 					width: 70%;
@@ -291,7 +286,6 @@
 				post[with-graphics] > sub-post > post-content > :not(notice, iframe:first-of-type.last-visible-child, img.first-visible-child:last-of-type) {
 					display: none;
 				}
-
 				post[with-graphics] > sub-post > post-content > img.first-visible-child.last-visible-child {
 					padding-bottom: 0px;
 				}
