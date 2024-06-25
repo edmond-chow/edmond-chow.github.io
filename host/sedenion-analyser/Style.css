@@ -1,5 +1,5 @@
 @charset 'UTF-8';
-@layer /* basis */ {
+@layer basis {
 	/* default */
 	::selection {
 		color: white;
@@ -137,7 +137,7 @@
 		line-height: 18px;
 	}
 }
-@layer /* scrollable */ {
+@layer scrollable {
 	/* ::-webkit-scrollbar */
 	@supports selector(::-webkit-scrollbar) {
 		::-webkit-scrollbar {
@@ -175,7 +175,7 @@
 		}
 	}
 }
-@layer /* themes */ {
+@layer themes {
 	console {
 		--background: rgb(0, 0, 0);
 		--black: rgb(0, 0, 0);
@@ -443,7 +443,7 @@
 		--white: #FFFFFF;
 	}
 }
-@layer /* features */ {
+@layer features {
 	console {
 		display: flex;
 		flex-direction: column;
