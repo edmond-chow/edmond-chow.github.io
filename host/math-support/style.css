@@ -1,15 +1,15 @@
 @charset 'UTF-8';
-@layer /* math-support */ {
-	@layer /* initializer */ {
-		@layer /* chung-style */ {
+@layer math-support {
+	@layer initializer {
+		@layer chung-style {
 			/* default */
 			body.chung-style ::selection {
 				background-color: #FF1493;
 			}
 		}
 	}
-	@layer /* scrollable */ {
-		@layer /* default */ {
+	@layer scrollable {
+		@layer default {
 			/* ::-webkit-scrollbar */
 			@supports selector(::-webkit-scrollbar) {
 				@media (pointer: fine) {
@@ -46,7 +46,7 @@
 				}
 			}
 		}
-		@layer /* chung-style */ {
+		@layer chung-style {
 			/* ::-webkit-scrollbar */
 			@supports selector(::-webkit-scrollbar) {
 				@media (pointer: fine) {
@@ -84,9 +84,9 @@
 			}
 		}
 	}
-	@layer /* features */ {
-		@layer /* default */ {
-			@layer /* structured-container */ {
+	@layer features {
+		@layer default {
+			@layer structured-container {
 				/* top */
 				top > a:first-of-type {
 					background-image: url('blackboard.png');
@@ -148,7 +148,7 @@
 					pointer-events: none;
 				}
 			}
-			@layer /* constrained-container */ {
+			@layer constrained-container {
 				/* post[with-collapsed] */
 				post[with-collapsed] > sub-post > post-content > img {
 					overflow: hidden;
@@ -249,8 +249,8 @@
 				}
 			}
 		}
-		@layer /* chung-style */ {
-			@layer /* constrained-container */ {
+		@layer chung-style {
+			@layer constrained-container {
 				/* post[with-notice] */
 				body.chung-style post[with-notice] > sub-post > post-content > notice.chung-notice ::selection {
 					background-color: #FFD54F;
@@ -269,15 +269,15 @@
 			}
 		}
 	}
-	@layer /* features-after */ {
-		@layer /* default */ {
-			@layer /* structured-container */ {
+	@layer features-after {
+		@layer default {
+			@layer structured-container {
 				/* post > sub-post > post-leader > post-leader-section > post-leader-date */
 				post > sub-post > post-leader > post-leader-section > post-leader-date:not(:first-of-type) {
 					display: none;
 				}
 			}
-			@layer /* constrained-container */ {
+			@layer constrained-container {
 				/* post[with-collapsed] */
 				post[with-collapsed] > sub-post > post-leader > post-leader-advance > button.advance.visibility:not(:first-of-type) {
 					display: none;
@@ -300,28 +300,28 @@
 			}
 		}
 	}
-	@layer /* backdrop */ {
-		@layer /* default */ {
+	@layer backdrop {
+		@layer default {
 			/* background-image with 'basis-layer, backdrop-container > blurred-filter' */
 			body basis-layer, body.blur major > sub-major > post > sub-post > backdrop-container > blurred-filter {
 				background-image: var(--background-image, url('analysis.jpg'));
 			}
 		}
-		@layer /* beautiful-math-style */ {
+		@layer beautiful-math-style {
 			/* background-image with 'basis-layer, backdrop-container > blurred-filter' */
 			body.beautiful-math-style basis-layer, body.blur.beautiful-math-style major > sub-major > post > sub-post > backdrop-container > blurred-filter {
 				background-image: var(--background-image, url('beautiful-math.jpg'));
 			}
 		}
-		@layer /* chung-style */ {
+		@layer chung-style {
 			/* background-image with 'basis-layer, backdrop-container > blurred-filter' */
 			body.chung-style basis-layer, body.blur.chung-style major > sub-major > post > sub-post > backdrop-container > blurred-filter {
 				background-image: var(--background-image, url('chung-galaxy.jpg'));
 			}
 		}
 	}
-	@layer /* extensions */ {
-		@layer /* default */ {
+	@layer extensions {
+		@layer default {
 			/* icons */
 			.back {
 				background-image: url('icons8-back-arrow-64.png');
