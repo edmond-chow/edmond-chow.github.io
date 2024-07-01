@@ -504,7 +504,7 @@
 		aspect-ratio: 1;
 		transition-property: color, background-color, box-shadow;
 		transition-duration: 0.4s;
-		background-image: url('Forward.png');
+		background-image: url('forward.png');
 		background-position: center;
 		background-size: 16px;
 		background-repeat: no-repeat;
