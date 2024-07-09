@@ -186,15 +186,14 @@
 				width: 14px;
 				height: 14px;
 			}
-			::-webkit-scrollbar-track, ::-webkit-scrollbar-corner {
-				background-color: transparent;
+			body.blur::-webkit-scrollbar-thumb, body.blur ::-webkit-scrollbar-thumb {
+				border-radius: 8px;
 			}
 			body::-webkit-scrollbar-track, body::-webkit-scrollbar-corner {
 				background-color: #f1f1f1;
 			}
-			body.blur top::-webkit-scrollbar-track:vertical, body.blur dropdown > dropdown-content::-webkit-scrollbar-track:vertical {
-				border-top-right-radius: 5px;
-				border-bottom-right-radius: 5px;
+			::-webkit-scrollbar-track, ::-webkit-scrollbar-corner {
+				background-color: transparent;
 			}
 			::-webkit-scrollbar-thumb {
 				background-color: #888;
@@ -210,9 +209,6 @@
 				background-color: #555;
 				border: 4px solid transparent;
 				background-clip: padding-box;
-			}
-			body.blur::-webkit-scrollbar-thumb, body.blur ::-webkit-scrollbar-thumb {
-				border-radius: 8px;
 			}
 		}
 	}
@@ -241,26 +237,37 @@
 	@layer features {
 		@layer structured-container {
 			/* top */
+			body > top {
+				position: fixed;
+				z-index: 4; /* -> layer[fixed] */
+			}
 			top /* -> */ {
 				overflow: hidden;
-				position: fixed;
-				margin: 0px -1px;
+				position: relative;
+				margin: 8px;
 				border: 1px solid #e7e7e7;
-				transition-property: margin-left, margin-right, max-height, width, left, right;
+				transition-property: margin-left, margin-right, max-height, width, left, right, box-shadow;
 				transition-duration: 0.5s;
 				background-color: #f3f3f3;
 				max-height: 51px;
 				width: 84%;
-				top: 8px;
 				left: 8%;
 				right: 8%;
-				z-index: 3; /* -> layer[top] */
+			}
+			major > major-menu > top {
+				position: absolute;
+				margin: 0px -1px;
+				top: 8px;
 			}
 			body.blur top {
 				border-radius: 5px;
 				border: 0px;
+			}
+			body.blur major > major-menu > top {
 				top: 9px;
-				box-shadow: 0px 0px 32px rgba(0, 0, 0, 0.5);
+			}
+			body.blur top:is(:hover, :focus-within) {
+				box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.5);
 			}
 			top.small {
 				left: 8px;
@@ -296,8 +303,8 @@
 				margin-right: 0px;
 			}
 			top:is(:hover, :focus-within) {
-				max-height: calc(70% - 18px);
-				overflow: auto;
+				max-height: calc(70vh - 18px);
+				overflow-y: auto;
 				animation-name: show-top;
 				animation-duration: 0.5s;
 			}
@@ -360,25 +367,52 @@
 			}
 			/* major */
 			major /* -> */ {
-				text-align: center;
-				min-width: 1048px;
+				display: flex;
+				flex-direction: column-reverse;
 				width: 100%;
-				padding: 25px 0px 75px 0px;
+				height: 100%;
+			}
+			body > top + major, body > top + major.tiny {
+				padding-top: 69px;
+				height: auto;
 			}
 			major.tiny {
 				min-width: 570px;
-				padding: 12px 0px 18px 0px;
 			}
-			top + major, top + major.tiny {
-				padding-top: 69px;
+			major > major-menu /* -> */ {
+				position: relative;
+				width: 100%;
+				z-index: 2; /* -> layer[top] */
+			}
+			major.no-menu > major-menu {
+				display: none;
 			}
 			major > sub-major /* -> */ {
+				position: relative;
+				text-align: center;
+				overflow-y: auto;
+				width: 100%;
+				height: 100%;
+			}
+			major > sub-major > major-post /* -> */ {
 				display: inline-block;
 				width: 848px;
+				padding-top: 69px;
+				padding-bottom: 75px;
 			}
-			major.tiny > sub-major {
+			major.no-menu > sub-major > major-post {
+				padding-top: 25px;
+			}
+			major.tiny > sub-major > major-post {
 				max-width: 848px;
 				width: calc(100% - 70px);
+				padding-bottom: 54px;
+			}
+			major.tiny.no-menu > sub-major > major-post {
+				padding-top: 18px;
+			}
+			body > top + major.no-menu > sub-major > major-post, body > top + major.tiny.no-menu > sub-major > major-post {
+				padding-top: 0px;
 			}
 			/* post */
 			post /* -> */ {
@@ -452,6 +486,9 @@
 				border-radius: inherit;
 				background-color: rgba(255, 255, 255, 0.3);
 				box-shadow: 0px 0px 32px rgba(0, 0, 0, 0.5);
+			}
+			body.blur major.tiny > sub-major post > sub-post:before {
+				box-shadow: 0px 0px 24px rgba(0, 0, 0, 0.5);
 			}
 			body.blur post > sub-post:after {
 				border-radius: inherit;
@@ -533,6 +570,7 @@
 				border-top-right-radius: inherit;
 			}
 			post > sub-post > post-content /* -> */ {
+				overflow: auto;
 				padding: 0px 40px 20px 40px;
 				flex-grow: 1;
 			}
@@ -567,13 +605,6 @@
 			dropdown.has-disabled {
 				pointer-events: none;
 			}
-			dropdown:not(.has-disabled):is(:hover, :focus-within) {
-				z-index: 2; /* -> layer[dropdown] */
-			}
-			dropdown:not(.has-disabled):is(:hover, :focus-within) > :not(dropdown-content, inner-padding, outer-margin) {
-				position: relative;
-				z-index: 1; /* -> layer[dropdown] -> layer[dropdown-element] */
-			}
 			dropdown > inner-padding /* -> */ {
 				display: none;
 			}
@@ -598,7 +629,10 @@
 				background-color: rgb(40, 40, 40);
 				min-height: 36px;
 				min-width: 175px;
-				box-shadow: 0 0 32px rgba(0, 0, 0, 0.5);
+				box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+			}
+			dropdown:not(.has-disabled):is(:hover, :focus-within) > dropdown-content {
+				z-index: 3; /* -> layer[dropdown] */
 			}
 			body.blur dropdown > dropdown-content {
 				border-radius: 5px;
@@ -722,7 +756,10 @@
 				outline-offset: 0px;
 			}
 			body.blur button:hover {
-				box-shadow: 0px 0px 32px rgba(0, 0, 0, 0.5);
+				box-shadow: 0px 0px 24px rgba(0, 0, 0, 0.5);
+			}
+			body.blur button.advance:hover {
+				box-shadow: 0px 0px 16px rgba(0, 0, 0, 0.5);
 			}
 			button:hover:active {
 				background-color: rgba(188, 188, 188, 0.9);
@@ -771,11 +808,64 @@
 	}
 	@layer features-after {
 		@layer structured-container {
+			/* top */
+			@supports selector(::-webkit-scrollbar) {
+				body.blur top::-webkit-scrollbar-track:vertical {
+					border-top-right-radius: 5px;
+					border-bottom-right-radius: 5px;
+				}
+				top::-webkit-scrollbar-thumb {
+					background-color: #708090;
+					border: 4px solid transparent;
+					background-clip: padding-box;
+				}
+				top::-webkit-scrollbar-thumb:hover {
+					background-color: #A6BFD9;
+					border: 4px solid transparent;
+					background-clip: padding-box;
+				}
+				top::-webkit-scrollbar-thumb:active {
+					background-color: #36454F;
+					border: 4px solid transparent;
+					background-clip: padding-box;
+				}
+			}
 			/* major */
-			major > sub-major:not(:first-of-type) {
-				display: none;
+			@supports selector(::-webkit-scrollbar) {
+				major > sub-major::-webkit-scrollbar-thumb {
+					background-color: #D3D3D3;
+					border: 4px solid transparent;
+					background-clip: padding-box;
+				}
+				major > sub-major::-webkit-scrollbar-thumb:hover {
+					background-color: #F5F5F5;
+					border: 4px solid transparent;
+					background-clip: padding-box;
+				}
+				major > sub-major::-webkit-scrollbar-thumb:active {
+					background-color: #A9A9A9;
+					border: 4px solid transparent;
+					background-clip: padding-box;
+				}
 			}
 			/* post */
+			@supports selector(::-webkit-scrollbar) {
+				post > sub-post > post-content::-webkit-scrollbar-thumb {
+					background-color: #4CAF50;
+					border: 4px solid transparent;
+					background-clip: padding-box;
+				}
+				post > sub-post > post-content::-webkit-scrollbar-thumb:hover {
+					background-color: #71CC19;
+					border: 4px solid transparent;
+					background-clip: padding-box;
+				}
+				post > sub-post > post-content::-webkit-scrollbar-thumb:active {
+					background-color: #106601;
+					border: 4px solid transparent;
+					background-clip: padding-box;
+				}
+			}
 			post:first-of-type {
 				padding-top: 0px;
 			}
@@ -816,6 +906,27 @@
 				display: none;
 			}
 			/* dropdown */
+			@supports selector(::-webkit-scrollbar) {
+				body.blur dropdown > dropdown-content::-webkit-scrollbar-track:vertical {
+					border-top-right-radius: 5px;
+					border-bottom-right-radius: 5px;
+				}
+				dropdown > dropdown-content::-webkit-scrollbar-thumb {
+					background-color: #888;
+					border: 4px solid transparent;
+					background-clip: padding-box;
+				}
+				dropdown > dropdown-content::-webkit-scrollbar-thumb:hover {
+					background-color: #AAA;
+					border: 4px solid transparent;
+					background-clip: padding-box;
+				}
+				dropdown > dropdown-content::-webkit-scrollbar-thumb:active {
+					background-color: #555;
+					border: 4px solid transparent;
+					background-clip: padding-box;
+				}
+			}
 			dropdown:hover > inner-padding:not(:first-of-type) {
 				display: none;
 			}
@@ -824,6 +935,10 @@
 			}
 		}
 		@layer constrained-container {
+			/* major */
+			major > major-menu > :not(top:first-of-type) {
+				display: none;
+			}
 			/* post */
 			post > sub-post > post-leader > post-leader-advance > :not(button.advance, dropdown.has-single-button) {
 				display: none;
@@ -854,47 +969,47 @@
 			left: 0px;
 			z-index: -3; /* -> layer[basis-backdrop] */
 		}
-		body major > sub-major > post > sub-post > backdrop-container {
+		body major > sub-major > major-post > post > sub-post > backdrop-container {
 			position: absolute;
 			width: 100%;
 			height: 100%;
 			z-index: -2; /* -> layer[container-backdrop] */
 		}
-		body.blur major > sub-major > post > sub-post > backdrop-container {
+		body.blur major > sub-major > major-post > post > sub-post > backdrop-container {
 			background-color: black;
 			clip-path: inset(0px round 8px);
 		}
 		body.blur major.tiny > sub-major > post > sub-post > backdrop-container {
 			clip-path: inset(0px round 5px);
 		}
-		body major > sub-major > post > sub-post > backdrop-container > blurred-filter {
+		body major > sub-major > major-post > post > sub-post > backdrop-container > blurred-filter {
 			position: fixed;
 			width: calc(100% + 100px);
 			height: calc(100% + 100px);
 			top: -50px;
 			left: -50px;
 		}
-		body.blur major > sub-major > post > sub-post > backdrop-container > blurred-filter {
+		body.blur major > sub-major > major-post > post > sub-post > backdrop-container > blurred-filter {
 			filter: blur(20px);
 		}
-		body basis-layer, body.blur major > sub-major > post > sub-post > backdrop-container > blurred-filter {
+		body basis-layer, body.blur major > sub-major > major-post > post > sub-post > backdrop-container > blurred-filter {
 			background-repeat: no-repeat;
 			background-position: center;
 			background-size: cover;
 			background-image: var(--background-image, url('lake.jpg'));
 		}
 		@media (pointer: coarse), (pointer: none) {
-			body major > sub-major > post > sub-post {
+			body major > sub-major > major-post > post > sub-post {
 				transition-property: background-color;
 				transition-duration: 0.5s;
 			}
-			body major > sub-major > post > sub-post.suspended-backdrop:before {
+			body major > sub-major > major-post > post > sub-post.suspended-backdrop:before {
 				background-color: transparent;
 			}
-			body major > sub-major > post > sub-post.suspended-backdrop > backdrop-container {
+			body major > sub-major > major-post > post > sub-post.suspended-backdrop > backdrop-container {
 				display: none;
 			}
-			body major > sub-major > post > sub-post:not(.suspended-backdrop) > backdrop-container {
+			body major > sub-major > major-post > post > sub-post:not(.suspended-backdrop) > backdrop-container {
 				animation-name: show-backdrop;
 				animation-duration: 0.5s;
 			}
@@ -905,10 +1020,10 @@
 		body basis-layer:not(:first-of-type) {
 			display: none;
 		}
-		body.blur major > sub-major > post > sub-post > backdrop-container:not(:first-of-type) {
+		body.blur major > sub-major > major-post > post > sub-post > backdrop-container:not(:first-of-type) {
 			display: none;
 		}
-		body.blur major > sub-major > post > sub-post > backdrop-container > blurred-filter:not(:first-of-type) {
+		body.blur major > sub-major > major-post > post > sub-post > backdrop-container > blurred-filter:not(:first-of-type) {
 			display: none;
 		}
 	}

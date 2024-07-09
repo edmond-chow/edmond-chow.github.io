@@ -219,6 +219,8 @@
 			let matched = isMatched(head, 'major');
 			this.majorNode = switchIf(matched, head);
 			this.subMajorNode = switchIf(matched, head.get(':scope > sub-major'));
+			this.majorMenuNode = switchIf(matched, head.get(':scope > major-menu'));
+			this.majorPostNode = switchIf(matched, head.get(':scope > sub-major > major-post'));
 			this.completed = isCompleted(this);
 			makeFrozen(this, true);
 		}
@@ -228,15 +230,15 @@
 			[head].constrainedWithAndThrow(Element);
 			let matched = isMatched(head, 'post');
 			this.postNode = switchIf(matched, head);
-			this.subPostNode = switchIf(matched, head.get(':scope > sub-post'));
 			this.postIconNode = switchIf(matched, head.get(':scope > post-icon'));
+			this.subPostNode = switchIf(matched, head.get(':scope > sub-post'));
 			this.scrollIntoNode = switchIf(matched, head.get(':scope > sub-post > scroll-into'));
 			this.postLeaderNode = switchIf(matched, head.get(':scope > sub-post > post-leader'));
+			this.postContentNode = switchIf(matched, head.get(':scope > sub-post > post-content'));
 			this.postLeaderSectionNode = switchIf(matched, head.get(':scope > sub-post > post-leader > post-leader-section'));
+			this.postLeaderAdvanceNode = switchIf(matched, head.get(':scope > sub-post > post-leader > post-leader-advance'));
 			this.postLeaderOrderNode = switchIf(matched, head.get(':scope > sub-post > post-leader > post-leader-section > post-leader-order'));
 			this.postLeaderTitleNode = switchIf(matched, head.get(':scope > sub-post > post-leader > post-leader-section > post-leader-title'));
-			this.postLeaderAdvanceNode = switchIf(matched, head.get(':scope > sub-post > post-leader > post-leader-advance'));
-			this.postContentNode = switchIf(matched, head.get(':scope > sub-post > post-content'));
 			this.completed = isCompleted(this);
 			makeFrozen(this, true);
 		}
@@ -546,7 +548,7 @@
 					subPostConducting(postValue.postContentNode, subOrderString + '.', postLayer + 1);
 				});
 			};
-			subPostConducting(majorValue.subMajorNode, '', 0);
+			subPostConducting(majorValue.majorPostNode, '', 0);
 		});
 		forAllTag('post').map((value) => {
 			return new Post(value);
@@ -562,6 +564,17 @@
 		/* major */ {
 			/* structuring for the 'major' */ 
 			insertSurround('major', 'sub-major');
+			moveOutside('major > sub-major', 'major-menu');
+			switchBottom('major', 'sub-major');
+			switchBottom('major', 'major-menu');
+			insertSurround('major > sub-major', 'major-post');
+			forAllTag('major').map((value) => {
+				return new Major(value);
+			}).forEach((value) => {
+				/* transferring for the 'major > major-menu's */
+				let topNodes = value.majorPostNode.getAll(':scope > top');
+				value.majorMenuNode.prepend(...topNodes);
+			});
 		}
 		await suspend();
 		/* post */ {
@@ -633,8 +646,8 @@
 		await suspend();
 		/* background-image with 'basis-layer, backdrop-container > blurred-filter' */ {
 			switchBottom('body', 'basis-layer');
-			switchBottom('body major > sub-major > post > sub-post', 'backdrop-container');
-			switchBottom('body major > sub-major > post > sub-post > backdrop-container', 'blurred-filter');
+			switchBottom('body major > sub-major > major-post > post > sub-post', 'backdrop-container');
+			switchBottom('body major > sub-major > major-post > post > sub-post > backdrop-container', 'blurred-filter');
 		}
 		await suspend();
 		document.dispatchEvent(eventStructuredTag);
@@ -644,13 +657,13 @@
 			/* style#background-image */ {
 				if (document.body.hasAttribute('background-image')) {
 					makeCascading(document.head, 'background-image', `
-body basis-layer, body#blur major > sub-major > post > sub-post > backdrop-container > blurred-filter {
+body basis-layer, body.blur major > sub-major > major-post > post > sub-post > backdrop-container > blurred-filter {
 	--background-image: url('` + new URL(document.body.getAttribute('background-image'), document.baseURI).href + `');
 }
 `);
 				} else {
 					makeCascading(document.head, 'background-image', `
-body basis-layer, body#blur major > sub-major > post > sub-post > backdrop-container > blurred-filter {
+body basis-layer, body.blur major > sub-major > major-post > post > sub-post > backdrop-container > blurred-filter {
 	--background-image: unset;
 }
 `);
@@ -668,19 +681,23 @@ body basis-layer, body#blur major > sub-major > post > sub-post > backdrop-conta
 		}
 		await suspend();
 		/* top */
-		forAll('body top').map((value) => {
+		forAllTag('top').map((value) => {
 			return new Top(value);
 		}).filter((value) => {
 			return value.completed;
 		}).forEach((value) => {
-			/* '.no-text' for the 'top' */
+			/* '.no-text' for the 'top's */
 			value.topNode.classList.add('no-text');
-			/* resizing for the 'top' */
-			if (document.body.clientWidth > 1226) {
+			/* resizing for the 'top's */
+			if (!value.topNode.hasParentNode()) {
+				value.topNode.classList.remove('small');
+				value.topNode.classList.remove('medium');
+				value.topNode.classList.remove('large');
+			} else if (value.topNode.parentElement.clientWidth > 1226) {
 				value.topNode.classList.remove('small');
 				value.topNode.classList.remove('medium');
 				value.topNode.classList.add('large');
-			} else if (document.body.clientWidth >= 1048) {
+			} else if (value.topNode.parentElement.clientWidth >= 1048) {
 				value.topNode.classList.remove('small');
 				value.topNode.classList.add('medium');
 				value.topNode.classList.remove('large');
@@ -731,16 +748,22 @@ body basis-layer, body#blur major > sub-major > post > sub-post > backdrop-conta
 		});
 		await suspend();
 		/* major */
-		forAll('body top + major').map((value) => {
+		forAllTag('major').map((value) => {
 			return new Major(value);
 		}).filter((value) => {
 			return value.completed;
 		}).forEach((value) => {
-			/* resizing for the 'major' */
-			if (document.body.clientWidth >= 1048) {
+			/* resizing for the 'major's */
+			if (value.majorNode.clientWidth >= 1048) {
 				value.majorNode.classList.remove('tiny');
 			} else {
 				value.majorNode.classList.add('tiny');
+			}
+			/* '.no-menu' for the 'major's */
+			if (value.majorMenuNode.getAll(':scope > top').length == 0) {
+				value.majorNode.classList.add('no-menu');
+			} else {
+				value.majorNode.classList.remove('no-menu');
 			}
 		});
 		await suspend();
@@ -887,7 +910,7 @@ body basis-layer, body#blur major > sub-major > post > sub-post > backdrop-conta
 			value.buttonNode.disabled = value.buttonNode.classList.contains('disabled');
 		});
 		await suspend();
-		/* .no-space */
+		/* '.no-space' */
 		forAllClass('no-space').map((value) => {
 			return value.childNodes;
 		}).forEach((value) => {
@@ -897,7 +920,7 @@ body basis-layer, body#blur major > sub-major > post > sub-post > backdrop-conta
 				}
 			});
 		});
-		/* .no-text */
+		/* '.no-text' */
 		forAllClass('no-text').map((value) => {
 			return value.childNodes;
 		}).forEach((value) => {
@@ -909,12 +932,12 @@ body basis-layer, body#blur major > sub-major > post > sub-post > backdrop-conta
 		});
 		await suspend();
 		/* background-image with 'basis-layer, backdrop-container > blurred-filter' */
-		forAll('body top + major').map((value) => {
+		forAllTag('major').map((value) => {
 			return new Major(value);
 		}).filter((value) => {
 			return value.completed;
 		}).forEach((value) => {
-			value.subMajorNode.getAll(':scope > post').map((value) => {
+			value.majorPostNode.getAll(':scope > post').map((value) => {
 				return new Post(value);
 			}).filter((value) => {
 				return value.completed;
