@@ -130,7 +130,7 @@
 					min-width: max-content;
 				}
 				/* post[with-collapsed] */
-				post[with-collapsed] > sub-post > post-content {
+				post[with-collapsed] > sub-post > post-content > post-content-container {
 					aspect-ratio: 16 / 9;
 					overflow-y: scroll;
 					padding: 0px 0px 16px 16px;
@@ -139,25 +139,25 @@
 					transition-property: aspect-ratio;
 					transition-timing-function: ease-in-out;
 				}
-				post[with-collapsed] > sub-post > post-content.resizing {
+				post[with-collapsed] > sub-post > post-content > post-content-container.resizing {
 					transition-duration: unset;
 				}
-				post[with-collapsed] > sub-post > post-content.no-scrollbar {
+				post[with-collapsed] > sub-post > post-content > post-content-container.no-scrollbar {
 					overflow-y: visible;
 				}
-				post.tiny[with-collapsed] > sub-post > post-content {
+				post.tiny[with-collapsed] > sub-post > post-content > post-content-container {
 					padding: 0px 0px 12px 12px;
 				}
 				/* post[with-graphics] */
-				post[with-graphics] > sub-post > post-content {
+				post[with-graphics] > sub-post > post-content > post-content-container {
 					padding: 0px;
 				}
 				/* post[with-notice] */
-				post[with-notice] > sub-post > post-content {
+				post[with-notice] > sub-post > post-content > post-content-container {
 					padding: 0px;
 				}
 				/* post[with-inline-frame] */
-				post[with-inline-frame] > sub-post > post-content {
+				post[with-inline-frame] > sub-post > post-content > post-content-container {
 					padding: 0px;
 				}
 				/* post > sub-post > post-leader > post-leader-section > post-leader-date */
@@ -183,54 +183,54 @@
 			}
 			@layer constrained-container {
 				/* post[with-collapsed] */
-				post[with-collapsed] > sub-post > post-content > img {
+				post[with-collapsed] > sub-post > post-content > post-content-container > img {
 					overflow: hidden;
 					width: 70%;
 					margin: 0px 0px 6px 0px;
 					aspect-ratio: 1275 / 1754;
 					-webkit-user-drag: none;
 				}
-				post[with-collapsed] > sub-post > post-content > img:last-of-type {
+				post[with-collapsed] > sub-post > post-content > post-content-container > img:last-of-type {
 					margin-bottom: 0px;
 				}
 				/* post[with-graphics] */
-				post[with-graphics] > sub-post > post-content > img.first-visible-child:last-of-type {
+				post[with-graphics] > sub-post > post-content > post-content-container > img.first-visible-child:last-of-type {
 					overflow: hidden;
 					width: 100%;
 					padding: 0px 0px 16px 0px;
 					aspect-ratio: auto 16 / 9;
 					-webkit-user-drag: none;
 				}
-				post[with-graphics] > sub-post > post-content > img.first-visible-child:last-of-type[pre-deferred-src] {
+				post[with-graphics] > sub-post > post-content > post-content-container > img.first-visible-child:last-of-type[pre-deferred-src] {
 					opacity: 0;
 				}
-				post.tiny[with-graphics] > sub-post > post-content > img.first-visible-child:last-of-type {
+				post.tiny[with-graphics] > sub-post > post-content > post-content-container > img.first-visible-child:last-of-type {
 					padding: 0px 0px 12px 0px;
 				}
-				body.blur post[with-graphics] > sub-post > post-content > img.first-visible-child.last-visible-child {
+				body.blur post[with-graphics] > sub-post > post-content > post-content-container > img.first-visible-child.last-visible-child {
 					border-bottom-left-radius: inherit;
 					border-bottom-right-radius: inherit;
 				}
 				/* post[with-notice] */
-				post[with-notice] > sub-post > post-content > notice {
+				post[with-notice] > sub-post > post-content > post-content-container > notice {
 					padding: 0px 16px 16px 16px;
 				}
-				post.tiny[with-notice] > sub-post > post-content > notice {
+				post.tiny[with-notice] > sub-post > post-content > post-content-container > notice {
 					padding: 0px 12px 12px 12px;
 				}
-				post[with-notice] > sub-post > post-content > notice > sub-notice {
+				post[with-notice] > sub-post > post-content > post-content-container > notice > sub-notice {
 					border: 1px solid rgba(247, 247, 247, .7);
 					padding: 10px;
 					background-color: rgba(0, 0, 0, .5);
 					text-align: center;
 				}
-				body.blur post[with-notice] > sub-post > post-content > notice > sub-notice {
+				body.blur post[with-notice] > sub-post > post-content > post-content-container > notice > sub-notice {
 					border: 0px;
 					border-radius: 5px;
 					box-shadow: 0 0 32px rgba(0, 0, 0, 0.5);
 					background-color: rgba(255, 255, 255, 0.3);
 				}
-				post[with-notice] > sub-post > post-content > notice > sub-notice > notice-content {
+				post[with-notice] > sub-post > post-content > post-content-container > notice > sub-notice > notice-content {
 					display: inline-block;
 					padding: 0px 0px 0px 50px;
 					background-repeat: no-repeat;
@@ -239,44 +239,44 @@
 					min-height: 40px;
 					width: calc(60% - 50px);
 				}
-				post.tiny[with-notice] > sub-post > post-content > notice > sub-notice > notice-content {
+				post.tiny[with-notice] > sub-post > post-content > post-content-container > notice > sub-notice > notice-content {
 					width: calc(80% - 50px);
 				}
-				post[with-notice] > sub-post > post-content > notice.alert > sub-notice > notice-content {
+				post[with-notice] > sub-post > post-content > post-content-container > notice.alert > sub-notice > notice-content {
 					background-image: url('security-maintenance-alert.png');
 				}
-				post[with-notice] > sub-post > post-content > notice.error > sub-notice > notice-content {
+				post[with-notice] > sub-post > post-content > post-content-container > notice.error > sub-notice > notice-content {
 					background-image: url('security-maintenance-error.png');
 				}
-				post[with-notice] > sub-post > post-content > notice.information > sub-notice > notice-content {
+				post[with-notice] > sub-post > post-content > post-content-container > notice.information > sub-notice > notice-content {
 					background-image: url('security-maintenance-information.png');
 				}
-				post[with-notice] > sub-post > post-content > notice > sub-notice > notice-content > * {
+				post[with-notice] > sub-post > post-content > post-content-container > notice > sub-notice > notice-content > * {
 					display: none;
 				}
-				post[with-notice] > sub-post > post-content > notice > sub-notice > notice-content > h3:first-of-type {
+				post[with-notice] > sub-post > post-content > post-content-container > notice > sub-notice > notice-content > h3:first-of-type {
 					text-align: center;
 					display: block;
 					padding: 0px 0px 10px 0px;
 					line-height: 25px;
 					font-weight: bold;
 				}
-				post[with-notice] > sub-post > post-content > notice > sub-notice > notice-content > p {
+				post[with-notice] > sub-post > post-content > post-content-container > notice > sub-notice > notice-content > p {
 					text-align: center;
 					display: block;
 					padding: 0px 0px 6px 0px;
 					line-height: 21px;
 					font-weight: bold;
 				}
-				post[with-notice] > sub-post > post-content > notice > sub-notice > notice-content > p:last-of-type {
+				post[with-notice] > sub-post > post-content > post-content-container > notice > sub-notice > notice-content > p:last-of-type {
 					padding: 0px;
 				}
 				/* post[with-inline-frame] */
-				post[with-inline-frame] > sub-post > post-content > iframe:first-of-type.last-visible-child {
+				post[with-inline-frame] > sub-post > post-content > post-content-container > iframe:first-of-type.last-visible-child {
 					overflow: hidden;
 					width: 100%;
 				}
-				body.blur post[with-inline-frame] > sub-post > post-content > iframe:first-of-type.last-visible-child {
+				body.blur post[with-inline-frame] > sub-post > post-content > post-content-container > iframe:first-of-type.last-visible-child {
 					border-bottom-left-radius: inherit;
 					border-bottom-right-radius: inherit;
 				}
@@ -285,17 +285,17 @@
 		@layer chung-style {
 			@layer constrained-container {
 				/* post[with-notice] */
-				body.chung-style post[with-notice] > sub-post > post-content > notice.chung-notice ::selection {
+				body.chung-style post[with-notice] > sub-post > post-content > post-content-container > notice.chung-notice ::selection {
 					background-color: #FFD54F;
 				}
-				body.chung-style post[with-notice] > sub-post > post-content > notice.chung-notice > sub-notice {
+				body.chung-style post[with-notice] > sub-post > post-content > post-content-container > notice.chung-notice > sub-notice {
 					border: #FFD54F 2px solid;
 					padding: 9px;
 					background-image: url('chung-notice.jpg');
 					background-position: center;
 					background-size: cover;
 				}
-				body.blur.chung-style post[with-notice] > sub-post > post-content > notice.chung-notice > sub-notice {
+				body.blur.chung-style post[with-notice] > sub-post > post-content > post-content-container > notice.chung-notice > sub-notice {
 					border: #FFD54F 2px solid;
 					padding: 8px;
 				}
@@ -316,18 +316,18 @@
 					display: none;
 				}
 				/* post[with-graphics] */
-				post[with-graphics] > sub-post > post-content > :not(notice, iframe:first-of-type.last-visible-child, img.first-visible-child:last-of-type) {
+				post[with-graphics] > sub-post > post-content > post-content-container > :not(notice, iframe:first-of-type.last-visible-child, img.first-visible-child:last-of-type) {
 					display: none;
 				}
-				post[with-graphics] > sub-post > post-content > img.first-visible-child.last-visible-child {
+				post[with-graphics] > sub-post > post-content > post-content-container > img.first-visible-child.last-visible-child {
 					padding-bottom: 0px;
 				}
 				/* post[with-notice] */
-				post[with-notice] > sub-post > post-content > :not(notice, iframe:first-of-type.last-visible-child, img.first-visible-child:last-of-type) {
+				post[with-notice] > sub-post > post-content > post-content-container > :not(notice, iframe:first-of-type.last-visible-child, img.first-visible-child:last-of-type) {
 					display: none;
 				}
 				/* post[with-inline-frame] */
-				post[with-inline-frame] > sub-post > post-content > :not(notice, iframe:first-of-type.last-visible-child, img.first-visible-child:last-of-type) {
+				post[with-inline-frame] > sub-post > post-content > post-content-container > :not(notice, iframe:first-of-type.last-visible-child, img.first-visible-child:last-of-type) {
 					display: none;
 				}
 			}

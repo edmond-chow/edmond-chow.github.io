@@ -173,14 +173,14 @@
 				}
 			});
 		}
-		getAspectRatioFor(postContentNode) {
-			return postContentNode.offsetWidth.toString() + ' / ' + postContentNode.scrollHeight.toString();
+		getAspectRatioFor(postContentContainerNode) {
+			return postContentContainerNode.offsetWidth.toString() + ' / ' + postContentContainerNode.scrollHeight.toString();
 		}
-		getGutterSizeFor(postContentNode) {
-			return (postContentNode.offsetWidth - postContentNode.clientWidth).toString() + 'px';
+		getGutterSizeFor(postContentContainerNode) {
+			return (postContentContainerNode.offsetWidth - postContentContainerNode.clientWidth).toString() + 'px';
 		}
-		onLazyFrozen(postContentNode, freeze) {
-			Array.from(postContentNode.childNodes).filter((value) => {
+		onLazyFrozen(postContentContainerNode, freeze) {
+			Array.from(postContentContainerNode.childNodes).filter((value) => {
 				return value.nodeName == 'img'.toUpperCase() || value.nodeName == 'iframe'.toUpperCase();
 			}).forEach((value) => {
 				if (freeze) {
@@ -200,48 +200,48 @@
 				return buttonNode;
 			}
 		}
-		renderPostWithCollapsedBegin(postContentNode, buttonNode, narrowFrame) {
+		renderPostWithCollapsedBegin(postContentContainerNode, buttonNode, narrowFrame) {
 			if (narrowFrame) {
-				postContentNode.style.aspectRatio = '';
+				postContentContainerNode.style.aspectRatio = '';
 				buttonNode.classList.remove('up');
 				buttonNode.classList.add('down');
 				buttonNode.textContent = '展開';
 			} else {
-				postContentNode.style.aspectRatio = this.getAspectRatioFor(postContentNode);
+				postContentContainerNode.style.aspectRatio = this.getAspectRatioFor(postContentContainerNode);
 				buttonNode.classList.add('up');
 				buttonNode.classList.remove('down');
 				buttonNode.textContent = '縮小';
 			}
-			postContentNode.style.paddingRight = '';
+			postContentContainerNode.style.paddingRight = '';
 			buttonNode.classList.add('disabled');
 		}
-		renderPostWithCollapsedEnd(postContentNode, buttonNode, narrowFrame) {
+		renderPostWithCollapsedEnd(postContentContainerNode, buttonNode, narrowFrame) {
 			if (narrowFrame) {
-				postContentNode.style.paddingRight = '';
-				postContentNode.classList.remove('no-scrollbar');
+				postContentContainerNode.style.paddingRight = '';
+				postContentContainerNode.classList.remove('no-scrollbar');
 				buttonNode.classList.remove('extensied');
 			} else {
-				postContentNode.style.paddingRight = this.getGutterSizeFor(postContentNode);
-				postContentNode.classList.add('no-scrollbar');
+				postContentContainerNode.style.paddingRight = this.getGutterSizeFor(postContentContainerNode);
+				postContentContainerNode.classList.add('no-scrollbar');
 				buttonNode.classList.add('extensied');
 			}
 			buttonNode.classList.remove('disabled');
 		}
-		renderPostWithCollapsedImmediately(postContentNode, buttonNode, narrowFrame) {
-			this.renderPostWithCollapsedBegin(postContentNode, buttonNode, narrowFrame);
-			this.renderPostWithCollapsedEnd(postContentNode, buttonNode, narrowFrame);
+		renderPostWithCollapsedImmediately(postContentContainerNode, buttonNode, narrowFrame) {
+			this.renderPostWithCollapsedBegin(postContentContainerNode, buttonNode, narrowFrame);
+			this.renderPostWithCollapsedEnd(postContentContainerNode, buttonNode, narrowFrame);
 		}
 		async onPostWithCollapsedVisibleClick(postNode, e) {
 			/* 'onVisibleClick' events for the 'post > sub-post > post-leader > post-leader-advance > button.visibility's */
 			let postValue = new Post(postNode);
 			if (postValue.completed && e.target.parentElement == postValue.postLeaderAdvanceNode) {
-				postValue.postContentNode.classList.remove('no-scrollbar');
+				postValue.postContentContainerNode.classList.remove('no-scrollbar');
 				let extensied = e.target.classList.contains('extensied');
-				this.renderPostWithCollapsedBegin(postValue.postContentNode, e.target, extensied);
-				this.onLazyFrozen(postValue.postContentNode, true);
+				this.renderPostWithCollapsedBegin(postValue.postContentContainerNode, e.target, extensied);
+				this.onLazyFrozen(postValue.postContentContainerNode, true);
 				await defer(1000);
-				this.renderPostWithCollapsedEnd(postValue.postContentNode, e.target, extensied);
-				this.onLazyFrozen(postValue.postContentNode, false);
+				this.renderPostWithCollapsedEnd(postValue.postContentContainerNode, e.target, extensied);
+				this.onLazyFrozen(postValue.postContentContainerNode, false);
 			}
 		}
 		operatePostWithCollapsedResizingAgent(resizingOperation) {
@@ -253,25 +253,25 @@
 				return value.postLeaderAdvanceNode.has(':scope > button.advance.visibility');
 			}).forEach((postValue) => {
 				let buttonNode = postValue.postLeaderAdvanceNode.get(':scope > button.advance.visibility');
-				resizingOperation(postValue.postContentNode, buttonNode);
+				resizingOperation(postValue.postContentContainerNode, buttonNode);
 			});
 		}
 		async onPostWithCollapsedResized() {
-			this.operatePostWithCollapsedResizingAgent((postContentNode, buttonNode) => {
+			this.operatePostWithCollapsedResizingAgent((postContentContainerNode, buttonNode) => {
 				if (buttonNode.classList.contains('extensied')) {
-					postContentNode.style.aspectRatio = 'auto';
+					postContentContainerNode.style.aspectRatio = 'auto';
 				}
-				postContentNode.classList.add('resizing');
+				postContentContainerNode.classList.add('resizing');
 				buttonNode.classList.add('pseudo-disabled');
 			});
 			++this.resizingAgentCounter;
 			await defer(250);
 			if (--this.resizingAgentCounter == 0) {
-				this.operatePostWithCollapsedResizingAgent((postContentNode, buttonNode) => {
+				this.operatePostWithCollapsedResizingAgent((postContentContainerNode, buttonNode) => {
 					if (buttonNode.classList.contains('extensied')) {
-						postContentNode.style.aspectRatio = this.getAspectRatioFor(postContentNode);
+						postContentContainerNode.style.aspectRatio = this.getAspectRatioFor(postContentContainerNode);
 					}
-					postContentNode.classList.remove('resizing');
+					postContentContainerNode.classList.remove('resizing');
 					buttonNode.classList.remove('pseudo-disabled');
 				});
 			}
@@ -296,7 +296,7 @@
 				return value.completed && value.postNode.hasAttribute('with-collapsed');
 			}).forEach((postValue) => {
 				let buttonNode = this.newPostWithCollapsedButton(postValue.postLeaderAdvanceNode);
-				this.renderPostWithCollapsedImmediately(postValue.postContentNode, buttonNode, true);
+				this.renderPostWithCollapsedImmediately(postValue.postContentContainerNode, buttonNode, true);
 				let onVisibleClick = this.onPostWithCollapsedVisibleClick.bind(this, postValue.postNode);
 				this.pushEvent(buttonNode, 'click', onVisibleClick);
 			});
