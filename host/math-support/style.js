@@ -355,7 +355,7 @@
 			DispatcherStateMachine.prototype.onARoleAriaLabel
 		]
 		operatePost(node, attribute, selector, bind = null) {
-			let original = !node.hasAttribute('as-is') && !node.hasAttribute('with-collapsed') && !node.has(':scope > sub-post > post-content > post');
+			let original = !node.hasAttribute('as-is') && !node.hasAttribute('with-collapsed') && !node.has(':scope > sub-post > post-content > post-content-container > post');
 			let matched = (siblingProperty, classSelector) => {
 				let isMatched = true;
 				let siblingNode = node.get(selector)[siblingProperty];
@@ -387,15 +387,15 @@
 			}).filter((value) => {
 				return value.completed;
 			}).forEach((postValue) => {
-				this.operatePost(postValue.postNode, 'with-graphics', ':scope > sub-post > post-content > img:first-of-type:last-of-type');
-				this.operatePost(postValue.postNode, 'with-notice', ':scope > sub-post > post-content > notice', (postNode) => {
-					let noticeNode = postNode.get(':scope > sub-post > post-content > notice');
+				this.operatePost(postValue.postNode, 'with-graphics', ':scope > sub-post > post-content > post-content-container > img:first-of-type:last-of-type');
+				this.operatePost(postValue.postNode, 'with-notice', ':scope > sub-post > post-content > post-content-container > notice', (postNode) => {
+					let noticeNode = postNode.get(':scope > sub-post > post-content > post-content-container > notice');
 					if (noticeNode.has(':scope > sub-notice > notice-content')) {
 						let noticeContentNode = noticeNode.get(':scope > sub-notice > notice-content');
 						noticeContentNode.classList.add('no-space');
 					}
 				});
-				this.operatePost(postValue.postNode, 'with-inline-frame', ':scope > sub-post > post-content > iframe:first-of-type:last-of-type');
+				this.operatePost(postValue.postNode, 'with-inline-frame', ':scope > sub-post > post-content > post-content-container > iframe:first-of-type:last-of-type');
 			});
 		}
 		operateLazy(selector, scrollable, action) {
