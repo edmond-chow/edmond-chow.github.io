@@ -306,8 +306,8 @@
 		}
 		onPostWithNotice() {
 			/* '[with-notice]' for the 'post's */
-			insertSurround('post > sub-post > post-content > notice', 'sub-notice');
-			insertSurround('post > sub-post > post-content > notice > sub-notice', 'notice-content');
+			insertSurround('post > sub-post > post-content > post-content-container > notice', 'sub-notice');
+			insertSurround('post > sub-post > post-content > post-content-container > notice > sub-notice', 'notice-content');
 		}
 		onImgAlt() {
 			/* '[alt]' for the 'img's */
