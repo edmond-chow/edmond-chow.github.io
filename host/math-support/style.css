@@ -145,7 +145,7 @@
 				post[with-collapsed] > sub-post > post-content.no-scrollbar {
 					overflow-y: visible;
 				}
-				major.tiny > sub-major > major-post post[with-collapsed] > sub-post > post-content {
+				post.tiny[with-collapsed] > sub-post > post-content {
 					padding: 0px 0px 12px 12px;
 				}
 				/* post[with-graphics] */
@@ -170,7 +170,7 @@
 					color: white;
 					flex-grow: 0;
 				}
-				major.tiny > sub-major > major-post post > sub-post > post-leader > post-leader-section > post-leader-date {
+				post.tiny > sub-post > post-leader > post-leader-section > post-leader-date {
 					padding: 15px 15px 24px 15px;
 				}
 				body.blur post > sub-post > post-leader > post-leader-section > post-leader-date {
@@ -204,7 +204,7 @@
 				post[with-graphics] > sub-post > post-content > img.first-visible-child:last-of-type[pre-deferred-src] {
 					opacity: 0;
 				}
-				major.tiny > sub-major > major-post post[with-graphics] > sub-post > post-content > img.first-visible-child:last-of-type {
+				post.tiny[with-graphics] > sub-post > post-content > img.first-visible-child:last-of-type {
 					padding: 0px 0px 12px 0px;
 				}
 				body.blur post[with-graphics] > sub-post > post-content > img.first-visible-child.last-visible-child {
@@ -215,7 +215,7 @@
 				post[with-notice] > sub-post > post-content > notice {
 					padding: 0px 16px 16px 16px;
 				}
-				major.tiny > sub-major > major-post post[with-notice] > sub-post > post-content > notice {
+				post.tiny[with-notice] > sub-post > post-content > notice {
 					padding: 0px 12px 12px 12px;
 				}
 				post[with-notice] > sub-post > post-content > notice > sub-notice {
@@ -239,7 +239,7 @@
 					min-height: 40px;
 					width: calc(60% - 50px);
 				}
-				major.tiny > sub-major > major-post post[with-notice] > sub-post > post-content > notice > sub-notice > notice-content {
+				post.tiny[with-notice] > sub-post > post-content > notice > sub-notice > notice-content {
 					width: calc(80% - 50px);
 				}
 				post[with-notice] > sub-post > post-content > notice.alert > sub-notice > notice-content {
