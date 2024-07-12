@@ -46,43 +46,49 @@
 <a class="air-play" href="chung-space.html">Mr.Chung的數學天地</a>
 </top>
 <major marker-reversed="true true true true true" marker-started-with="1 1 1 1 1">
-<post hash-id="✮" headline="真．數學支援" as-is>
+<post hash-id="✮" headline="真．數學支援" as-is inner-class="top-post">
 <advance>
 <button id="frame-state" class="advance browse-page"></button>
 </advance>
 <style>
-top-post {
+post > sub-post > post-content > post-content-container.top-post {
+	padding: 20px 0px 0px 0px;
+}
+post.tiny > sub-post > post-content > post-content-container.top-post {
+	padding: 15px 0px 0px 0px;
+}
+post > sub-post > post-content > post-content-container.top-post > box {
 	display: flex;
 	overflow: hidden;
 	padding: 0px;
 	width: 100%;
 	border-radius: inherit;
 }
-top-post > img {
+post > sub-post > post-content > post-content-container.top-post > box > img {
 	display: inline-block;
 	-webkit-user-drag: none;
 }
 @media only screen and (width >= 600px) {
-	top-post > img:nth-of-type(1) {
+	post > sub-post > post-content > post-content-container.top-post > box > img:nth-of-type(1) {
 		width: calc(100% * (673 / 353) / ((673 / 353) + (371 / 371)));
 	}
-	top-post > img:nth-of-type(2) {
+	post > sub-post > post-content > post-content-container.top-post > box > img:nth-of-type(2) {
 		width: calc(100% * (371 / 371) / ((673 / 353) + (371 / 371)));
 	}
 }
 @media only screen and (width < 600px) {
-	top-post {
+	post > sub-post > post-content > post-content-container.top-post > box {
 		flex-direction: column-reverse;
 	}
-	top-post > img {
+	post > sub-post > post-content > post-content-container.top-post > box > img {
 		width: 100%;
 	}
 }
 </style>
-<top-post>
+<box>
 <img deferred-src="home/rainbow.jpg">
 <img deferred-src="home/wk-claim.jpg">
-</top-post>
+</box>
 </post>
 <post headline="十六元數">
 <advance>
