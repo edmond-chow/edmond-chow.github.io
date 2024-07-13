@@ -173,14 +173,14 @@
 				}
 			});
 		}
-		getAspectRatioFor(postContentContainerNode) {
-			return postContentContainerNode.offsetWidth.toString() + ' / ' + postContentContainerNode.scrollHeight.toString();
+		getAspectRatioFor(postContentSubstanceNode) {
+			return postContentSubstanceNode.offsetWidth.toString() + ' / ' + postContentSubstanceNode.scrollHeight.toString();
 		}
-		getGutterSizeFor(postContentContainerNode) {
-			return (postContentContainerNode.offsetWidth - postContentContainerNode.clientWidth).toString() + 'px';
+		getGutterSizeFor(postContentSubstanceNode) {
+			return (postContentSubstanceNode.offsetWidth - postContentSubstanceNode.clientWidth).toString() + 'px';
 		}
-		onLazyFrozen(postContentContainerNode, freeze) {
-			Array.from(postContentContainerNode.childNodes).filter((value) => {
+		onLazyFrozen(postContentSubstanceNode, freeze) {
+			Array.from(postContentSubstanceNode.childNodes).filter((value) => {
 				return value.nodeName == 'img'.toUpperCase() || value.nodeName == 'iframe'.toUpperCase();
 			}).forEach((value) => {
 				if (freeze) {
@@ -200,48 +200,48 @@
 				return buttonNode;
 			}
 		}
-		renderPostWithCollapsedBegin(postContentContainerNode, buttonNode, narrowFrame) {
+		renderPostWithCollapsedBegin(postContentSubstanceNode, buttonNode, narrowFrame) {
 			if (narrowFrame) {
-				postContentContainerNode.style.aspectRatio = '';
+				postContentSubstanceNode.style.aspectRatio = '';
 				buttonNode.classList.remove('up');
 				buttonNode.classList.add('down');
 				buttonNode.textContent = '展開';
 			} else {
-				postContentContainerNode.style.aspectRatio = this.getAspectRatioFor(postContentContainerNode);
+				postContentSubstanceNode.style.aspectRatio = this.getAspectRatioFor(postContentSubstanceNode);
 				buttonNode.classList.add('up');
 				buttonNode.classList.remove('down');
 				buttonNode.textContent = '縮小';
 			}
-			postContentContainerNode.style.paddingRight = '';
+			postContentSubstanceNode.style.paddingRight = '';
 			buttonNode.classList.add('disabled');
 		}
-		renderPostWithCollapsedEnd(postContentContainerNode, buttonNode, narrowFrame) {
+		renderPostWithCollapsedEnd(postContentSubstanceNode, buttonNode, narrowFrame) {
 			if (narrowFrame) {
-				postContentContainerNode.style.paddingRight = '';
-				postContentContainerNode.classList.remove('no-scrollbar');
+				postContentSubstanceNode.style.paddingRight = '';
+				postContentSubstanceNode.classList.remove('no-scrollbar');
 				buttonNode.classList.remove('extensied');
 			} else {
-				postContentContainerNode.style.paddingRight = this.getGutterSizeFor(postContentContainerNode);
-				postContentContainerNode.classList.add('no-scrollbar');
+				postContentSubstanceNode.style.paddingRight = this.getGutterSizeFor(postContentSubstanceNode);
+				postContentSubstanceNode.classList.add('no-scrollbar');
 				buttonNode.classList.add('extensied');
 			}
 			buttonNode.classList.remove('disabled');
 		}
-		renderPostWithCollapsedImmediately(postContentContainerNode, buttonNode, narrowFrame) {
-			this.renderPostWithCollapsedBegin(postContentContainerNode, buttonNode, narrowFrame);
-			this.renderPostWithCollapsedEnd(postContentContainerNode, buttonNode, narrowFrame);
+		renderPostWithCollapsedImmediately(postContentSubstanceNode, buttonNode, narrowFrame) {
+			this.renderPostWithCollapsedBegin(postContentSubstanceNode, buttonNode, narrowFrame);
+			this.renderPostWithCollapsedEnd(postContentSubstanceNode, buttonNode, narrowFrame);
 		}
 		async onPostWithCollapsedVisibleClick(postNode, e) {
 			/* 'onVisibleClick' events for the 'post > sub-post > post-leader > post-leader-advance > button.visibility's */
 			let postValue = new Post(postNode);
 			if (postValue.completed && e.target.parentElement == postValue.postLeaderAdvanceNode) {
-				postValue.postContentContainerNode.classList.remove('no-scrollbar');
+				postValue.postContentSubstanceNode.classList.remove('no-scrollbar');
 				let extensied = e.target.classList.contains('extensied');
-				this.renderPostWithCollapsedBegin(postValue.postContentContainerNode, e.target, extensied);
-				this.onLazyFrozen(postValue.postContentContainerNode, true);
+				this.renderPostWithCollapsedBegin(postValue.postContentSubstanceNode, e.target, extensied);
+				this.onLazyFrozen(postValue.postContentSubstanceNode, true);
 				await defer(1000);
-				this.renderPostWithCollapsedEnd(postValue.postContentContainerNode, e.target, extensied);
-				this.onLazyFrozen(postValue.postContentContainerNode, false);
+				this.renderPostWithCollapsedEnd(postValue.postContentSubstanceNode, e.target, extensied);
+				this.onLazyFrozen(postValue.postContentSubstanceNode, false);
 			}
 		}
 		operatePostWithCollapsedResizingAgent(resizingOperation) {
@@ -253,25 +253,25 @@
 				return value.postLeaderAdvanceNode.has(':scope > button.advance.visibility');
 			}).forEach((postValue) => {
 				let buttonNode = postValue.postLeaderAdvanceNode.get(':scope > button.advance.visibility');
-				resizingOperation(postValue.postContentContainerNode, buttonNode);
+				resizingOperation(postValue.postContentSubstanceNode, buttonNode);
 			});
 		}
 		async onPostWithCollapsedResized() {
-			this.operatePostWithCollapsedResizingAgent((postContentContainerNode, buttonNode) => {
+			this.operatePostWithCollapsedResizingAgent((postContentSubstanceNode, buttonNode) => {
 				if (buttonNode.classList.contains('extensied')) {
-					postContentContainerNode.style.aspectRatio = 'auto';
+					postContentSubstanceNode.style.aspectRatio = 'auto';
 				}
-				postContentContainerNode.classList.add('resizing');
+				postContentSubstanceNode.classList.add('resizing');
 				buttonNode.classList.add('pseudo-disabled');
 			});
 			++this.resizingAgentCounter;
 			await defer(250);
 			if (--this.resizingAgentCounter == 0) {
-				this.operatePostWithCollapsedResizingAgent((postContentContainerNode, buttonNode) => {
+				this.operatePostWithCollapsedResizingAgent((postContentSubstanceNode, buttonNode) => {
 					if (buttonNode.classList.contains('extensied')) {
-						postContentContainerNode.style.aspectRatio = this.getAspectRatioFor(postContentContainerNode);
+						postContentSubstanceNode.style.aspectRatio = this.getAspectRatioFor(postContentSubstanceNode);
 					}
-					postContentContainerNode.classList.remove('resizing');
+					postContentSubstanceNode.classList.remove('resizing');
 					buttonNode.classList.remove('pseudo-disabled');
 				});
 			}
@@ -296,7 +296,7 @@
 				return value.completed && value.postNode.hasAttribute('with-collapsed');
 			}).forEach((postValue) => {
 				let buttonNode = this.newPostWithCollapsedButton(postValue.postLeaderAdvanceNode);
-				this.renderPostWithCollapsedImmediately(postValue.postContentContainerNode, buttonNode, true);
+				this.renderPostWithCollapsedImmediately(postValue.postContentSubstanceNode, buttonNode, true);
 				let onVisibleClick = this.onPostWithCollapsedVisibleClick.bind(this, postValue.postNode);
 				this.pushEvent(buttonNode, 'click', onVisibleClick);
 			});
@@ -306,8 +306,8 @@
 		}
 		onPostWithNotice() {
 			/* '[with-notice]' for the 'post's */
-			insertSurround('post > sub-post > post-content > post-content-container > notice', 'sub-notice');
-			insertSurround('post > sub-post > post-content > post-content-container > notice > sub-notice', 'notice-content');
+			insertSurround('post > sub-post > post-content > post-content-substance > notice', 'sub-notice');
+			insertSurround('post > sub-post > post-content > post-content-substance > notice > sub-notice', 'notice-content');
 		}
 		onImgAlt() {
 			/* '[alt]' for the 'img's */
@@ -355,7 +355,7 @@
 			DispatcherStateMachine.prototype.onARoleAriaLabel
 		]
 		operatePost(node, attribute, selector, bind = null) {
-			let original = !node.hasAttribute('as-is') && !node.hasAttribute('with-collapsed') && !node.has(':scope > sub-post > post-content > post-content-container > post');
+			let original = !node.hasAttribute('as-is') && !node.hasAttribute('with-collapsed') && !node.has(':scope > sub-post > post-content > post-content-substance > post');
 			let matched = (siblingProperty, classSelector) => {
 				let isMatched = true;
 				let siblingNode = node.get(selector)[siblingProperty];
@@ -387,15 +387,15 @@
 			}).filter((value) => {
 				return value.completed;
 			}).forEach((postValue) => {
-				this.operatePost(postValue.postNode, 'with-graphics', ':scope > sub-post > post-content > post-content-container > img:first-of-type:last-of-type');
-				this.operatePost(postValue.postNode, 'with-notice', ':scope > sub-post > post-content > post-content-container > notice', (postNode) => {
-					let noticeNode = postNode.get(':scope > sub-post > post-content > post-content-container > notice');
+				this.operatePost(postValue.postNode, 'with-graphics', ':scope > sub-post > post-content > post-content-substance > img:first-of-type:last-of-type');
+				this.operatePost(postValue.postNode, 'with-notice', ':scope > sub-post > post-content > post-content-substance > notice', (postNode) => {
+					let noticeNode = postNode.get(':scope > sub-post > post-content > post-content-substance > notice');
 					if (noticeNode.has(':scope > sub-notice > notice-content')) {
 						let noticeContentNode = noticeNode.get(':scope > sub-notice > notice-content');
 						noticeContentNode.classList.add('no-space');
 					}
 				});
-				this.operatePost(postValue.postNode, 'with-inline-frame', ':scope > sub-post > post-content > post-content-container > iframe:first-of-type:last-of-type');
+				this.operatePost(postValue.postNode, 'with-inline-frame', ':scope > sub-post > post-content > post-content-substance > iframe:first-of-type:last-of-type');
 			});
 		}
 		operateLazy(selector, scrollable, action) {
