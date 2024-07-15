@@ -151,14 +151,14 @@
 			lockFields(this, ['state', 'isLoaded', 'hasScrolled', 'scrollingStarted', 'resizingAgentCounter', 'registeredEvents'], true);
 		}
 		onButtonFrameState() {
-			forAll('button#frame-state').forEach((value) => {
-				this.pushEvent(value, 'click', switchFrameState);
+			forAll('button#frame-state').forEach((node) => {
+				this.pushEvent(node, 'click', switchFrameState);
 			});
 		}
 		onPostDateString() {
 			/* integrating the 'post-leader-date's by including the '[date-string]'s */
-			forAllTag('post').map((value) => {
-				return new Post(value);
+			forAllTag('post').map((node) => {
+				return new Post(node);
 			}).filter((value) => {
 				return value.completed;
 			}).forEach((postValue) => {
@@ -180,13 +180,13 @@
 			return (postContentSubstanceNode.offsetWidth - postContentSubstanceNode.clientWidth).toString() + 'px';
 		}
 		onLazyFrozen(postContentSubstanceNode, freeze) {
-			Array.from(postContentSubstanceNode.childNodes).filter((value) => {
-				return value.nodeName == 'img'.toUpperCase() || value.nodeName == 'iframe'.toUpperCase();
-			}).forEach((value) => {
+			Array.from(postContentSubstanceNode.childNodes).filter((node) => {
+				return node.nodeName == 'img'.toUpperCase() || node.nodeName == 'iframe'.toUpperCase();
+			}).forEach((node) => {
 				if (freeze) {
-					value.setAttribute('frozen', '');
+					node.setAttribute('frozen', '');
 				} else {
-					value.removeAttribute('frozen');
+					node.removeAttribute('frozen');
 				}
 			});
 		}
@@ -245,8 +245,8 @@
 			}
 		}
 		operatePostWithCollapsedResizingAgent(resizingOperation) {
-			forAll('post[with-collapsed]').map((value) => {
-				return new Post(value);
+			forAll('post[with-collapsed]').map((node) => {
+				return new Post(node);
 			}).filter((value) => {
 				return value.completed;
 			}).filter((value) => {
@@ -278,15 +278,15 @@
 		}
 		onPostWithCollapsed() {
 			/* remove 'visibility' class name for the 'post:not([with-collapsed]) > sub-post > post-leader > post-leader-advance > button.visibility's */
-			forAll('post').map((value) => {
-				return new Post(value);
+			forAll('post').map((node) => {
+				return new Post(node);
 			}).filter((value) => {
 				return value.completed && !value.postNode.hasAttribute('with-collapsed');
 			}).map((value) => {
 				return value.postLeaderAdvanceNode;
 			}).forEach((postLeaderAdvanceNode) => {
-				postLeaderAdvanceNode.getAll(':scope > button.advance.visibility').forEach((value) => {
-					value.classList.remove('visibility');
+				postLeaderAdvanceNode.getAll(':scope > button.advance.visibility').forEach((node) => {
+					node.classList.remove('visibility');
 				});
 			});
 			/* 'onVisibleClick' events for the 'post[with-collapsed] > sub-post > post-leader > post-leader-advance > button.visibility's */
@@ -311,36 +311,36 @@
 		}
 		onImgAlt() {
 			/* '[alt]' for the 'img's */
-			forAllTag('img').forEach((value) => {
-				if (!hasAlt(value) && !hasAriaLabel(value) && !hasAriaLabelBy(value)) {
-					makeAlt(value);
+			forAllTag('img').forEach((node) => {
+				if (!hasAlt(node) && !hasAriaLabel(node) && !hasAriaLabelBy(node)) {
+					makeAlt(node);
 				}
 			});
 		}
 		onIframeTitle() {
 			/* '[title]' for the 'iframe's */
-			forAllTag('iframe').forEach((value) => {
-				if (!hasTitle(value)) {
-					makeTitle(value);
+			forAllTag('iframe').forEach((node) => {
+				if (!hasTitle(node)) {
+					makeTitle(node);
 				}
 			});
 		}
 		onButtonRoleAriaLabel() {
 			/* '[aria-label]' for the 'button, [role="button"]'s */
-			forAll('button, [role="button"]').forEach((value) => {
-				if (!hasTitle(value) && !hasAriaLabel(value) && !hasAriaLabelBy(value)) {
-					makeAriaLabel(value);
+			forAll('button, [role="button"]').forEach((node) => {
+				if (!hasTitle(node) && !hasAriaLabel(node) && !hasAriaLabelBy(node)) {
+					makeAriaLabel(node);
 				}
-				if (!value.hasAttribute('type')) {
-					value.setAttribute('type', 'button');
+				if (!node.hasAttribute('type')) {
+					node.setAttribute('type', 'button');
 				}
 			});
 		}
 		onARoleAriaLabel() {
 			/* '[aria-label]' for the 'a, [role="link"]'s */
-			forAll('a, [role="link"]').forEach((value) => {
-				if (value.hasAttribute('href') && !hasAriaLabel(value)) {
-					makeAriaLabel(value);
+			forAll('a, [role="link"]').forEach((node) => {
+				if (node.hasAttribute('href') && !hasAriaLabel(node)) {
+					makeAriaLabel(node);
 				}
 			});
 		}
@@ -390,9 +390,10 @@
 				this.operatePost(postValue.postNode, 'with-graphics', ':scope > sub-post > post-content > post-content-substance > img:first-of-type:last-of-type');
 				this.operatePost(postValue.postNode, 'with-notice', ':scope > sub-post > post-content > post-content-substance > notice', (postNode) => {
 					let noticeNode = postNode.get(':scope > sub-post > post-content > post-content-substance > notice');
-					if (noticeNode.has(':scope > sub-notice > notice-content')) {
-						let noticeContentNode = noticeNode.get(':scope > sub-notice > notice-content');
-						noticeContentNode.classList.add('no-space');
+					if (noticeNode.classList.contains('first-visible-child')) {
+						postNode.classList.add('has-first-notice');
+					} else {
+						postNode.classList.remove('has-first-notice');
 					}
 				});
 				this.operatePost(postValue.postNode, 'with-inline-frame', ':scope > sub-post > post-content > post-content-substance > iframe:first-of-type:last-of-type');
