@@ -79,6 +79,43 @@
 				}
 			}
 		}
+		@layer beautiful-math-style {
+			/* ::-webkit-scrollbar */
+			@supports selector(::-webkit-scrollbar) {
+				@media (pointer: fine) {
+					body.beautiful-math-style::-webkit-scrollbar-thumb {
+						background-color: #7A00FF;
+						border: 4px solid transparent;
+						background-clip: padding-box;
+					}
+					body.beautiful-math-style::-webkit-scrollbar-thumb:hover {
+						background-color: #1C97EA;
+						border: 4px solid transparent;
+						background-clip: padding-box;
+					}
+					body.beautiful-math-style::-webkit-scrollbar-thumb:active {
+						background-color: #007ACC;
+						border: 4px solid transparent;
+						background-clip: padding-box;
+					}
+				}
+				body.beautiful-math-style :is(:not(body, top), top:hover)::-webkit-scrollbar-thumb {
+					background-color: #3B78FF;
+					border: 4px solid transparent;
+					background-clip: padding-box;
+				}
+				body.beautiful-math-style :is(:not(body, top), top:hover)::-webkit-scrollbar-thumb:hover {
+					background-color: #3A96DD;
+					border: 4px solid transparent;
+					background-clip: padding-box;
+				}
+				body.beautiful-math-style :is(:not(body, top), top:hover)::-webkit-scrollbar-thumb:active {
+					background-color: #0037DA;
+					border: 4px solid transparent;
+					background-clip: padding-box;
+				}
+			}
+		}
 		@layer chung-style {
 			/* ::-webkit-scrollbar */
 			@supports selector(::-webkit-scrollbar) {
