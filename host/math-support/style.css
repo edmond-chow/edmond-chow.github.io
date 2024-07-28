@@ -367,6 +367,10 @@
 				}
 			}
 			@layer constrained-container {
+				/* post > sub-post > post-leader > post-leader-section > post-leader-date */
+				post > sub-post > post-leader > post-leader-section > post-leader-date > * {
+					display: none;
+				}
 				/* post[with-collapsed] */
 				post[with-collapsed] > sub-post > post-leader > post-leader-advance > button.advance.visibility:not(:first-of-type) {
 					display: none;
