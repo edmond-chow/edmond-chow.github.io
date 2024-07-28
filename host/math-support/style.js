@@ -156,7 +156,7 @@
 			});
 		}
 		onPostDateString() {
-			/* integrating the 'post-leader-date's by including the '[date-string]'s */
+			/* integrating the 'post-leader-date's by including the '[date-string]' */
 			forAllTag('post').map((node) => {
 				return new Post(node);
 			}).filter((value) => {
@@ -381,6 +381,21 @@
 			}
 		}
 		onPost() {
+			/* '.no-content' for the 'post-leader-date's */
+			forAllTag('post').map((node) => {
+				return new Post(node);
+			}).filter((value) => {
+				return value.completed;
+			}).forEach((postValue) => {
+				if (postValue.postNode.has(':scope > sub-post > post-leader > post-leader-section > post-leader-date')) {
+					let postLeaderDateNode = postValue.postNode.get(':scope > sub-post > post-leader > post-leader-section > post-leader-date');
+					if (hasSubstance(postLeaderDateNode)) {
+						postLeaderDateNode.classList.remove('no-content');
+					} else {
+						postLeaderDateNode.classList.add('no-content');
+					}
+				}
+			});
 			/* '[with-graphics, with-notice, with-inline-frame]' for the 'post's */
 			forAllTag('post').map((value) => {
 				return new Post(value);
