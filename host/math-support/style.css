@@ -162,6 +162,9 @@
 					background-image: url('blackboard.png');
 				}
 				/* post */
+				post > sub-post > post-leader > post-leader-section {
+					flex-basis: 0px;
+				}
 				post > sub-post > post-leader > post-leader-advance {
 					max-width: max-content;
 					min-width: max-content;
