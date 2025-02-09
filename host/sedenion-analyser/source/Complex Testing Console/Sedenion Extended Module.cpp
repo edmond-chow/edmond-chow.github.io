@@ -25,10 +25,10 @@ using namespace ComplexTestingConsole;
 using namespace Num;
 namespace SedenBasis
 {
+	static thread_local int& Err{ errno };
 	template <typename T>
 	void Mul(const std::wstring& L, const wchar_t* R, T(Gbl* F)(const Seden&, const Seden&))
 	{
-		int& Err{ errno };
 		if (Err != 0) { return; }
 		if (L == R)
 		{
@@ -42,7 +42,6 @@ namespace SedenBasis
 	template <typename T>
 	void Op(const std::wstring& L, const wchar_t* R, T(Gbl* F)(const Seden&, const Seden&))
 	{
-		int& Err{ errno };
 		if (Err != 0) { return; }
 		if (L == R)
 		{
@@ -55,7 +54,6 @@ namespace SedenBasis
 	};
 	inline void Pow(const std::wstring& L, const wchar_t* R, Seden(Gbl* F)(const Seden&, std::int64_t))
 	{
-		int& Err{ errno };
 		if (Err != 0) { return; }
 		if (L == R)
 		{
@@ -69,7 +67,6 @@ namespace SedenBasis
 	template <typename... As>
 	void Pow(const std::wstring& L, std::wstring&& R, Seden(Gbl* F)(const Seden&, const Seden&, std::int64_t, As...))
 	{
-		int& Err{ errno };
 		if (Err != 0) { return; }
 		if (L == R)
 		{
@@ -95,7 +92,6 @@ namespace SedenBasis
 	template <typename T>
 	void Bas(const std::wstring& L, const wchar_t* R, T(Gbl* F)(const Seden&))
 	{
-		int& Err{ errno };
 		if (Err != 0) { return; }
 		if (L == R)
 		{
@@ -107,7 +103,6 @@ namespace SedenBasis
 	template <typename T>
 	void BasP(const std::wstring& L, std::wstring&& R, T(Gbl* F)(const Seden&, std::int64_t))
 	{
-		int& Err{ errno };
 		if (Err != 0) { return; }
 		if (L == R)
 		{
@@ -133,7 +128,6 @@ namespace SedenBasis
 	};
 	inline void Tri(const std::wstring& L, const wchar_t* R, Seden(Gbl* F)(const Seden&))
 	{
-		int& Err{ errno };
 		if (Err != 0) { return; }
 		if (L == R)
 		{
@@ -144,7 +138,6 @@ namespace SedenBasis
 	};
 	inline void Atri(const std::wstring& L, std::wstring&& R, Seden(Gbl* F)(const Seden&, bool, std::int64_t))
 	{
-		int& Err{ errno };
 		if (Err != 0) { return; }
 		if (L == R)
 		{
@@ -195,8 +188,6 @@ namespace SedenBasis
 		for (std::wstring L; !Base::IsSwitchTo(L); L = Base::Input())
 		{
 			if (L.empty()) { continue; }
-			int& Err{ errno };
-			Err = 0;
 			Op(L, L"=", operator ==);
 			Op(L, L"+", operator +);
 			Op(L, L"-", operator -);
@@ -247,6 +238,7 @@ namespace SedenBasis
 			Atri(L, L"arccoth", Seden::Arccoth);
 			if (Err == EINVAL) { Base::Exception(std::invalid_argument{ " The int& errno becomes EINVAL. " }); }
 			if (Err == ERANGE) { Base::Exception(std::out_of_range{ " The int& errno becomes ERANGE. " }); }
+			Err = 0;
 		}
 	};
 }

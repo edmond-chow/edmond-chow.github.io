@@ -29,6 +29,7 @@ inline std::wstring Str(double Num)
 inline std::size_t stos_t(const std::wstring& Str)
 {
 	int& Err{ errno };
+	Err = 0;
 	if (Str[0] == L' ')
 	{
 		Err = EINVAL;
@@ -54,6 +55,7 @@ inline std::size_t stos_t(const std::wstring& Str)
 inline double stod_t(const std::wstring& Str)
 {
 	int& Err{ errno };
+	Err = 0;
 	if (Str[0] == L' ')
 	{
 		Err = EINVAL;

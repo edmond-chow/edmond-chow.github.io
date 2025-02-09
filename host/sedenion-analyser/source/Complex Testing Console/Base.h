@@ -33,6 +33,7 @@ inline std::wstring Str(double Num)
 inline std::int64_t stoi64_t(const std::wstring& Str)
 {
 	int& Err{ errno };
+	Err = 0;
 	if (Str[0] == L' ')
 	{
 		Err = EINVAL;

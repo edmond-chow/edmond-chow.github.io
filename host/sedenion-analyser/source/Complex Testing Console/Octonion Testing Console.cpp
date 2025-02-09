@@ -25,10 +25,10 @@ using namespace ComplexTestingConsole;
 using namespace Num;
 namespace OctonBasis
 {
+	static thread_local int& Err{ errno };
 	template <typename T>
 	void Mul(const std::wstring& L, const wchar_t* R, T(Gbl* F)(const Octon&, const Octon&))
 	{
-		int& Err{ errno };
 		if (Err != 0) { return; }
 		if (L == R)
 		{
@@ -46,7 +46,6 @@ namespace OctonBasis
 	template <typename T>
 	void Op(const std::wstring& L, const wchar_t* R, T(Gbl* F)(const Octon&, const Octon&))
 	{
-		int& Err{ errno };
 		if (Err != 0) { return; }
 		if (L == R)
 		{
@@ -59,7 +58,6 @@ namespace OctonBasis
 	};
 	inline void Pow(const std::wstring& L, const wchar_t* R, Octon(Gbl* F)(const Octon&, std::int64_t))
 	{
-		int& Err{ errno };
 		if (Err != 0) { return; }
 		if (L == R)
 		{
@@ -73,7 +71,6 @@ namespace OctonBasis
 	template <typename... As>
 	void Pow(const std::wstring& L, std::wstring&& R, Octon(Gbl* F)(const Octon&, const Octon&, std::int64_t, As...))
 	{
-		int& Err{ errno };
 		if (Err != 0) { return; }
 		if (L == R)
 		{
@@ -99,7 +96,6 @@ namespace OctonBasis
 	template <typename T>
 	void Bas(const std::wstring& L, const wchar_t* R, T(Gbl* F)(const Octon&))
 	{
-		int& Err{ errno };
 		if (Err != 0) { return; }
 		if (L == R)
 		{
@@ -111,7 +107,6 @@ namespace OctonBasis
 	template <typename T>
 	void BasP(const std::wstring& L, std::wstring&& R, T(Gbl* F)(const Octon&, std::int64_t))
 	{
-		int& Err{ errno };
 		if (Err != 0) { return; }
 		if (L == R)
 		{
@@ -137,7 +132,6 @@ namespace OctonBasis
 	};
 	inline void Tri(const std::wstring& L, const wchar_t* R, Octon(Gbl* F)(const Octon&))
 	{
-		int& Err{ errno };
 		if (Err != 0) { return; }
 		if (L == R)
 		{
@@ -148,7 +142,6 @@ namespace OctonBasis
 	};
 	inline void Atri(const std::wstring& L, std::wstring&& R, Octon(Gbl* F)(const Octon&, bool, std::int64_t))
 	{
-		int& Err{ errno };
 		if (Err != 0) { return; }
 		if (L == R)
 		{
@@ -199,8 +192,6 @@ namespace OctonBasis
 		for (std::wstring L; !Base::IsSwitchTo(L); L = Base::Input())
 		{
 			if (L.empty()) { continue; }
-			int& Err{ errno };
-			Err = 0;
 			Op(L, L"=", operator ==);
 			Op(L, L"+", operator +);
 			Op(L, L"-", operator -);
@@ -251,6 +242,7 @@ namespace OctonBasis
 			Atri(L, L"arccoth", Octon::Arccoth);
 			if (Err == EINVAL) { Base::Exception(std::invalid_argument{ " The int& errno becomes EINVAL. " }); }
 			if (Err == ERANGE) { Base::Exception(std::out_of_range{ " The int& errno becomes ERANGE. " }); }
+			Err = 0;
 		}
 	};
 }

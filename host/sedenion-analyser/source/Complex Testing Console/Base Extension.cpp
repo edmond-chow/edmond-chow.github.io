@@ -19,7 +19,6 @@
 /*               */
 /* ============= */
 #include <emscripten.h>
-#include <cstdlib>
 #include <cstdint>
 #include <string>
 #include <sstream>
@@ -241,20 +240,20 @@ namespace CmplxConExt
 	{
 		return *dom::console::title();
 	};
-	void SetForegroundColor(ConsoleColor Color)
+	void SetForegroundColor(ConsoleColor Col)
 	{
-		*dom::console::foreground() = static_cast<std::uint8_t>(Color);
-		dom::wcout << L"\\f" << dom::console::color_char_code(static_cast<std::uint8_t>(Color)) << L"\\";
+		*dom::console::foreground() = static_cast<std::uint8_t>(Col);
+		dom::wcout << L"\\f" << dom::console::color_char_code(static_cast<std::uint8_t>(Col)) << L"\\";
 	};
-	void SetBackgroundColor(ConsoleColor Color)
+	void SetBackgroundColor(ConsoleColor Col)
 	{
-		*dom::console::background() = static_cast<std::uint8_t>(Color);
-		dom::wcout << L"\\b" << dom::console::color_char_code(static_cast<std::uint8_t>(Color)) << L"\\";
+		*dom::console::background() = static_cast<std::uint8_t>(Col);
+		dom::wcout << L"\\b" << dom::console::color_char_code(static_cast<std::uint8_t>(Col)) << L"\\";
 	};
-	void SetTitle(const std::wstring& Text)
+	void SetTitle(const std::wstring& Tle)
 	{
-		*dom::console::title() = Text;
-		dom::wcout << L"\\t" << Text << L"\\";
+		*dom::console::title() = Tle;
+		dom::wcout << L"\\t" << Tle << L"\\";
 	};
 	void PressAnyKey()
 	{

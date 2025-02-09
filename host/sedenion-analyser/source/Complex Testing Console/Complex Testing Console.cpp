@@ -25,10 +25,10 @@ using namespace ComplexTestingConsole;
 using namespace Num;
 namespace CmplxBasis
 {
+	static thread_local int& Err{ errno };
 	template <typename T>
 	void Mul(const std::wstring& L, const wchar_t* R, T(Gbl* F)(const Cmplx&, const Cmplx&))
 	{
-		int& Err{ errno };
 		if (Err != 0) { return; }
 		if (L == R)
 		{
@@ -46,7 +46,6 @@ namespace CmplxBasis
 	template <typename T>
 	void Op(const std::wstring& L, const wchar_t* R, T(Gbl* F)(const Cmplx&, const Cmplx&))
 	{
-		int& Err{ errno };
 		if (Err != 0) { return; }
 		if (L == R)
 		{
@@ -59,7 +58,6 @@ namespace CmplxBasis
 	};
 	inline void Pow(const std::wstring& L, const wchar_t* R, Cmplx(Gbl* F)(const Cmplx&, std::int64_t))
 	{
-		int& Err{ errno };
 		if (Err != 0) { return; }
 		if (L == R)
 		{
@@ -73,7 +71,6 @@ namespace CmplxBasis
 	template <typename... As>
 	void Pow(const std::wstring& L, std::wstring&& R, Cmplx(Gbl* F)(const Cmplx&, const Cmplx&, std::int64_t, As...))
 	{
-		int& Err{ errno };
 		if (Err != 0) { return; }
 		if (L == R)
 		{
@@ -99,7 +96,6 @@ namespace CmplxBasis
 	template <typename T>
 	void Bas(const std::wstring& L, const wchar_t* R, T(Gbl* F)(const Cmplx&))
 	{
-		int& Err{ errno };
 		if (Err != 0) { return; }
 		if (L == R)
 		{
@@ -111,7 +107,6 @@ namespace CmplxBasis
 	template <typename T>
 	void BasP(const std::wstring& L, std::wstring&& R, T(Gbl* F)(const Cmplx&, std::int64_t))
 	{
-		int& Err{ errno };
 		if (Err != 0) { return; }
 		if (L == R)
 		{
@@ -137,7 +132,6 @@ namespace CmplxBasis
 	};
 	inline void Tri(const std::wstring& L, const wchar_t* R, Cmplx(Gbl* F)(const Cmplx&))
 	{
-		int& Err{ errno };
 		if (Err != 0) { return; }
 		if (L == R)
 		{
@@ -148,7 +142,6 @@ namespace CmplxBasis
 	};
 	inline void Atri(const std::wstring& L, std::wstring&& R, Cmplx(Gbl* F)(const Cmplx&, bool, std::int64_t))
 	{
-		int& Err{ errno };
 		if (Err != 0) { return; }
 		if (L == R)
 		{
@@ -199,8 +192,6 @@ namespace CmplxBasis
 		for (std::wstring L; !Base::IsSwitchTo(L); L = Base::Input())
 		{
 			if (L.empty()) { continue; }
-			int& Err{ errno };
-			Err = 0;
 			Op(L, L"=", operator ==);
 			Op(L, L"+", operator +);
 			Op(L, L"-", operator -);
@@ -251,6 +242,7 @@ namespace CmplxBasis
 			Atri(L, L"arccoth", Cmplx::Arccoth);
 			if (Err == EINVAL) { Base::Exception(std::invalid_argument{" The int& errno becomes EINVAL. "}); }
 			if (Err == ERANGE) { Base::Exception(std::out_of_range{ " The int& errno becomes ERANGE. " }); }
+			Err = 0;
 		}
 	};
 }
