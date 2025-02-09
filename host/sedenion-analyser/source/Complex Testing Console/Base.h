@@ -67,6 +67,14 @@ inline std::wstring Replace(const std::wstring& Ipt, const std::wstring& Sch, co
 	}
 	return Rst;
 };
+inline constexpr const wchar_t* Ws = L" \t\n\r\f\v";
+inline std::wstring Trim(const std::wstring& Ipt)
+{
+	std::wstring Rst = Ipt;
+	Rst.erase(0, Rst.find_first_not_of(Ws));
+	Rst.erase(Rst.find_last_not_of(Ws) + 1);
+	return Rst;
+};
 template <typename T>
 T Val(const std::wstring& Str)
 {
