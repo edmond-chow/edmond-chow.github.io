@@ -24,6 +24,7 @@
 #include <stdexcept>
 #include <functional>
 #include <NumString.h>
+inline constexpr const wchar_t* Ws = L" \t\n\v\f\r";
 inline std::wstring Str(double Num)
 {
 	std::wstringstream Rst;
@@ -34,7 +35,7 @@ inline std::int64_t stoi64_t(const std::wstring& Str)
 {
 	int& Err{ errno };
 	Err = 0;
-	if (Str[0] == L' ')
+	if (Str.find_first_not_of(Ws) > 0)
 	{
 		Err = EINVAL;
 		return 0;
@@ -48,13 +49,7 @@ inline std::int64_t stoi64_t(const std::wstring& Str)
 		return 0;
 	}
 	if (Err == ERANGE) { return 0; }
-	std::int64_t TRst{ static_cast<std::int64_t>(Rst) };
-	if (TRst != Rst)
-	{
-		Err = ERANGE;
-		return 0;
-	}
-	return TRst;
+	return static_cast<std::int64_t>(Rst);
 };
 inline std::wstring Replace(const std::wstring& Ipt, const std::wstring& Sch, const std::wstring& Rpt)
 {
@@ -67,7 +62,6 @@ inline std::wstring Replace(const std::wstring& Ipt, const std::wstring& Sch, co
 	}
 	return Rst;
 };
-inline constexpr const wchar_t* Ws = L" \t\n\r\f\v";
 inline std::wstring Trim(const std::wstring& Ipt)
 {
 	std::wstring Rst = Ipt;

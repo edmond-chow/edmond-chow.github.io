@@ -20,6 +20,7 @@
 #include <regex>
 #include <sstream>
 #include <stdexcept>
+inline constexpr const wchar_t* Ws = L" \t\n\v\f\r";
 inline std::wstring Str(double Num)
 {
 	std::wstringstream Rst;
@@ -30,7 +31,7 @@ inline std::size_t stos_t(const std::wstring& Str)
 {
 	int& Err{ errno };
 	Err = 0;
-	if (Str[0] == L' ')
+	if (Str.find_first_not_of(Ws) > 0)
 	{
 		Err = EINVAL;
 		return 0;
@@ -44,19 +45,13 @@ inline std::size_t stos_t(const std::wstring& Str)
 		return 0;
 	}
 	if (Err == ERANGE) { return 0; }
-	std::size_t TRst{ static_cast<std::size_t>(Rst) };
-	if (TRst != Rst)
-	{
-		Err = ERANGE;
-		return 0;
-	}
-	return TRst;
+	return static_cast<std::size_t>(Rst);
 };
 inline double stod_t(const std::wstring& Str)
 {
 	int& Err{ errno };
 	Err = 0;
-	if (Str[0] == L' ')
+	if (Str.find_first_not_of(Ws) > 0)
 	{
 		Err = EINVAL;
 		return 0;
