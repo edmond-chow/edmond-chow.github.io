@@ -171,18 +171,18 @@ inline std::vector<double> ToNumbers(const std::wstring& Val, const Terms& Trm)
 			Err = EINVAL;
 			return {};
 		}
-		std::wsmatch::const_reference BegV = Mat[BegI];
-		std::wsmatch::const_reference SigV = Mat[SigI];
-		std::wsmatch::const_reference TrmV = Mat[TrmI];
-		std::wstring Cap(BegV.first, SigV.second);
+		std::wstring BegV = Mat.str(BegI);
+		std::wstring SigV = Mat.str(SigI);
+		std::wstring TrmV = Mat.str(TrmI);
+		std::wstring Cap{ BegV + SigV };
 		std::size_t i{ 0 };
-		if (Trm.Null()) { i = stos_t(std::wstring(TrmV.first + 1, TrmV.second)); }
+		if (Trm.Null()) { i = stos_t(TrmV.substr(1)); }
 		else
 		{
 			while (Trm[i] != TrmV && i < Siz) { ++i; }
 			if (i == Siz) { throw std::runtime_error{ "The branch should unreachable." }; }
 		}
-		if (!SigV.matched && !TrmV.matched)
+		if (SigV.empty() && TrmV.empty())
 		{
 			Err = EINVAL;
 			return {};

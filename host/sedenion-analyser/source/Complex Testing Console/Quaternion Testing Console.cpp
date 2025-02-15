@@ -250,8 +250,9 @@ namespace QuterBasis
 			Atri(L, L"Arccsch", Quter::Arccsch);
 			Atri(L, L"Arcsech", Quter::Arcsech);
 			Atri(L, L"Arccoth", Quter::Arccoth);
-			if (Err == EINVAL) { Base::Exception(std::invalid_argument{ " The int& errno becomes EINVAL. " }); }
-			if (Err == ERANGE) { Base::Exception(std::out_of_range{ " The int& errno becomes ERANGE. " }); }
+			if (Err == EINVAL) { Base::Exception(std::invalid_argument{ strerror(Err) }); }
+			else if (Err == ERANGE) { Base::Exception(std::out_of_range{ strerror(Err) }); }
+			else if (Err != 0) { Base::Exception(std::runtime_error{ strerror(Err) }); }
 			Err = 0;
 		}
 	};

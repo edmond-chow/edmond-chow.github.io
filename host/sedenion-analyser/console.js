@@ -477,7 +477,7 @@
 			let pushNode = () => {
 				this.BufferNode.append(Fragment);
 				Fragment = document.createDocumentFragment();
-				for (let i = 0; i < this.LineNodes.length - 8192; i++) {
+				for (let i = 0; i < this.LineNodes.length - 1000; i++) {
 					this.LineNodes[i].Self.remove();
 				}
 				this.ForegroundColor = Console.GetColorName(foreground);

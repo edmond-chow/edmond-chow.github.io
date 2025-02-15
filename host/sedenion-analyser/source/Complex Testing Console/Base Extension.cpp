@@ -124,51 +124,53 @@ namespace CmplxConExt
 		struct stream : public std::wstreambuf
 		{
 		private:
+			static constexpr const std::ptrdiff_t put_sz = 5113;
+			static constexpr const std::ptrdiff_t get_sz = 2041;
+			static constexpr const std::ptrdiff_t bak_sz = 1017;
 			struct builder : public std::wstreambuf
 			{
 			public:
-				static constexpr const int out_sz = 1048576;
-				static constexpr const int in_sz = 1024;
-				static constexpr const int back_sz = 32;
-				char_type out[out_sz + 1];
-				char_type* out_last;
-				char_type in[back_sz + in_sz];
-				const char_type* in_next;
-				bool in_slash;
-				bool flush_now;
-				explicit builder() : out{}, out_last{ out }, in{}, in_next{ nullptr }, in_slash{ false }, flush_now{ false }
+				char_type put[put_sz + 1];
+				char_type get[bak_sz + get_sz + 1];
+				char_type* put_lst;
+				const char_type* get_nxt;
+				bool put_confg_beg;
+				bool put_flush_now;
+				explicit builder()
+					: put{}, get{}, put_lst{ put }, get_nxt{ nullptr }, put_confg_beg{ false }, put_flush_now{ false }
 				{
-					this->setp(out, out + out_sz);
+					this->setp(put, put + put_sz);
 				};
 				friend class stream;
 			};
-			builder builder;
+			builder bd;
 		public:
-			explicit stream() : builder{}
+			explicit stream()
+				: bd{}, std::wstreambuf{}
 			{
-				this->setg(builder.in, builder.in + builder::back_sz, builder.in + builder::back_sz);
+				this->setg(bd.get, bd.get + bak_sz, bd.get + bak_sz);
 			};
 		protected:
 			virtual int sync() override
 			{
-				char_type* pptr = builder.pptr();
-				if (pptr == builder.out + builder::out_sz || builder.flush_now)
+				char_type* pptr = bd.pptr();
+				if (pptr == bd.put + put_sz || bd.put_flush_now)
 				{
-					char_type out_char = *builder.out_last;
-					*builder.out_last = L'\0';
-					console::write_code(builder.out);
-					*builder.out_last = out_char;
-					std::copy(builder.out_last, pptr, builder.out);
-					builder.pbump(builder.out - builder.out_last);
-					builder.out_last = builder.out;
-					builder.flush_now = false;
+					char_type put_ch = *bd.put_lst;
+					*bd.put_lst = L'\0';
+					console::write_code(bd.put);
+					*bd.put_lst = put_ch;
+					std::copy(bd.put_lst, pptr, bd.put);
+					bd.pbump(bd.put - bd.put_lst);
+					bd.put_lst = bd.put;
+					bd.put_flush_now = false;
 				}
 				return 0;
 			};
 		public:
 			int send()
 			{
-				builder.flush_now = true;
+				bd.put_flush_now = true;
 				return this->sync();
 			};
 		protected:
@@ -177,20 +179,21 @@ namespace CmplxConExt
 				this->sync();
 				if (ch != traits_type::eof())
 				{
-					char_type* pptr = builder.pptr();
-					*pptr++ = traits_type::to_char_type(ch);
-					if (traits_type::to_char_type(ch) == L'\\')
+					char_type* pptr = bd.pptr();
+					char_type wc = traits_type::to_char_type(ch);
+					*pptr++ = wc;
+					if (wc == L'\\')
 					{
-						if (builder.in_slash) { builder.out_last = pptr; }
-						builder.in_slash = !builder.in_slash;
+						if (bd.put_confg_beg) { bd.put_lst = pptr; }
+						bd.put_confg_beg = !bd.put_confg_beg;
 					}
-					else if (traits_type::to_char_type(ch) == L'\n')
+					else if (wc == L'\n')
 					{
-						builder.in_slash = false;
-						builder.out_last = pptr;
+						bd.put_confg_beg = false;
+						bd.put_lst = pptr;
 					}
-					else if (builder.in_slash == false) { builder.out_last = pptr; }
-					builder.pbump(1);
+					else if (!bd.put_confg_beg) { bd.put_lst = pptr; }
+					bd.pbump(1);
 				}
 				return ch;
 			};
@@ -199,27 +202,24 @@ namespace CmplxConExt
 				char_type* gptr = this->gptr();
 				if (gptr == this->egptr())
 				{
-					char_type* nw_eback = builder.in;
-					std::copy(gptr - builder::back_sz, gptr, nw_eback);
-					if (builder.in_next == nullptr)
+					std::copy(gptr - bak_sz, gptr, bd.get);
+					gptr = bd.get + bak_sz;
+					if (bd.get_nxt == nullptr)
 					{
 						this->send();
-						builder.in_next = console::read_line();
+						bd.get_nxt = console::read_line();
 					}
-					const char_type* nw_next = builder.in_next;
-					while (nw_next < builder.in_next + builder::in_sz && *nw_next != L'\0') { ++nw_next; }
-					char_type* nw_gptr = nw_eback + builder::back_sz;
-					std::copy(builder.in_next, nw_next, nw_gptr);
-					int nw_offset = nw_next - builder.in_next;
-					if (*nw_next == L'\0')
+					const char_type* nw_nxt = bd.get_nxt;
+					while (nw_nxt < bd.get_nxt + get_sz && *nw_nxt != L'\0') { ++nw_nxt; }
+					std::copy(bd.get_nxt, nw_nxt, gptr);
+					std::ptrdiff_t nw_off = nw_nxt - bd.get_nxt;
+					if (*nw_nxt == L'\0')
 					{
-						nw_gptr[nw_offset++] = L'\n';
-						nw_next = nullptr;
+						gptr[nw_off++] = L'\n';
+						nw_nxt = nullptr;
 					}
-					char_type* nw_egptr = nw_gptr + nw_offset;
-					this->setg(nw_eback, nw_gptr, nw_egptr);
-					builder.in_next = nw_next;
-					gptr = nw_gptr;
+					this->setg(bd.get, gptr, gptr + nw_off);
+					bd.get_nxt = nw_nxt;
 				}
 				return traits_type::to_int_type(*gptr);
 			};
