@@ -124,104 +124,99 @@ namespace CmplxConExt
 		struct stream : public std::wstreambuf
 		{
 		private:
-			static constexpr const std::ptrdiff_t put_sz = 5113;
-			static constexpr const std::ptrdiff_t get_sz = 2041;
-			static constexpr const std::ptrdiff_t bak_sz = 1017;
-			struct builder : public std::wstreambuf
-			{
-			public:
-				char_type put[put_sz + 1];
-				char_type get[bak_sz + get_sz + 1];
-				char_type* put_lst;
-				const char_type* get_nxt;
-				bool put_confg_beg;
-				bool put_flush_now;
-				explicit builder()
-					: put{}, get{}, put_lst{ put }, get_nxt{ nullptr }, put_confg_beg{ false }, put_flush_now{ false }
-				{
-					this->setp(put, put + put_sz);
-				};
-				friend class stream;
-			};
-			builder bd;
+			static constexpr const std::ptrdiff_t put_sz = 5000;
+			static constexpr const std::ptrdiff_t get_sz = 2000;
+			static constexpr const std::ptrdiff_t bak_sz = 1000;
+			char_type put[put_sz + 1];
+			char_type get[bak_sz + get_sz + 1];
+			char_type* put_buf_lst;
+			const char_type* get_stm_nxt;
+			bool put_flush_now;
 		public:
 			explicit stream()
-				: bd{}, std::wstreambuf{}
+				: put{}, get{}, put_buf_lst{}, get_stm_nxt{}, put_flush_now{}, std::wstreambuf{}
 			{
-				this->setg(bd.get, bd.get + bak_sz, bd.get + bak_sz);
+				this->setp(put, put + put_sz);
+				this->setg(get, get + bak_sz, get + bak_sz);
+				put_buf_lst = put;
+			};
+		public:
+			void send()
+			{
+				char_type* put_ptr = this->pptr();
+				char_type* put_try = put_buf_lst;
+				bool put_confg_beg = false;
+				while (put_try < put_ptr)
+				{
+					if (*put_try == L'\\')
+					{
+						put_confg_beg = !put_confg_beg;
+						if (put_confg_beg) { put_buf_lst = put_try; }
+					}
+					else if (*put_try == L'\n')
+					{
+						put_confg_beg = false;
+						put_buf_lst = put_try;
+					}
+					else if (!put_confg_beg) { put_buf_lst = put_try; }
+					++put_try;
+				}
+				put_flush_now = true;
+				this->sync();
 			};
 		protected:
 			virtual int sync() override
 			{
-				char_type* pptr = bd.pptr();
-				if (pptr == bd.put + put_sz || bd.put_flush_now)
+				char_type* put_ptr = this->pptr();
+				if (put_ptr == put + put_sz || put_flush_now)
 				{
-					char_type put_ch = *bd.put_lst;
-					*bd.put_lst = L'\0';
-					console::write_code(bd.put);
-					*bd.put_lst = put_ch;
-					std::copy(bd.put_lst, pptr, bd.put);
-					bd.pbump(bd.put - bd.put_lst);
-					bd.put_lst = bd.put;
-					bd.put_flush_now = false;
+					char_type put_ch = *put_buf_lst;
+					*put_buf_lst = L'\0';
+					console::write_code(put);
+					*put_buf_lst = put_ch;
+					std::copy(put_buf_lst, put_ptr, put);
+					this->pbump(put - put_buf_lst);
+					put_buf_lst = put;
+					put_flush_now = false;
 				}
 				return 0;
-			};
-		public:
-			int send()
-			{
-				bd.put_flush_now = true;
-				return this->sync();
 			};
 		protected:
 			virtual int_type overflow(int_type ch) override
 			{
-				this->sync();
+				this->send();
 				if (ch != traits_type::eof())
 				{
-					char_type* pptr = bd.pptr();
 					char_type wc = traits_type::to_char_type(ch);
-					*pptr++ = wc;
-					if (wc == L'\\')
-					{
-						if (bd.put_confg_beg) { bd.put_lst = pptr; }
-						bd.put_confg_beg = !bd.put_confg_beg;
-					}
-					else if (wc == L'\n')
-					{
-						bd.put_confg_beg = false;
-						bd.put_lst = pptr;
-					}
-					else if (!bd.put_confg_beg) { bd.put_lst = pptr; }
-					bd.pbump(1);
+					this->sputc(wc);
 				}
 				return ch;
 			};
 			virtual int_type underflow() override
 			{
-				char_type* gptr = this->gptr();
-				if (gptr == this->egptr())
+				char_type* get_ptr = this->gptr();
+				char_type* eget_ptr = this->egptr();
+				std::ptrdiff_t get_buf_off = eget_ptr - get_ptr;
+				std::copy(get_ptr - bak_sz, eget_ptr, get);
+				get_ptr = get + bak_sz;
+				eget_ptr = get_ptr + get_buf_off;
+				if (get_stm_nxt == nullptr)
 				{
-					std::copy(gptr - bak_sz, gptr, bd.get);
-					gptr = bd.get + bak_sz;
-					if (bd.get_nxt == nullptr)
-					{
-						this->send();
-						bd.get_nxt = console::read_line();
-					}
-					const char_type* nw_nxt = bd.get_nxt;
-					while (nw_nxt < bd.get_nxt + get_sz && *nw_nxt != L'\0') { ++nw_nxt; }
-					std::copy(bd.get_nxt, nw_nxt, gptr);
-					std::ptrdiff_t nw_off = nw_nxt - bd.get_nxt;
-					if (*nw_nxt == L'\0')
-					{
-						gptr[nw_off++] = L'\n';
-						nw_nxt = nullptr;
-					}
-					this->setg(bd.get, gptr, gptr + nw_off);
-					bd.get_nxt = nw_nxt;
+					this->send();
+					get_stm_nxt = console::read_line();
 				}
-				return traits_type::to_int_type(*gptr);
+				const char_type* get_try = get_stm_nxt;
+				while (get_try < get_stm_nxt + get_sz && *get_try != L'\0') { ++get_try; }
+				std::copy(get_stm_nxt, get_try, eget_ptr);
+				std::ptrdiff_t get_stm_off = get_try - get_stm_nxt;
+				get_stm_nxt = get_try;
+				if (*get_try == L'\0')
+				{
+					eget_ptr[get_stm_off++] = L'\n';
+					get_stm_nxt = nullptr;
+				}
+				this->setg(get, get_ptr, eget_ptr + get_stm_off);
+				return traits_type::to_int_type(*get_ptr);
 			};
 		};
 		static stream io{};
