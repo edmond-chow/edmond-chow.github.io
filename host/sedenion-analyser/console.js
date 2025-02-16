@@ -205,7 +205,8 @@
 			}) : null;
 		}
 		get LastSpanNode() {
-			return this.Self != null && this.SpanNodes.length > 0 ? this.SpanNodes.pop() : null;
+			let SpanNodes = this.SpanNodes;
+			return SpanNodes != null && SpanNodes.length > 0 ? SpanNodes.pop() : null;
 		}
 	};
 	class Console {
@@ -376,15 +377,34 @@
 				this.CanType = false;
 			}
 		}
-		get LineNodes() {
+		get BoxNodes() {
 			return Array.from(this.BufferNode.childNodes).filter((value) => {
-				return value.nodeName == 'line'.toUpperCase();
-			}).map((value) => {
+				return value.nodeName == 'box'.toUpperCase();
+			});
+		}
+		get LineNodes() {
+			let LineNodes = [];
+			this.BoxNodes.forEach((value) => {
+				LineNodes.push(...Array.from(value.childNodes).filter((value) => {
+					return value.nodeName == 'line'.toUpperCase();
+				}));
+			});
+			return LineNodes.map((value) => {
 				return new LineNodeWrapper(value);
 			});
 		}
 		get LastLineNode() {
-			return this.LineNodes.length > 0 ? this.LineNodes.pop() : new LineNodeWrapper(null);
+			let BoxNodes = this.BoxNodes;
+			if (BoxNodes.length == 0) {
+				return new LineNodeWrapper(null);
+			}
+			let LineNodes = Array.from(BoxNodes.pop().childNodes).filter((value) => {
+				return value.nodeName == 'line'.toUpperCase();
+			});
+			if (LineNodes.length == 0) {
+				return new LineNodeWrapper(null);
+			}
+			return new LineNodeWrapper(LineNodes.pop());
 		}
 		get Scheme() {
 			return this.ConsoleNode.getAttribute('scheme');
@@ -475,10 +495,21 @@
 			let LineNode = this.LastLineNode.Self;
 			let SpanNode = this.LastLineNode.LastSpanNode;
 			let pushNode = () => {
-				this.BufferNode.append(Fragment);
-				Fragment = document.createDocumentFragment();
-				for (let i = 0; i < this.LineNodes.length - 1000; i++) {
-					this.LineNodes[i].Self.remove();
+				if (Fragment.childNodes.length > 0) {
+					let BoxNode = document.createElement('box');
+					BoxNode.append(Fragment);
+					this.BufferNode.append(BoxNode);
+					Fragment = document.createDocumentFragment();
+				}
+				let LineNodes = this.LineNodes;
+				for (let i = 0; i < LineNodes.length - 1024; i++) {
+					LineNodes[i].Self.remove();
+				}
+				let BoxNodes = this.BoxNodes;
+				for (let i = 0; i < BoxNodes.length; i++) {
+					if (BoxNodes[i].childNodes.length == 0) {
+						BoxNodes[i].remove();
+					}
 				}
 				this.ForegroundColor = Console.GetColorName(foreground);
 				this.BackgroundColor = Console.GetColorName(background);
@@ -563,7 +594,7 @@
 				if (content[i] == '\n') {
 					if (config && pending) {
 						throwNow();
-					} else if (count >= 512) {
+					} else if (count >= 32) {
 						count = 0;
 						pushNode();
 						await suspend();

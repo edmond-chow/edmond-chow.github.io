@@ -487,13 +487,13 @@
 		display: inline-block;
 		padding: 8px;
 		box-sizing: border-box;
-		transition-duration: 0.4s;
 		background-color: inherit;
 		color: rgb(192, 192, 192);
 		outline: none;
 		flex-grow: 1;
 	}
 	console > control > input[type="text"][readonly] {
+		pointer-events: none;
 		opacity: 0;
 	}
 	console > control > input[type="text"] + button {
@@ -533,7 +533,10 @@
 		padding: 0px 8px;
 		flex-grow: 1;
 	}
-	console > buffer > line {
+	console > buffer > box {
+		display: block;
+	}
+	console > buffer > box > line {
 		text-align: left;
 		position: relative;
 		display: block;
@@ -544,20 +547,20 @@
 		min-height: 21px;
 		color: rgb(192, 192, 192);
 	}
-	console > buffer > line > span {
+	console > buffer > box > line > span {
 		display: inline;
 		white-space: pre-wrap;
 		word-break: break-all;
 		overflow-wrap: anywhere;
 	}
-	console > buffer > line > span:after {
+	console > buffer > box > line > span:after {
 		content: ' ';
 		font-size: 0px;
 		display: inline-block;
 		width: 0px;
 		height: 0px;
 	}
-	console > buffer > line > span > data-content {
+	console > buffer > box > line > span > data-content {
 		display: inline;
 		white-space: pre-wrap;
 		word-break: break-all;
@@ -594,7 +597,7 @@
 			background-color: transparent;
 		}
 	}
-	console > buffer > line:last-of-type:after {
+	console > buffer > box:last-of-type > line:last-of-type:after {
 		content: '';
 		position: absolute;
 		height: 2px;
@@ -602,106 +605,106 @@
 		bottom: 0px;
 		animation: shining 2s infinite;
 	}
-	console > buffer > line > span[foreground="default"] {
+	console > buffer > box > line > span[foreground="default"] {
 		color: transparent;
 	}
-	console > buffer > line > span[foreground="black"] {
+	console > buffer > box > line > span[foreground="black"] {
 		color: var(--black);
 	}
-	console > buffer > line > span[foreground="dark-blue"] {
+	console > buffer > box > line > span[foreground="dark-blue"] {
 		color: var(--dark-blue);
 	}
-	console > buffer > line > span[foreground="dark-green"] {
+	console > buffer > box > line > span[foreground="dark-green"] {
 		color: var(--dark-green);
 	}
-	console > buffer > line > span[foreground="dark-cyan"] {
+	console > buffer > box > line > span[foreground="dark-cyan"] {
 		color: var(--dark-cyan);
 	}
-	console > buffer > line > span[foreground="dark-red"] {
+	console > buffer > box > line > span[foreground="dark-red"] {
 		color: var(--dark-red);
 	}
-	console > buffer > line > span[foreground="dark-magenta"] {
+	console > buffer > box > line > span[foreground="dark-magenta"] {
 		color: var(--dark-magenta);
 	}
-	console > buffer > line > span[foreground="dark-yellow"] {
+	console > buffer > box > line > span[foreground="dark-yellow"] {
 		color: var(--dark-yellow);
 	}
-	console > buffer > line > span[foreground="gray"] {
+	console > buffer > box > line > span[foreground="gray"] {
 		color: var(--gray);
 	}
-	console > buffer > line > span[foreground="dark-gray"] {
+	console > buffer > box > line > span[foreground="dark-gray"] {
 		color: var(--dark-gray);
 	}
-	console > buffer > line > span[foreground="blue"] {
+	console > buffer > box > line > span[foreground="blue"] {
 		color: var(--blue);
 	}
-	console > buffer > line > span[foreground="green"] {
+	console > buffer > box > line > span[foreground="green"] {
 		color: var(--green);
 	}
-	console > buffer > line > span[foreground="cyan"] {
+	console > buffer > box > line > span[foreground="cyan"] {
 		color: var(--cyan);
 	}
-	console > buffer > line > span[foreground="red"] {
+	console > buffer > box > line > span[foreground="red"] {
 		color: var(--red);
 	}
-	console > buffer > line > span[foreground="magenta"] {
+	console > buffer > box > line > span[foreground="magenta"] {
 		color: var(--magenta);
 	}
-	console > buffer > line > span[foreground="yellow"] {
+	console > buffer > box > line > span[foreground="yellow"] {
 		color: var(--yellow);
 	}
-	console > buffer > line > span[foreground="white"] {
+	console > buffer > box > line > span[foreground="white"] {
 		color: var(--white);
 	}
-	console > buffer > line > span[background="default"] {
+	console > buffer > box > line > span[background="default"] {
 		background-color: transparent;
 	}
-	console > buffer > line > span[background="black"] {
+	console > buffer > box > line > span[background="black"] {
 		background-color: var(--black);
 	}
-	console > buffer > line > span[background="dark-blue"] {
+	console > buffer > box > line > span[background="dark-blue"] {
 		background-color: var(--dark-blue);
 	}
-	console > buffer > line > span[background="dark-green"] {
+	console > buffer > box > line > span[background="dark-green"] {
 		background-color: var(--dark-green);
 	}
-	console > buffer > line > span[background="dark-cyan"] {
+	console > buffer > box > line > span[background="dark-cyan"] {
 		background-color: var(--dark-cyan);
 	}
-	console > buffer > line > span[background="dark-red"] {
+	console > buffer > box > line > span[background="dark-red"] {
 		background-color: var(--dark-red);
 	}
-	console > buffer > line > span[background="dark-magenta"] {
+	console > buffer > box > line > span[background="dark-magenta"] {
 		background-color: var(--dark-magenta);
 	}
-	console > buffer > line > span[background="dark-yellow"] {
+	console > buffer > box > line > span[background="dark-yellow"] {
 		background-color: var(--dark-yellow);
 	}
-	console > buffer > line > span[background="gray"] {
+	console > buffer > box > line > span[background="gray"] {
 		background-color: var(--gray);
 	}
-	console > buffer > line > span[background="dark-gray"] {
+	console > buffer > box > line > span[background="dark-gray"] {
 		background-color: var(--dark-gray);
 	}
-	console > buffer > line > span[background="blue"] {
+	console > buffer > box > line > span[background="blue"] {
 		background-color: var(--blue);
 	}
-	console > buffer > line > span[background="green"] {
+	console > buffer > box > line > span[background="green"] {
 		background-color: var(--green);
 	}
-	console > buffer > line > span[background="cyan"] {
+	console > buffer > box > line > span[background="cyan"] {
 		background-color: var(--cyan);
 	}
-	console > buffer > line > span[background="red"] {
+	console > buffer > box > line > span[background="red"] {
 		background-color: var(--red);
 	}
-	console > buffer > line > span[background="magenta"] {
+	console > buffer > box > line > span[background="magenta"] {
 		background-color: var(--magenta);
 	}
-	console > buffer > line > span[background="yellow"] {
+	console > buffer > box > line > span[background="yellow"] {
 		background-color: var(--yellow);
 	}
-	console > buffer > line > span[background="white"] {
+	console > buffer > box > line > span[background="white"] {
 		background-color: var(--white);
 	}
 }
