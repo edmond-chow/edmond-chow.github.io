@@ -209,6 +209,22 @@
 			return SpanNodes != null && SpanNodes.length > 0 ? SpanNodes.pop() : null;
 		}
 	};
+	class BoxNodeWrapper {
+		constructor(head) {
+			[head].constrainedWithAndThrow(Element.toNullable());
+			this.Self = head != null && head.nodeName == 'box'.toUpperCase() ? head : null;
+			lockFields(this, ['Self'], false);
+		}
+		get LineNodes() {
+			return this.Self != null ? Array.from(this.Self.childNodes).filter((value) => {
+				return value.nodeName == 'line'.toUpperCase();
+			}) : null;
+		}
+		get LastLineNode() {
+			let LineNodes = this.LineNodes;
+			return LineNodes != null && LineNodes.length > 0 ? LineNodes.pop() : null;
+		}
+	};
 	class Console {
 		constructor() {
 			this.ConsoleNode = document.createElement('console');
@@ -236,23 +252,13 @@
 					await this.ReadLineType();
 				}
 			});
-			this.InputNode.addEventListener('input', async () => {
+			this.InputNode.addEventListener('input', () => {
 				let value = this.InputNode.value;
 				if (this.KeyFreeze) {
 					this.Keys = value;
 					this.ForAnyKeyType();
 				} else if (this.CanType) {
-					let space = String.fromCharCode(0x200B);
-					let content = '';
-					for (let i = 0; i < value.length; i++) {
-						content += value[i];
-						if (value.codePointAt(i) > 0xFFFF) {
-							content += value[++i];
-						}
-						content += space;
-					}
-					await suspend();
-					this.DataContentNode.textContent = content;
+					this.DataContentNode.textContent = value;
 					this.ScrollIntoBottom();
 				}
 			});
@@ -271,9 +277,9 @@
 			this.BackgroundColor = 'default';
 			this.Scheme = 'campbell';
 			this.CanType = false;
-			this.istream = '';
-			this.icursor = 0;
-			lockFields(this, ['typing', 'freezing', 'keys', 'istream', 'icursor'], true);
+			this.ibuffer = [];
+			this.osize = 32;
+			lockFields(this, ['typing', 'freezing', 'keys', 'ibuffer', 'osize'], true);
 			lockFields(this, ['ConsoleNode', 'BufferNode', 'ControlNode', 'DataContentNode', 'InputNode', 'ButtonNode'], false);
 		}
 		ClearBufferNode() {
@@ -282,6 +288,23 @@
 		ScrollIntoBottom() {
 			this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
 		}
+		FlushOutStream() {
+			let BoxNodes = this.BoxNodes;
+			while (BoxNodes.length > this.osize) {
+				let FirstBoxNode = BoxNodes.shift();
+				if (BoxNodes.length == this.osize) {
+					let LastBoxNode = BoxNodes.pop();
+					let drop = LastBoxNode.LineNodes.length;
+					let keep = drop <= this.osize ? this.osize - drop : 0;
+					let LineNodes = FirstBoxNode.LineNodes;
+					while (LineNodes.length > keep) {
+						LineNodes.shift().remove();
+					}
+				} else {
+					FirstBoxNode.Self.remove();
+				}
+			}
+		}
 		get CanType() {
 			return this.typing;
 		}
@@ -289,12 +312,15 @@
 			this.InputNode.readOnly = !value;
 			this.ButtonNode.disabled = !value;
 			if (value && !this.typing) {
-				this.LastLineNode.LastSpanNode?.append(this.DataContentNode);
+				let LastSpanNode = this.LastLineNode.LastSpanNode;
+				if (LastSpanNode != null) {
+					LastSpanNode.append(this.DataContentNode);
+				}
 				if (window == window.top) {
 					this.InputNode.focus();
 				}
 			} else if (!value && this.typing) {
-				document.createDocumentFragment().append(this.DataContentNode);
+				this.DataContentNode.remove();
 				this.DataContentNode.textContent = '';
 			}
 			this.typing = value;
@@ -371,7 +397,7 @@
 					if (value.length > 1 && value.substring(0, 2) == '\\$') {
 						value = value.substring(1);
 					}
-					this.pushInput(value + '\n');
+					this.pushInput(value);
 				}
 				this.InputNode.value = '';
 				this.CanType = false;
@@ -380,31 +406,26 @@
 		get BoxNodes() {
 			return Array.from(this.BufferNode.childNodes).filter((value) => {
 				return value.nodeName == 'box'.toUpperCase();
+			}).map((value) => {
+				return new BoxNodeWrapper(value);
 			});
+		}
+		get LastBoxNode() {
+			let BoxNodes = this.BoxNodes;
+			return BoxNodes.length > 0 ? BoxNodes.pop() : null;
 		}
 		get LineNodes() {
 			let LineNodes = [];
 			this.BoxNodes.forEach((value) => {
-				LineNodes.push(...Array.from(value.childNodes).filter((value) => {
-					return value.nodeName == 'line'.toUpperCase();
-				}));
+				LineNodes.push(...value.LineNodes);
 			});
 			return LineNodes.map((value) => {
 				return new LineNodeWrapper(value);
 			});
 		}
 		get LastLineNode() {
-			let BoxNodes = this.BoxNodes;
-			if (BoxNodes.length == 0) {
-				return new LineNodeWrapper(null);
-			}
-			let LineNodes = Array.from(BoxNodes.pop().childNodes).filter((value) => {
-				return value.nodeName == 'line'.toUpperCase();
-			});
-			if (LineNodes.length == 0) {
-				return new LineNodeWrapper(null);
-			}
-			return new LineNodeWrapper(LineNodes.pop());
+			let LastBoxNode = this.LastBoxNode;
+			return new LineNodeWrapper(LastBoxNode != null ? LastBoxNode.LastLineNode : null);
 		}
 		get Scheme() {
 			return this.ConsoleNode.getAttribute('scheme');
@@ -482,8 +503,13 @@
 		}
 		async write(content, controlized = true) {
 			[content, controlized].constrainedWithAndThrow(String, Boolean);
+			let Fragment = document.createDocumentFragment();
+			let BoxNode = this.LastBoxNode;
+			let LineNode = this.LastLineNode.Self;
+			let SpanNode = this.LastLineNode.LastSpanNode;
+			let count = BoxNode != null ? BoxNode.LineNodes.length : 0;
+			let times = 0;
 			let value = '';
-			let count = 0;
 			let config = false;
 			let pending = false;
 			let control = null;
@@ -491,25 +517,19 @@
 			let foreground = Console.GetColorCode(this.ForegroundColor);
 			let background = Console.GetColorCode(this.BackgroundColor);
 			let title = Console.Title;
-			let Fragment = document.createDocumentFragment();
-			let LineNode = this.LastLineNode.Self;
-			let SpanNode = this.LastLineNode.LastSpanNode;
 			let pushNode = () => {
 				if (Fragment.childNodes.length > 0) {
-					let BoxNode = document.createElement('box');
-					BoxNode.append(Fragment);
-					this.BufferNode.append(BoxNode);
+					let NewBoxNode = BoxNode != null && BoxNode.LineNodes.length < this.osize ? BoxNode.Self : document.createElement('box');
+					NewBoxNode.append(Fragment);
+					this.BufferNode.append(NewBoxNode);
+					BoxNode = new BoxNodeWrapper(NewBoxNode);
 					Fragment = document.createDocumentFragment();
 				}
-				let LineNodes = this.LineNodes;
-				for (let i = 0; i < LineNodes.length - 1024; i++) {
-					LineNodes[i].Self.remove();
-				}
-				let BoxNodes = this.BoxNodes;
-				for (let i = 0; i < BoxNodes.length; i++) {
-					if (BoxNodes[i].childNodes.length == 0) {
-						BoxNodes[i].remove();
-					}
+				if (times < 4) {
+					times++;
+				} else {
+					this.FlushOutStream();
+					times = 0;
 				}
 				this.ForegroundColor = Console.GetColorName(foreground);
 				this.BackgroundColor = Console.GetColorName(background);
@@ -544,6 +564,7 @@
 				SpanNode.setAttribute('background', Console.GetColorName(background));
 			};
 			let endUp = () => {
+				times = 4;
 				pushSpan();
 				pushNode();
 			};
@@ -594,12 +615,12 @@
 				if (content[i] == '\n') {
 					if (config && pending) {
 						throwNow();
-					} else if (count >= 32) {
+					} else if (count >= this.osize) {
 						count = 0;
 						pushNode();
 						await suspend();
 					} else {
-						count += 1;
+						count++;
 					}
 					newLine();
 					newSpan();
@@ -656,47 +677,50 @@
 			}
 		}
 		async readLine() {
-			let result = '';
-			while (true) {
-				while (this.icursor < this.istream.length) {
-					let char = this.istream[this.icursor++];
-					if (char == '\n') {
-						return result;
-					} else {
-						result += char;
-					}
-				}
-				this.istream = '';
-				this.icursor = 0;
+			while (this.ibuffer.length == 0) {
 				this.CanType = true;
 				await suspend();
 			}
+			return this.ibuffer.shift();
 		}
 		async read(unicode = true) {
 			[unicode].constrainedWithAndThrow(Boolean);
-			let result = '';
-			while (true) {
-				if (this.icursor < this.istream.length) {
-					if (unicode && this.istream.codePointAt(this.icursor) > 0xFFFF) {
-						result += this.istream[this.icursor++];
-					}
-					result += this.istream[this.icursor++];
-					return result;
-				}
-				this.istream = '';
-				this.icursor = 0;
+			while (this.ibuffer.length == 0) {
 				this.CanType = true;
 				await suspend();
 			}
+			let first = this.ibuffer.shift();
+			if (first == '') {
+				return '\n';
+			}
+			let result = '';
+			if (unicode && first.codePointAt(0) > 0xFFFF) {
+				result = first.substring(0, 2);
+				first = first.substring(2);
+			} else {
+				result = first.substring(0, 1);
+				first = first.substring(1);
+			}
+			this.ibuffer.unshift(first);
+			return result;
 		}
 		putBack(content) {
 			[content].constrainedWithAndThrow(String);
-			this.istream = content + this.istream.substring(this.icursor);
-			this.icursor = 0;
+			let lines = content.split('\n');
+			if (this.ibuffer.length > 0) {
+				let last = lines.pop() + this.ibuffer.shift();
+				this.ibuffer.unshift(last);
+			}
+			this.ibuffer.unshift(...lines);
 		}
 		pushInput(content) {
 			[content].constrainedWithAndThrow(String);
-			this.istream += content;
+			let lines = content.split('\n');
+			if (this.ibuffer.length > 0) {
+				let first = this.ibuffer.pop() + lines.shift();
+				this.ibuffer.push(first);
+			}
+			this.ibuffer.push(...lines);
 		}
 		clear() {
 			this.ClearBufferNode();
@@ -745,10 +769,12 @@
 	};
 	shareProperties(LineNodeWrapper, ['SpanNodes', 'LastSpanNode'], false);
 	hardFreeze(Console, [LineNodeWrapper], false);
+	shareProperties(BoxNodeWrapper, ['LineNodes', 'LastLineNode'], false);
+	hardFreeze(Console, [BoxNodeWrapper], false);
 	Console.Colors[0xFF] = 'default';
 	Object.freeze(Console.Colors);
 	Object.freeze(Console.Themes);
-	shareProperties(Console, ['LineNodes', 'LastLineNode', 'Scheme', 'ForegroundColor', 'BackgroundColor', 'writeLine', 'write', 'readLine', 'read', 'putBack', 'pushInput', 'clear', 'pressAnyKey', 'completed', 'terminated', 'bindTo'], false);
+	shareProperties(Console, ['BoxNodes', 'LastBoxNode', 'LineNodes', 'LastLineNode', 'Scheme', 'ForegroundColor', 'BackgroundColor', 'writeLine', 'write', 'readLine', 'read', 'putBack', 'pushInput', 'clear', 'pressAnyKey', 'completed', 'terminated', 'bindTo'], false);
 	shareProperties(Console, ['Colors', 'Themes', 'GetColorCode', 'GetColorName', 'GetColorCharCode', 'Title'], true);
 	hardFreeze(window, [Console], false);
 	/* { event-dispatcher } */
@@ -848,7 +874,7 @@
 		getUTFString(callerCaptured, converterCaptured, counterCaptured, sizeCaptured, fnScope, jsString) {
 			[fnScope, jsString].constrainedWithAndThrow(Function.toNullable(), String.toNullable());
 			let myScope = fnScope == null ? callerCaptured : fnScope;
-			let stringSource = jsString == null ? "" : jsString;
+			let stringSource = jsString == null ? '' : jsString;
 			let sizeCapacity = counterCaptured(stringSource) + sizeCaptured;
 			if (!myScope.bufferData || myScope.bufferSize < sizeCapacity) {
 				this.functionList['_free'](myScope.bufferData);
