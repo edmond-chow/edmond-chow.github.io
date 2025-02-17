@@ -252,13 +252,13 @@
 					await this.ReadLineType();
 				}
 			});
+			let InstallInput = false;
 			this.InputNode.addEventListener('input', () => {
-				let value = this.InputNode.value;
 				if (this.KeyFreeze) {
-					this.Keys = value;
+					this.Keys = this.InputNode.value;
 					this.ForAnyKeyType();
 				} else if (this.CanType) {
-					this.DataContentNode.textContent = value;
+					InstallInput = true;
 					this.ScrollIntoBottom();
 				}
 			});
@@ -281,6 +281,19 @@
 			this.osize = 32;
 			lockFields(this, ['typing', 'freezing', 'keys', 'ibuffer', 'osize'], true);
 			lockFields(this, ['ConsoleNode', 'BufferNode', 'ControlNode', 'DataContentNode', 'InputNode', 'ButtonNode'], false);
+			let FlushNow = 0;
+			setInterval(() => {
+				if (FlushNow < 20) {
+					FlushNow++;
+				} else {
+					this.FlushOutStream();
+					FlushNow = 0;
+				}
+				if (InstallInput) {
+					this.DataContentNode.innerText = this.InputNode.value;
+					InstallInput = false;
+				}
+			}, 500);
 		}
 		ClearBufferNode() {
 			this.BufferNode.innerText = '';
@@ -320,8 +333,8 @@
 					this.InputNode.focus();
 				}
 			} else if (!value && this.typing) {
+				this.DataContentNode.innerText = '';
 				this.DataContentNode.remove();
-				this.DataContentNode.textContent = '';
 			}
 			this.typing = value;
 		}
@@ -412,7 +425,7 @@
 		}
 		get LastBoxNode() {
 			let BoxNodes = this.BoxNodes;
-			return BoxNodes.length > 0 ? BoxNodes.pop() : null;
+			return BoxNodes.length > 0 ? BoxNodes.pop() : new BoxNodeWrapper(null);
 		}
 		get LineNodes() {
 			let LineNodes = [];
@@ -503,12 +516,7 @@
 		}
 		async write(content, controlized = true) {
 			[content, controlized].constrainedWithAndThrow(String, Boolean);
-			let Fragment = document.createDocumentFragment();
-			let BoxNode = this.LastBoxNode;
-			let LineNode = this.LastLineNode.Self;
-			let SpanNode = this.LastLineNode.LastSpanNode;
-			let count = BoxNode != null ? BoxNode.LineNodes.length : 0;
-			let times = 0;
+			let lines = 0;
 			let value = '';
 			let config = false;
 			let pending = false;
@@ -517,19 +525,29 @@
 			let foreground = Console.GetColorCode(this.ForegroundColor);
 			let background = Console.GetColorCode(this.BackgroundColor);
 			let title = Console.Title;
+			let Fragment = document.createDocumentFragment();
+			let BoxNode = this.LastBoxNode;
+			let LineNode = this.LastLineNode.Self;
+			let SpanNode = this.LastLineNode.LastSpanNode;
+			if (BoxNode.Self != null) {
+				lines = BoxNode.LineNodes.length;
+				if (lines > 0) {
+					lines--;
+				} else if (lines >= this.osize) {
+					BoxNode = new BoxNodeWrapper(null);
+					lines = 0;
+				}
+			}
 			let pushNode = () => {
-				if (Fragment.childNodes.length > 0) {
-					let NewBoxNode = BoxNode != null && BoxNode.LineNodes.length < this.osize ? BoxNode.Self : document.createElement('box');
+				if (true || Fragment.childNodes.length > 0) {
+					let NewBoxNode = BoxNode.Self;
+					if (NewBoxNode == null) {
+						NewBoxNode = document.createElement('box');
+					}
 					NewBoxNode.append(Fragment);
 					this.BufferNode.append(NewBoxNode);
-					BoxNode = new BoxNodeWrapper(NewBoxNode);
 					Fragment = document.createDocumentFragment();
-				}
-				if (times < 4) {
-					times++;
-				} else {
-					this.FlushOutStream();
-					times = 0;
+					BoxNode = new BoxNodeWrapper(null);
 				}
 				this.ForegroundColor = Console.GetColorName(foreground);
 				this.BackgroundColor = Console.GetColorName(background);
@@ -564,7 +582,6 @@
 				SpanNode.setAttribute('background', Console.GetColorName(background));
 			};
 			let endUp = () => {
-				times = 4;
 				pushSpan();
 				pushNode();
 			};
@@ -615,12 +632,10 @@
 				if (content[i] == '\n') {
 					if (config && pending) {
 						throwNow();
-					} else if (count >= this.osize) {
-						count = 0;
+					} else if (++lines >= this.osize) {
 						pushNode();
+						lines = 0;
 						await suspend();
-					} else {
-						count++;
 					}
 					newLine();
 					newSpan();
