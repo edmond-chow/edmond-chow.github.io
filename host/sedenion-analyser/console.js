@@ -283,14 +283,14 @@
 			lockFields(this, ['ConsoleNode', 'BufferNode', 'ControlNode', 'DataContentNode', 'InputNode', 'ButtonNode'], false);
 			let FlushNow = 0;
 			setInterval(() => {
-				if (FlushNow < 20) {
-					FlushNow++;
-				} else {
+				if (++FlushNow >= 20) {
 					this.FlushOutStream();
 					FlushNow = 0;
 				}
 				if (InstallInput) {
-					this.DataContentNode.innerText = this.InputNode.value;
+					if (this.CanType) {
+						this.DataContentNode.innerText = this.InputNode.value;
+					}
 					InstallInput = false;
 				}
 			}, 500);
@@ -691,14 +691,18 @@
 				endUp();
 			}
 		}
-		async readLine() {
+		async readLine(echoing = true) {
 			while (this.ibuffer.length == 0) {
 				this.CanType = true;
 				await suspend();
 			}
-			return this.ibuffer.shift();
+			let result = this.ibuffer.shift();
+			if (echoing) {
+				await this.writeLine(result, false);
+			}
+			return result;
 		}
-		async read(unicode = true) {
+		async read(echoing = true, unicode = true) {
 			[unicode].constrainedWithAndThrow(Boolean);
 			while (this.ibuffer.length == 0) {
 				this.CanType = true;
@@ -708,15 +712,28 @@
 			if (first == '') {
 				return '\n';
 			}
-			let result = '';
-			if (unicode && first.codePointAt(0) > 0xFFFF) {
-				result = first.substring(0, 2);
-				first = first.substring(2);
+			let result = first.codePointAt(0);
+			if (unicode && result > 0xFFFF) {
+				result = String.fromCodePoint(result);
 			} else {
-				result = first.substring(0, 1);
-				first = first.substring(1);
+				result = first.charAt(0);
 			}
+			first = first.substring(result.length);
 			this.ibuffer.unshift(first);
+			if (echoing) {
+				await this.write(result, false);
+			}
+			return result;
+		}
+		async readKey(echoing = true) {
+			this.KeyFreeze = true;
+			while (this.KeyFreeze) {
+				await suspend();
+			}
+			let result = this.Keys;
+			if (echoing) {
+				await this.write(result, false);
+			}
 			return result;
 		}
 		putBack(content) {
@@ -740,13 +757,6 @@
 		clear() {
 			this.ClearBufferNode();
 		}
-		async pressAnyKey() {
-			this.KeyFreeze = true;
-			while (this.KeyFreeze) {
-				await suspend();
-			}
-			return this.Keys;
-		}
 		async completed(code) {
 			[code].constrainedWithAndThrow(Number);
 			this.ForegroundColor = 'gray';
@@ -756,7 +766,7 @@
 			await this.writeLine('   The program completed with a return code ' + code.toString() + '.');
 			await this.writeLine('');
 			await this.writeLine('      >> Press any key to continue with restart the program . . .   ');
-			await this.pressAnyKey();
+			await this.readKey(false);
 			this.clear();
 		}
 		async terminated() {
@@ -767,7 +777,7 @@
 			await this.writeLine('   The program terminated with no return codes.');
 			await this.writeLine('');
 			await this.writeLine('      >> Press any key to continue with restart the program . . .   ');
-			await this.pressAnyKey();
+			await this.readKey(false);
 			this.clear();
 		}
 		bindTo(node) {
@@ -789,7 +799,7 @@
 	Console.Colors[0xFF] = 'default';
 	Object.freeze(Console.Colors);
 	Object.freeze(Console.Themes);
-	shareProperties(Console, ['BoxNodes', 'LastBoxNode', 'LineNodes', 'LastLineNode', 'Scheme', 'ForegroundColor', 'BackgroundColor', 'writeLine', 'write', 'readLine', 'read', 'putBack', 'pushInput', 'clear', 'pressAnyKey', 'completed', 'terminated', 'bindTo'], false);
+	shareProperties(Console, ['BoxNodes', 'LastBoxNode', 'LineNodes', 'LastLineNode', 'Scheme', 'ForegroundColor', 'BackgroundColor', 'writeLine', 'write', 'readLine', 'read', 'readKey', 'putBack', 'pushInput', 'clear', 'completed', 'terminated', 'bindTo'], false);
 	shareProperties(Console, ['Colors', 'Themes', 'GetColorCode', 'GetColorName', 'GetColorCharCode', 'Title'], true);
 	hardFreeze(window, [Console], false);
 	/* { event-dispatcher } */
@@ -847,7 +857,6 @@
 					this.exitCode = 0;
 				},
 				onAbort: () => {
-					this.functionList['__Z12abort_unwindv']();
 					this.abortState = true;
 				},
 				onExit: (code) => {
@@ -876,7 +885,7 @@
 			});			
 		}
 		async monitorProcess() {
-			if (this.functionList['keepRuntimeAlive']() == false) {
+			if (!this.functionList['keepRuntimeAlive']()) {
 				if (!this.abortState) {
 					await this.iostream.completed(this.exitCode);
 				} else {

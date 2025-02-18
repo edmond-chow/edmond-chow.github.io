@@ -63,16 +63,15 @@ namespace CmplxConExt
 			EM_JS(std::char_traits<wchar_t>::int_type, color_char_code, (std::uint8_t code), {
 				return Console.GetColorCharCode(code);
 			});
-			EM_ASYNC_JS(const wchar_t*, read_line, (), {
-				let line = await Module['iostream'].readLine();
-				await Module['iostream'].writeLine(line, false);
-				return Module['getUTF32String'](__asyncjs__read_line, line);
-			});
-			EM_ASYNC_JS(void, write_code, (const wchar_t* content), {
+			EM_ASYNC_JS(void, write_controlized, (const wchar_t* content), {
 				await Module['iostream'].write(UTF32ToString(content));
 			});
+			EM_ASYNC_JS(const wchar_t*, read_echoing, (), {
+				let line = await Module['iostream'].readLine();
+				return Module['getUTF32String'](__asyncjs__read_echoing, line);
+			});
 			EM_ASYNC_JS(void, press_any_key, (), {
-				await Module['iostream'].pressAnyKey();
+				await Module['iostream'].readKey(false);
 			});
 			EM_JS(void, clear, (), {
 				Module['iostream'].clear();
@@ -104,13 +103,13 @@ namespace CmplxConExt
 				static std::wstring data = native::title();
 				return &data;
 			};
-			static const wchar_t* read_line()
+			static void write_controlized(const wchar_t* content)
 			{
-				return native::read_line();
+				return native::write_controlized(content);
 			};
-			static void write_code(const wchar_t* content)
+			static const wchar_t* read_echoing()
 			{
-				return native::write_code(content);
+				return native::read_echoing();
 			};
 			static void press_any_key()
 			{
@@ -172,7 +171,7 @@ namespace CmplxConExt
 				{
 					char_type put_ch = *put_buf_lst;
 					*put_buf_lst = L'\0';
-					console::write_code(put);
+					console::write_controlized(put);
 					*put_buf_lst = put_ch;
 					std::copy(put_buf_lst, put_ptr, put);
 					this->pbump(put - put_buf_lst);
@@ -203,7 +202,7 @@ namespace CmplxConExt
 				if (get_stm_nxt == nullptr)
 				{
 					this->send();
-					get_stm_nxt = console::read_line();
+					get_stm_nxt = console::read_echoing();
 				}
 				const char_type* get_try = get_stm_nxt;
 				while (get_try < get_stm_nxt + get_sz && *get_try != L'\0') { ++get_try; }
