@@ -15,6 +15,8 @@
  */
 #pragma once
 #include <cstddef>
+#include <cmath>
+#include <limits>
 #include <iomanip>
 #include <string>
 #include <regex>
@@ -23,6 +25,8 @@
 inline constexpr const wchar_t* Ws = L" \t\n\v\f\r";
 inline std::wstring Str(double Num)
 {
+	if (std::isnan(Num)) { return L"-nan"; }
+	else if (std::isinf(Num)) { return std::signbit(Num) ? L"-inf" : L"inf"; }
 	std::wstringstream Rst;
 	Rst << std::defaultfloat << std::setprecision(17) << Num;
 	return std::regex_replace(Rst.str(), std::wregex(L"e-0(?=[1-9])"), L"e-");
@@ -93,7 +97,7 @@ public:
 	};
 };
 inline constexpr const wchar_t Beg[] = LR"((-|\+|^))";
-inline constexpr const wchar_t Sig[] = LR"(((\d+)(\.\d+|)([Ee](-|\+|)(\d+)|)|))";
+inline constexpr const wchar_t Sig[] = LR"(((\d+)(\.\d+|)([Ee](-|\+|)(\d+)|)|nan|inf|))";
 inline constexpr const wchar_t End[] = LR"((?=(-|\+|$)))";
 inline constexpr const std::size_t BegI = 1;
 inline constexpr const std::size_t SigI = 2;
@@ -186,6 +190,13 @@ inline std::vector<double> ToNumbers(const std::wstring& Val, const Terms& Trm)
 		{
 			Err = EINVAL;
 			return {};
+		}
+		else if (SigV == L"nan") { Num[i] += std::numeric_limits<double>::quiet_NaN(); }
+		else if (SigV == L"inf")
+		{
+			double Inf = std::numeric_limits<double>::infinity();
+			if (BegV == L"-") { Inf = -Inf; }
+			Num[i] += Inf;
 		}
 		else if (Cap.empty() || Cap == L"+") { ++Num[i]; }
 		else if (Cap == L"-") { --Num[i]; }
