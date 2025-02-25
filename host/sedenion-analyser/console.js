@@ -533,7 +533,8 @@
 				lines = BoxNode.LineNodes.length;
 				if (lines > 0) {
 					lines--;
-				} else if (lines >= this.osize) {
+				}
+				if (lines >= this.osize) {
 					BoxNode = new BoxNodeWrapper(null);
 					lines = 0;
 				}
@@ -613,7 +614,7 @@
 					throwNow();
 				}
 			};
-			let BreakNow = (code) => {
+			let shallBreakChar = (code) => {
 				let Unbreakables = [33, 34, 36, 39, 40, 41, 44, 46, 47, 58, 59, 63, 91, 92, 93, 123, 125];
 				for (let i = 0; i < Unbreakables.length; i++) {
 					if (Unbreakables[i] == code) {
@@ -676,7 +677,7 @@
 					pending = true;
 					control = content[i];
 				} else {
-					let release = BreakNow(content.charCodeAt(i));
+					let release = shallBreakChar(content.charCodeAt(i));
 					if (breaking || release) {
 						newSpan();
 						breaking = release;
