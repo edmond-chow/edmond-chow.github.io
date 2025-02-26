@@ -225,6 +225,12 @@
 			return LineNodes != null && LineNodes.length > 0 ? LineNodes.pop() : null;
 		}
 	};
+	let ConsoleIntervals = [];
+	setInterval(() => {
+		ConsoleIntervals.forEach((value) => {
+			value();
+		});
+	}, 500);
 	class Console {
 		constructor() {
 			this.ConsoleNode = document.createElement('console');
@@ -238,7 +244,7 @@
 			this.keys = '';
 			this.InputNode = document.createElement('input');
 			this.InputNode.type = 'text';
-			this.InputNode.placeholder = 'type in something for interacting with the console . . . . .';
+			this.InputNode.placeholder = ' > ';
 			this.InputNode.addEventListener('keydown', async (e) => {
 				if (this.KeyFreeze) {
 					let EscapeKeys = ['ContextMenu', 'Backspace', 'CapsLock', 'Control', 'Escape', 'Shift', 'Meta', 'Alt', 'Tab'];
@@ -282,7 +288,7 @@
 			lockFields(this, ['typing', 'freezing', 'keys', 'ibuffer', 'osize'], true);
 			lockFields(this, ['ConsoleNode', 'BufferNode', 'ControlNode', 'DataContentNode', 'InputNode', 'ButtonNode'], false);
 			let FlushNow = 0;
-			setInterval(() => {
+			ConsoleIntervals.push(() => {
 				if (++FlushNow >= 20) {
 					this.FlushOutStream();
 					FlushNow = 0;
@@ -293,7 +299,7 @@
 					}
 					InstallInput = false;
 				}
-			}, 500);
+			});
 		}
 		ClearBufferNode() {
 			this.BufferNode.innerText = '';
@@ -841,7 +847,7 @@
 	hardFreeze(window, [Console], false);
 	/* { event-dispatcher } */
 	class ModuleState {
-		/* { infrastructure } */
+		/* { infrastructures } */
 		static SetDefaultParams(head, fetch, alive) {
 			Object.defineProperty(window, 'dispatcher', makeDescriptor(new ModuleState(head, fetch, alive), true));
 			dispatcher.startAsync();
@@ -853,7 +859,7 @@
 			this.fetchModule = fetch;
 			this.runtimeAlive = alive;
 			this.iostream = new Console();
-			lockFields(this, ['isLoaded', 'abortState', 'exitCode'], true);
+			lockFields(this, ['isLoaded', 'exitCode', 'abortType', 'abortWhat', 'abortStack'], true);
 			lockFields(this, ['headNode', 'fetchModule', 'runtimeAlive', 'iostream'], false);
 		}
 		async structuredTag() {
@@ -879,11 +885,55 @@
 				}
 			})();
 		}
-		/* { processor } */
+		/* { fields } */
+		get ExitCode() {
+			return this.exitCode;
+		}
+		set ExitCode(value) {
+			[value].constrainedWithAndThrow(Number);
+			this.exitCode = value;
+		}
+		get AbortType() {
+			return this.abortType;
+		}
+		set AbortType(value) {
+			[value].constrainedWithAndThrow(String);
+			this.abortType = value;
+		}
+		get AbortWhat() {
+			return this.abortWhat;
+		}
+		set AbortWhat(value) {
+			[value].constrainedWithAndThrow(String);
+			this.abortWhat = value;
+		}
+		get AbortStack() {
+			return this.abortStack;
+		}
+		set AbortStack(value) {
+			[value].constrainedWithAndThrow(String);
+			this.abortStack = value;
+		}
+		get AbortState() {
+			return this.abortType.length > 0 || this.abortWhat.length > 0 || this.abortStack.length > 0;
+		}
+		set AbortState(value) {
+			[value].constrainedWithAndThrow(Boolean);
+			if (!value) {
+				this.abortType = '';
+				this.abortWhat = '';
+				this.abortStack = '';
+			} else if (this.abortType.length == 0 && this.abortWhat.length == 0 && this.abortStack.length == 0) {
+				this.abortType = '[ModuleState]RuntimeError';
+			}
+		}
+		/* { processors } */
 		initStream() {
 			this.iostream.bindTo(this.headNode);
 		}
 		async renderModule() {
+			this.ExitCode = 0;
+			this.AbortState = false;
 			await this.fetchModule(this);
 		}
 		clearText() {
@@ -895,16 +945,16 @@
 		}
 		async monitorProcess() {
 			if (!this.runtimeAlive(this)) {
-				if (!this.abortState) {
-					await this.iostream.completed(this.exitCode);
+				if (!this.AbortState) {
+					await this.iostream.completed(this.ExitCode);
 				} else {
-					await this.iostream.terminated();
+					await this.iostream.terminated(this.AbortType, this.AbortWhat, this.AbortStack);
 				}
 				await this.fetchModule(this);
 			}
 		}
 	};
-	shareProperties(ModuleState, ['startAsync'], false);
+	shareProperties(ModuleState, ['startAsync', 'ExitCode', 'AbortType', 'AbortWhat', 'AbortStack', 'AbortState'], false);
 	shareProperties(ModuleState, ['SetDefaultParams'], true);
 	hardFreeze(window, [ModuleState], false);
 })();

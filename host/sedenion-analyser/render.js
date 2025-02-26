@@ -47,6 +47,26 @@
 			}
 		}
 		shareProperties(UTFString, ['get'], false);
+		let abort = (e) => {
+			if (e instanceof WebAssembly.RuntimeError) {
+				ths.AbortType = e.name;
+				ths.AbortWhat = e.message;
+				ths.AbortStack = e.stack;
+			} else if (e instanceof functions['ExitStatus']) {
+				ths.ExitCode = e.status;
+			} else if (!!functions['getExceptionMessage']) {
+				let info = functions['getExceptionMessage'](e);
+				ths.AbortType = info[0];
+				if (!!info[1]) {
+					ths.AbortWhat = info[1];
+				}
+			} else {
+				ths.AbortState = true;
+			}
+		};
+		let exit = (c) => {
+			ths.ExitCode = c;
+		};
 		let overrides = {
 			iostream: ths.iostream,
 			getUTF8String: (scope, content) => {
@@ -59,35 +79,23 @@
 				return functions['UTF32String'].get(scope, content);
 			},
 			onRuntimeInitialized: () => {
-				ths.abortState = false;
-				ths.exitCode = 0;
+				ths.AbortState = false;
+				ths.ExitCode = 0;
 			},
-			onAbort: () => {
-				ths.abortState = true;
-			},
-			onExit: (code) => {
-				ths.exitCode = code;
-			}
+			onAbort: abort,
+			onExit: exit
 		};
 		functions = await Module(overrides);
 		functions['UTF8String'] = new UTFString(functions['_malloc'], functions['_free'], functions['stringToUTF8'], functions['lengthBytesUTF8'], 1);
 		functions['UTF16String'] = new UTFString(functions['_malloc'], functions['_free'], functions['stringToUTF16'], functions['lengthBytesUTF16'], 2);
 		functions['UTF32String'] = new UTFString(functions['_malloc'], functions['_free'], functions['stringToUTF32'], functions['lengthBytesUTF32'], 4);
 		functions.Asyncify.asyncPromiseHandlers = {
-			reject: (e) => {
-				if (e instanceof functions['ExitStatus']) {
-					ths.exitCode = e.status;
-				} else {
-					ths.abortState = true;
-				}
-			},
-			resolve: (code) => {
-				ths.exitCode = code;
-			}
+			reject: abort,
+			resolve: exit
 		};
 	};
-	let alive = () => {
-		return functions['keepRuntimeAlive'];
+	let alive = (ths) => {
+		return functions['keepRuntimeAlive']() || !ths.AbortState;
 	};
 	while (!window['ModuleState']) {
 		await suspend();
