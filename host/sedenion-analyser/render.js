@@ -78,10 +78,6 @@
 			getUTF32String: (scope, content) => {
 				return functions['UTF32String'].get(scope, content);
 			},
-			onRuntimeInitialized: () => {
-				ths.AbortState = false;
-				ths.ExitCode = 0;
-			},
 			onAbort: abort,
 			onExit: exit
 		};
@@ -95,7 +91,8 @@
 		};
 	};
 	let alive = (ths) => {
-		return functions['keepRuntimeAlive']() || !ths.AbortState;
+		if (ths.AbortState) { return false; }
+		return functions['keepRuntimeAlive']();
 	};
 	while (!window['ModuleState']) {
 		await suspend();

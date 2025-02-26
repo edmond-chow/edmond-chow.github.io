@@ -924,7 +924,7 @@
 				this.abortWhat = '';
 				this.abortStack = '';
 			} else if (this.abortType.length == 0 && this.abortWhat.length == 0 && this.abortStack.length == 0) {
-				this.abortType = '[ModuleState]RuntimeError';
+				this.abortType = '[ModuleState]';
 			}
 		}
 		/* { processors } */
@@ -950,7 +950,7 @@
 				} else {
 					await this.iostream.terminated(this.AbortType, this.AbortWhat, this.AbortStack);
 				}
-				await this.fetchModule(this);
+				await this.renderModule();
 			}
 		}
 	};
