@@ -758,26 +758,62 @@
 		clear() {
 			this.ClearBufferNode();
 		}
-		async completed(code) {
+		async completed(code = 0) {
 			[code].constrainedWithAndThrow(Number);
 			this.ForegroundColor = 'gray';
 			this.BackgroundColor = 'default';
 			this.clear();
-			await this.writeLine('');
-			await this.writeLine('   The program completed with a return code ' + code.toString() + '.');
-			await this.writeLine('');
-			await this.writeLine('      >> Press any key to continue with restart the program . . .   ');
+			await this.writeLine('', false);
+			await this.write('   The program is completed with a return code ', false);
+			await this.write(code.toString(), false);
+			await this.writeLine('.', false);
+			await this.writeLine('', false);
+			await this.writeLine('      >> Press any key to continue with restart the program . . .   ', false);
 			await this.readKey(false);
 			this.clear();
 		}
-		async terminated() {
+		async terminated(type = '', what = '', stack = '') {
+			[type, what, stack].constrainedWithAndThrow(String, String, String);
+			let list = (content) => {
+				return content.split('\n').map((value) => {
+					return value.trim();
+				}).filter((value) => {
+					return value.length > 0;
+				});
+			};
+			let types = list(type);
+			let whats = list(what);
+			let stacks = list(stack);
 			this.ForegroundColor = 'gray';
 			this.BackgroundColor = 'default';
 			this.clear();
-			await this.writeLine('');
-			await this.writeLine('   The program terminated with no return codes.');
-			await this.writeLine('');
-			await this.writeLine('      >> Press any key to continue with restart the program . . .   ');
+			await this.writeLine('', false);
+			await this.write('   The program is terminated', false);
+			if (types.length > 0) {
+				await this.write(' through types < ', false);
+			}
+			for (let i = 0; i < types.length; i++) {
+				await this.write(i == 0 ? '' : ', ', false);
+				await this.write(types[i], false);
+			}
+			if (types.length > 0) {
+				await this.write(' > ', false);
+			}
+			await this.writeLine('.', false);
+			for (let i = 0; i < whats.length; i++) {
+				await this.write('   +  ', false);
+				await this.writeLine(whats[i], false);
+			}
+			if (stacks.length > 0) {
+				await this.writeLine('', false);
+				await this.writeLine('   The stack trace is as follow,', false);
+			}
+			for (let i = 0; i < stacks.length; i++) {
+				await this.write('   -> ', false);
+				await this.writeLine(stacks[i], false);
+			}
+			await this.writeLine('', false);
+			await this.writeLine('      >> Press any key to continue with restart the program . . .   ', false);
 			await this.readKey(false);
 			this.clear();
 		}
@@ -806,16 +842,23 @@
 	/* { event-dispatcher } */
 	class ModuleState {
 		/* { infrastructure } */
-		constructor(head) {
+		static SetDefaultParams(head, fetch, alive) {
+			Object.defineProperty(window, 'dispatcher', makeDescriptor(new ModuleState(head, fetch, alive), true));
+			dispatcher.startAsync();
+		}
+		constructor(head, fetch, alive) {
+			[head, fetch, alive].constrainedWithAndThrow(Element, Function, Function);
 			this.isLoaded = false;
 			this.headNode = head;
+			this.fetchModule = fetch;
+			this.runtimeAlive = alive;
 			this.iostream = new Console();
-			lockFields(this, ['isLoaded', 'functionList', 'abortState', 'exitCode'], true);
-			lockFields(this, ['headNode', 'iostream'], false);
+			lockFields(this, ['isLoaded', 'abortState', 'exitCode'], true);
+			lockFields(this, ['headNode', 'fetchModule', 'runtimeAlive', 'iostream'], false);
 		}
 		async structuredTag() {
 			this.initStream();
-			await this.fetchModule();
+			await this.renderModule();
 		}
 		async formedStyle() {
 			this.clearText();
@@ -840,78 +883,28 @@
 		initStream() {
 			this.iostream.bindTo(this.headNode);
 		}
-		async fetchModule() {
-			let captured = {};
-			let overrides = {
-				iostream: this.iostream,
-				getUTF8String: (fnScope, jsString) => {
-					return this.getUTFString(captured, this.functionList['stringToUTF8'], this.functionList['lengthBytesUTF8'], 1, fnScope, jsString);
-				},
-				getUTF16String: (fnScope, jsString) => {
-					return this.getUTFString(captured, this.functionList['stringToUTF16'], this.functionList['lengthBytesUTF16'], 2, fnScope, jsString);
-				},
-				getUTF32String: (fnScope, jsString) => {
-					return this.getUTFString(captured, this.functionList['stringToUTF32'], this.functionList['lengthBytesUTF32'], 4, fnScope, jsString);
-				},
-				onRuntimeInitialized: () => {
-					this.abortState = false;
-					this.exitCode = 0;
-				},
-				onAbort: () => {
-					this.abortState = true;
-				},
-				onExit: (code) => {
-					this.exitCode = code;
-				}
-			};
-			this.functionList = await Module(overrides);
-			this.functionList.Asyncify.asyncPromiseHandlers = {
-				reject: (e) => {
-					if (e instanceof this.functionList['ExitStatus']) {
-						this.exitCode = e.status;
-					} else {
-						this.abortState = true;
-					}
-				},
-				resolve: (code) => {
-					this.exitCode = code;
-				}
-			};
+		async renderModule() {
+			await this.fetchModule(this);
 		}
 		clearText() {
 			this.headNode.childNodes.forEach((value) => {
 				if (value.nodeName == '#text') {
-					value.textContent = '';
+					value.remove();
 				}
-			});			
+			});
 		}
 		async monitorProcess() {
-			if (!this.functionList['keepRuntimeAlive']()) {
+			if (!this.runtimeAlive(this)) {
 				if (!this.abortState) {
 					await this.iostream.completed(this.exitCode);
 				} else {
 					await this.iostream.terminated();
 				}
-				await this.fetchModule();
+				await this.fetchModule(this);
 			}
-		}
-		/* { functionality } */
-		getUTFString(callerCaptured, converterCaptured, counterCaptured, sizeCaptured, fnScope, jsString) {
-			[fnScope, jsString].constrainedWithAndThrow(Function.toNullable(), String.toNullable());
-			let myScope = fnScope == null ? callerCaptured : fnScope;
-			let stringSource = jsString == null ? '' : jsString;
-			let sizeCapacity = counterCaptured(stringSource) + sizeCaptured;
-			if (!myScope.bufferData || myScope.bufferSize < sizeCapacity) {
-				this.functionList['_free'](myScope.bufferData);
-				myScope.bufferData = this.functionList['_malloc'](sizeCapacity);
-				myScope.bufferSize = sizeCapacity;
-			}
-			converterCaptured(stringSource, myScope.bufferData, myScope.bufferSize);
-			return myScope.bufferData;
 		}
 	};
 	shareProperties(ModuleState, ['startAsync'], false);
+	shareProperties(ModuleState, ['SetDefaultParams'], true);
 	hardFreeze(window, [ModuleState], false);
-	Object.defineProperty(window, 'dispatcher', makeDescriptor(new ModuleState(document.body), true));
-	dispatcher.startAsync();
 })();
