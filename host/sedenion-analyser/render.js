@@ -60,7 +60,7 @@
 			} else if (functions['getExceptionMessage']) {
 				let pair = functions['getExceptionMessage'](e);
 				ths.AbortType = pair[0];
-				if (info[1]) {
+				if (pair[1]) {
 					ths.AbortWhat = pair[1];
 				}
 			} else {
