@@ -806,16 +806,20 @@
 				await this.write(' > ', false);
 			}
 			await this.writeLine('.', false);
+			if (whats.length > 0) {
+				await this.writeLine('', false);
+			}
 			for (let i = 0; i < whats.length; i++) {
-				await this.write('   +  ', false);
+				await this.write('   ~>   ', false);
 				await this.writeLine(whats[i], false);
 			}
 			if (stacks.length > 0) {
 				await this.writeLine('', false);
 				await this.writeLine('   The stack trace is as follow,', false);
+				await this.writeLine('', false);
 			}
 			for (let i = 0; i < stacks.length; i++) {
-				await this.write('   -> ', false);
+				await this.write('   ->   ', false);
 				await this.writeLine(stacks[i], false);
 			}
 			await this.writeLine('', false);
@@ -934,7 +938,7 @@
 		async renderModule() {
 			this.ExitCode = 0;
 			this.AbortState = false;
-			await this.fetchModule(this);
+			await this.fetchModule();
 		}
 		clearText() {
 			this.headNode.childNodes.forEach((value) => {
@@ -944,7 +948,7 @@
 			});
 		}
 		async monitorProcess() {
-			if (!this.runtimeAlive(this)) {
+			if (!this.runtimeAlive()) {
 				if (!this.AbortState) {
 					await this.iostream.completed(this.ExitCode);
 				} else {

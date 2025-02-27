@@ -22,8 +22,8 @@
  *   SOFTWARE.
  */
 (async () => {
-	let functions = {};
-	let fetch = async (ths) => {
+	let functionList = null;
+	let fetch = async function () {
 		class UTFString {
 			constructor(allocate, release, converter, counter, size) {
 				[allocate, release, converter, counter, size].constrainedWithAndThrow(Function, Function, Function, Function, Number);
@@ -47,24 +47,29 @@
 			}
 		}
 		shareProperties(UTFString, ['get'], false);
+		let ErrorList = [];
 		let exit = (c) => {
-			ths.ExitCode = c;
+			this.ExitCode = c;
 		};
 		let abort = (e) => {
 			if (e instanceof WebAssembly.RuntimeError) {
-				ths.AbortType = e.name;
-				ths.AbortWhat = e.message;
-				ths.AbortStack = e.stack;
-			} else if (functions['ExitStatus'] && e instanceof functions['ExitStatus']) {
-				ths.ExitCode = e.status;
-			} else if (functions['getExceptionMessage']) {
-				let pair = functions['getExceptionMessage'](e);
-				ths.AbortType = pair[0];
+				this.AbortType = e.name;
+				this.AbortWhat = e.message;
+				this.AbortStack = e.stack;
+			} else if (e instanceof String || Object.getPrototypeOf(e) == String.prototype) {
+				this.AbortWhat = e;
+			} else if (functionList == null) {
+				ErrorList.push(e);
+			} else if (functionList['ExitStatus'] && e instanceof functionList['ExitStatus']) {
+				this.ExitCode = e.status;
+			} else if (functionList['getExceptionMessage']) {
+				let pair = functionList['getExceptionMessage'](e);
+				this.AbortType = pair[0];
 				if (pair[1]) {
-					ths.AbortWhat = pair[1];
+					this.AbortWhat = pair[1];
 				}
 			} else {
-				ths.AbortState = true;
+				this.AbortState = true;
 			}
 		};
 		let quit = (c, e) => {
@@ -73,32 +78,38 @@
 			throw e;
 		};
 		let overrides = {
-			iostream: ths.iostream,
+			iostream: this.iostream,
 			getUTF8String: (scope, content) => {
-				return functions['UTF8String'].get(scope, content);
+				return functionList['UTF8String'].get(scope, content);
 			},
 			getUTF16String: (scope, content) => {
-				return functions['UTF16String'].get(scope, content);
+				return functionList['UTF16String'].get(scope, content);
 			},
 			getUTF32String: (scope, content) => {
-				return functions['UTF32String'].get(scope, content);
+				return functionList['UTF32String'].get(scope, content);
+			},
+			onRuntimeInitialized: () => {
+				functionList = null;
 			},
 			onExit: exit,
 			onAbort: abort,
 			quit: quit
 		};
-		functions = await Module(overrides);
-		functions['UTF8String'] = new UTFString(functions['_malloc'], functions['_free'], functions['stringToUTF8'], functions['lengthBytesUTF8'], 1);
-		functions['UTF16String'] = new UTFString(functions['_malloc'], functions['_free'], functions['stringToUTF16'], functions['lengthBytesUTF16'], 2);
-		functions['UTF32String'] = new UTFString(functions['_malloc'], functions['_free'], functions['stringToUTF32'], functions['lengthBytesUTF32'], 4);
-		functions.Asyncify.asyncPromiseHandlers = {
+		functionList = await Module(overrides);
+		functionList['UTF8String'] = new UTFString(functionList['_malloc'], functionList['_free'], functionList['stringToUTF8'], functionList['lengthBytesUTF8'], 1);
+		functionList['UTF16String'] = new UTFString(functionList['_malloc'], functionList['_free'], functionList['stringToUTF16'], functionList['lengthBytesUTF16'], 2);
+		functionList['UTF32String'] = new UTFString(functionList['_malloc'], functionList['_free'], functionList['stringToUTF32'], functionList['lengthBytesUTF32'], 4);
+		functionList.Asyncify.asyncPromiseHandlers = {
 			resolve: exit,
 			reject: abort
 		};
+		while (ErrorList.length > 0) {
+			abort(ErrorList.shift());
+		}
 	};
-	let alive = (ths) => {
-		if (ths.AbortState) { return false; }
-		return functions['keepRuntimeAlive']();
+	let alive = function () {
+		if (this.AbortState) { return false; }
+		return functionList['keepRuntimeAlive']();
 	};
 	while (!window['ModuleState']) {
 		await suspend();
