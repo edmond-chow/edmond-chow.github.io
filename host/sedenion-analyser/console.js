@@ -284,21 +284,33 @@
 			this.Scheme = 'campbell';
 			this.CanType = false;
 			this.ibuffer = [];
-			this.osize = 32;
-			lockFields(this, ['typing', 'freezing', 'keys', 'ibuffer', 'osize'], true);
+			this.obuffer = {
+				controlized: true,
+				content: '',
+				characters: 1048576,
+				lines: 32
+			};
+			lockFields(this.obuffer, ['controlized', 'content'], true);
+			lockFields(this.obuffer, ['characters', 'lines'], false);
+			lockFields(this, ['typing', 'freezing', 'keys', 'ibuffer', 'obuffer'], true);
 			lockFields(this, ['ConsoleNode', 'BufferNode', 'ControlNode', 'DataContentNode', 'InputNode', 'ButtonNode'], false);
 			let FlushNow = 0;
-			ConsoleIntervals.push(() => {
+			let Processing = false;
+			ConsoleIntervals.push(async () => {
+				if (Processing) {
+					return;
+				}
 				if (++FlushNow >= 20) {
+					Processing = true;
+					await this.out();
 					this.FlushOutStream();
 					FlushNow = 0;
 				}
-				if (InstallInput) {
-					if (this.CanType) {
-						this.DataContentNode.innerText = this.InputNode.value;
-					}
+				if (InstallInput &&= this.CanType) {
+					this.DataContentNode.innerText = this.InputNode.value;
 					InstallInput = false;
 				}
+				Processing = false;
 			});
 		}
 		ClearBufferNode() {
@@ -309,12 +321,12 @@
 		}
 		FlushOutStream() {
 			let BoxNodes = this.BoxNodes;
-			while (BoxNodes.length > this.osize) {
+			while (BoxNodes.length > this.obuffer.lines) {
 				let FirstBoxNode = BoxNodes.shift();
-				if (BoxNodes.length == this.osize) {
+				if (BoxNodes.length == this.obuffer.lines) {
 					let LastBoxNode = BoxNodes.pop();
 					let drop = LastBoxNode.LineNodes.length;
-					let keep = drop <= this.osize ? this.osize - drop : 0;
+					let keep = drop <= this.obuffer.lines ? this.obuffer.lines - drop : 0;
 					let LineNodes = FirstBoxNode.LineNodes;
 					while (LineNodes.length > keep) {
 						LineNodes.shift().remove();
@@ -416,7 +428,7 @@
 					if (value.length > 1 && value.substring(0, 2) == '\\$') {
 						value = value.substring(1);
 					}
-					this.pushInput(value);
+					this.in(value);
 				}
 				this.InputNode.value = '';
 				this.CanType = false;
@@ -516,16 +528,34 @@
 			[value].constrainedWithAndThrow(String);
 			return this.ConsoleNode.setAttribute('background', value);
 		}
-		async writeLine(content, controlized = true) {
-			[content, controlized].constrainedWithAndThrow(String, Boolean);
-			await this.write(content + '\n', controlized);
+		back(content) {
+			[content].constrainedWithAndThrow(String);
+			let lines = content.split('\n');
+			if (this.ibuffer.length > 0) {
+				let last = lines.pop() + this.ibuffer.shift();
+				this.ibuffer.unshift(last);
+			}
+			this.ibuffer.unshift(...lines);
 		}
-		async write(content, controlized = true) {
-			[content, controlized].constrainedWithAndThrow(String, Boolean);
+		in(content) {
+			[content].constrainedWithAndThrow(String);
+			let lines = content.split('\n');
+			if (this.ibuffer.length > 0) {
+				let first = this.ibuffer.pop() + lines.shift();
+				this.ibuffer.push(first);
+			}
+			this.ibuffer.push(...lines);
+		}
+		async out() {
+			let controlized = this.obuffer.controlized = true;
+			let content = this.obuffer.content;
+			if (content.length == 0) {
+				return;
+			}
+			this.obuffer.content = '';
 			let lines = 0;
 			let value = '';
 			let config = false;
-			let pending = false;
 			let control = null;
 			let breaking = false;
 			let foreground = Console.GetColorCode(this.ForegroundColor);
@@ -540,13 +570,13 @@
 				if (lines > 0) {
 					lines--;
 				}
-				if (lines >= this.osize) {
+				if (lines >= this.obuffer.lines) {
 					BoxNode = new BoxNodeWrapper(null);
 					lines = 0;
 				}
 			}
 			let pushNode = () => {
-				if (true || Fragment.childNodes.length > 0) {
+				if (Fragment.childNodes.length > 0) {
 					let NewBoxNode = BoxNode.Self;
 					if (NewBoxNode == null) {
 						NewBoxNode = document.createElement('box');
@@ -636,10 +666,15 @@
 				newSpan();
 			}
 			for (let i = 0; i < content.length; i++) {
-				if (content[i] == '\n') {
-					if (config && pending) {
+				if (content[i] == '\0') {
+					if (config) {
 						throwNow();
-					} else if (++lines >= this.osize) {
+					}
+					controlized = !controlized;
+				} else if (content[i] == '\n') {
+					if (config) {
+						throwNow();
+					} else if (++lines >= this.obuffer.lines) {
 						pushNode();
 						lines = 0;
 						await suspend();
@@ -656,15 +691,12 @@
 						} else if (control == null) {
 							newSpan();
 							value = '\\';
-						} else if (pending) {
-							throwNow();
 						}
 					}
 					config = !config;
 					control = null;
 					breaking = value == '\\';
 				} else if (control != null) {
-					pending = false;
 					if (control == '+t') {
 						title += content[i];
 					} else if (control.toLowerCase() == 't') {
@@ -680,7 +712,6 @@
 						throwNow();
 					}
 				} else if (config) {
-					pending = true;
 					control = content[i];
 				} else {
 					let release = shallBreakChar(content.charCodeAt(i));
@@ -692,25 +723,15 @@
 				}
 			}
 			await suspend();
-			if (config && pending) {
+			if (config) {
 				throwNow();
 			} else {
 				endUp();
 			}
 		}
-		async readLine(echoing = true) {
-			while (this.ibuffer.length == 0) {
-				this.CanType = true;
-				await suspend();
-			}
-			let result = this.ibuffer.shift();
-			if (echoing) {
-				await this.writeLine(result, false);
-			}
-			return result;
-		}
 		async read(echoing = true, unicode = true) {
-			[unicode].constrainedWithAndThrow(Boolean);
+			[echoing, unicode].constrainedWithAndThrow(Boolean, Boolean);
+			await this.out();
 			while (this.ibuffer.length == 0) {
 				this.CanType = true;
 				await suspend();
@@ -732,7 +753,21 @@
 			}
 			return result;
 		}
+		async readLine(echoing = true) {
+			[echoing].constrainedWithAndThrow(Boolean);
+			await this.out();
+			while (this.ibuffer.length == 0) {
+				this.CanType = true;
+				await suspend();
+			}
+			let result = this.ibuffer.shift();
+			if (echoing) {
+				await this.writeLine(result, false);
+			}
+			return result;
+		}
 		async readKey(echoing = true) {
+			[echoing].constrainedWithAndThrow(Boolean);
 			this.KeyFreeze = true;
 			while (this.KeyFreeze) {
 				await suspend();
@@ -743,23 +778,28 @@
 			}
 			return result;
 		}
-		putBack(content) {
-			[content].constrainedWithAndThrow(String);
-			let lines = content.split('\n');
-			if (this.ibuffer.length > 0) {
-				let last = lines.pop() + this.ibuffer.shift();
-				this.ibuffer.unshift(last);
+		async write(content, controlized = true) {
+			[content, controlized].constrainedWithAndThrow(String, Boolean);
+			if (this.obuffer.controlized != controlized) {
+				this.obuffer.controlized = !this.obuffer.controlized;
+				this.obuffer.content += '\0';
 			}
-			this.ibuffer.unshift(...lines);
+			this.obuffer.content += content;
+			if (this.obuffer.content.length >= this.obuffer.characters) {
+				await this.out();
+			}
 		}
-		pushInput(content) {
-			[content].constrainedWithAndThrow(String);
-			let lines = content.split('\n');
-			if (this.ibuffer.length > 0) {
-				let first = this.ibuffer.pop() + lines.shift();
-				this.ibuffer.push(first);
+		async writeLine(content, controlized = true) {
+			[content, controlized].constrainedWithAndThrow(String, Boolean);
+			if (this.obuffer.controlized != controlized) {
+				this.obuffer.controlized = !this.obuffer.controlized;
+				this.obuffer.content += '\0';
 			}
-			this.ibuffer.push(...lines);
+			this.obuffer.content += content;
+			this.obuffer.content += '\n';
+			if (this.obuffer.content.length >= this.obuffer.characters) {
+				await this.out();
+			}
 		}
 		clear() {
 			this.ClearBufferNode();
@@ -839,15 +879,48 @@
 			document.title = value;
 		}
 	};
-	shareProperties(LineNodeWrapper, ['SpanNodes', 'LastSpanNode'], false);
+	shareProperties(LineNodeWrapper, [
+		'SpanNodes',
+		'LastSpanNode'
+	], false);
 	hardFreeze(Console, [LineNodeWrapper], false);
-	shareProperties(BoxNodeWrapper, ['LineNodes', 'LastLineNode'], false);
+	shareProperties(BoxNodeWrapper, [
+		'LineNodes',
+		'LastLineNode'
+	], false);
 	hardFreeze(Console, [BoxNodeWrapper], false);
 	Console.Colors[0xFF] = 'default';
 	Object.freeze(Console.Colors);
 	Object.freeze(Console.Themes);
-	shareProperties(Console, ['BoxNodes', 'LastBoxNode', 'LineNodes', 'LastLineNode', 'Scheme', 'ForegroundColor', 'BackgroundColor', 'writeLine', 'write', 'readLine', 'read', 'readKey', 'putBack', 'pushInput', 'clear', 'completed', 'terminated', 'bindTo'], false);
-	shareProperties(Console, ['Colors', 'Themes', 'GetColorCode', 'GetColorName', 'GetColorCharCode', 'Title'], true);
+	shareProperties(Console, [
+		'BoxNodes',
+		'LastBoxNode',
+		'LineNodes',
+		'LastLineNode',
+		'Scheme',
+		'ForegroundColor',
+		'BackgroundColor',
+		'back',
+		'in',
+		'out',
+		'write',
+		'writeLine',
+		'read',
+		'readLine',
+		'readKey',
+		'clear',
+		'completed',
+		'terminated',
+		'bindTo'
+	], false);
+	shareProperties(Console, [
+		'Colors',
+		'Themes',
+		'GetColorCode',
+		'GetColorName',
+		'GetColorCharCode',
+		'Title'
+	], true);
 	hardFreeze(window, [Console], false);
 	/* { event-dispatcher } */
 	class ModuleState {
@@ -865,8 +938,20 @@
 			this.runtimeAlive = alive;
 			this.disposeModule = dispose;
 			this.iostream = new Console();
-			lockFields(this, ['isLoaded', 'exitCode', 'abortType', 'abortWhat', 'abortStack'], true);
-			lockFields(this, ['headNode', 'fetchModule', 'runtimeAlive', 'disposeModule', 'iostream'], false);
+			lockFields(this, [
+				'isLoaded',
+				'exitCode',
+				'abortType',
+				'abortWhat',
+				'abortStack'
+			], true);
+			lockFields(this, [
+				'headNode',
+				'fetchModule',
+				'runtimeAlive',
+				'disposeModule',
+				'iostream'
+			], false);
 		}
 		async structuredTag() {
 			this.initStream();
@@ -961,7 +1046,16 @@
 			}
 		}
 	};
-	shareProperties(ModuleState, ['startAsync', 'ExitCode', 'AbortType', 'AbortWhat', 'AbortStack', 'AbortState'], false);
-	shareProperties(ModuleState, ['SetDefaultModule'], true);
+	shareProperties(ModuleState, [
+		'startAsync',
+		'ExitCode',
+		'AbortType',
+		'AbortWhat',
+		'AbortStack',
+		'AbortState'
+	], false);
+	shareProperties(ModuleState, [
+		'SetDefaultModule'
+	], true);
 	hardFreeze(window, [ModuleState], false);
 })();
