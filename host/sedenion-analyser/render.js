@@ -22,48 +22,68 @@
  *   SOFTWARE.
  */
 (async () => {
-	let functionList = null;
-	let fetch = async function () {
-		class UTFString {
-			constructor(allocate, release, converter, counter, size) {
-				[allocate, release, converter, counter, size].constrainedWithAndThrow(Function, Function, Function, Function, Number);
-				this.allocate = allocate;
-				this.release = release;
-				this.converter = converter;
-				this.counter = counter;
-				this.size = size;
-				lockFields(this, ['allocate', 'release', 'converter', 'counter', 'size'], false);
-			}
-			get(scope, content) {
-				[scope, content].constrainedWithAndThrow(Function, String);
-				let sizeCapacity = this.counter(content) + this.size;
-				if (!scope.bufferData || scope.bufferSize < sizeCapacity) {
-					this.release(scope.bufferData);
-					scope.bufferData = this.allocate(sizeCapacity);
-					scope.bufferSize = sizeCapacity;
-				}
-				this.converter(content, scope.bufferData, scope.bufferSize);
-				return scope.bufferData;
-			}
+	/* { string-conversions } */
+	class UTFString {
+		constructor(allocate, release, converter, counter, size) {
+			[allocate, release, converter, counter, size].constrainedWithAndThrow(Function, Function, Function, Function, Number);
+			this.allocate = allocate;
+			this.release = release;
+			this.converter = converter;
+			this.counter = counter;
+			this.size = size;
+			lockFields(this, ['allocate', 'release', 'converter', 'counter', 'size'], false);
 		}
-		shareProperties(UTFString, ['get'], false);
-		let ErrorList = [];
-		let exit = (c) => {
+		get(scope, content) {
+			[scope, content].constrainedWithAndThrow(Function, String);
+			let sizeCapacity = this.counter(content) + this.size;
+			if (!scope.bufferData || scope.bufferSize < sizeCapacity) {
+				this.release(scope.bufferData);
+				scope.bufferData = this.allocate(sizeCapacity);
+				scope.bufferSize = sizeCapacity;
+			}
+			this.converter(content, scope.bufferData, scope.bufferSize);
+			return scope.bufferData;
+		}
+	};
+	shareProperties(UTFString, ['get'], false);
+	/* { wasm-module } */
+	while (!window['ModuleState']) {
+		await suspend();
+	}
+	class WasmModuleState extends ModuleState {
+		constructor(head) {
+			let fetch = async () => {
+				await this.fetch();
+			};
+			let alive = () => {
+				return this.alive();
+			};
+			let dispose = () => {
+				this.dispose();
+			};
+			super(head, fetch, alive, dispose);
+			this.fn = null;
+			this.er = [];
+			lockFields(this, ['fn'], true);
+			lockFields(this, ['er'], false);
+		}
+		/* { event-handlers } */
+		exit(c) {
 			this.ExitCode = c;
-		};
-		let abort = (e) => {
+		}
+		abort(e) {
 			if (e instanceof WebAssembly.RuntimeError) {
 				this.AbortType = e.name;
 				this.AbortWhat = e.message;
 				this.AbortStack = e.stack;
 			} else if (e instanceof String || Object.getPrototypeOf(e) == String.prototype) {
 				this.AbortWhat = e;
-			} else if (functionList == null) {
-				ErrorList.push(e);
-			} else if (functionList['ExitStatus'] && e instanceof functionList['ExitStatus']) {
+			} else if (this.fn == null) {
+				this.er.push(e);
+			} else if (this.fn['ExitStatus'] && e instanceof this.fn['ExitStatus']) {
 				this.ExitCode = e.status;
-			} else if (functionList['getExceptionMessage']) {
-				let pair = functionList['getExceptionMessage'](e);
+			} else if (this.fn['getExceptionMessage']) {
+				let pair = this.fn['getExceptionMessage'](e);
 				this.AbortType = pair[0];
 				if (pair[1]) {
 					this.AbortWhat = pair[1];
@@ -71,48 +91,64 @@
 			} else {
 				this.AbortState = true;
 			}
-		};
-		let quit = (c, e) => {
-			exit(c);
-			abort(e);
+		}
+		quit(c, e) {
+			this.exit(c);
+			this.abort(e);
 			throw e;
-		};
-		let overrides = {
-			iostream: this.iostream,
-			getUTF8String: (scope, content) => {
-				return functionList['UTF8String'].get(scope, content);
-			},
-			getUTF16String: (scope, content) => {
-				return functionList['UTF16String'].get(scope, content);
-			},
-			getUTF32String: (scope, content) => {
-				return functionList['UTF32String'].get(scope, content);
-			},
-			onRuntimeInitialized: () => {
-				functionList = null;
-			},
-			onExit: exit,
-			onAbort: abort,
-			quit: quit
-		};
-		functionList = await Module(overrides);
-		functionList['UTF8String'] = new UTFString(functionList['_malloc'], functionList['_free'], functionList['stringToUTF8'], functionList['lengthBytesUTF8'], 1);
-		functionList['UTF16String'] = new UTFString(functionList['_malloc'], functionList['_free'], functionList['stringToUTF16'], functionList['lengthBytesUTF16'], 2);
-		functionList['UTF32String'] = new UTFString(functionList['_malloc'], functionList['_free'], functionList['stringToUTF32'], functionList['lengthBytesUTF32'], 4);
-		functionList.Asyncify.asyncPromiseHandlers = {
-			resolve: exit,
-			reject: abort
-		};
-		while (ErrorList.length > 0) {
-			abort(ErrorList.shift());
+		}
+		/* { method-injections } */
+		async fetch() {
+			let exit = (c) => {
+				this.exit(c);
+			};
+			let abort = (e) => {
+				this.abort(e);
+			};
+			let quit = (c, e) => {
+				this.quit(c, e);
+			};
+			let overrides = {
+				iostream: this.iostream,
+				getUTF8String: (scope, content) => {
+					return this.fn['UTF8String'].get(scope, content);
+				},
+				getUTF16String: (scope, content) => {
+					return this.fn['UTF16String'].get(scope, content);
+				},
+				getUTF32String: (scope, content) => {
+					return this.fn['UTF32String'].get(scope, content);
+				},
+				onRuntimeInitialized: () => {
+					this.fn = null;
+				},
+				onExit: exit,
+				onAbort: abort,
+				quit: quit
+			};
+			this.fn = await Module(overrides);
+			this.fn['UTF8String'] = new UTFString(this.fn['_malloc'], this.fn['_free'], this.fn['stringToUTF8'], this.fn['lengthBytesUTF8'], 1);
+			this.fn['UTF16String'] = new UTFString(this.fn['_malloc'], this.fn['_free'], this.fn['stringToUTF16'], this.fn['lengthBytesUTF16'], 2);
+			this.fn['UTF32String'] = new UTFString(this.fn['_malloc'], this.fn['_free'], this.fn['stringToUTF32'], this.fn['lengthBytesUTF32'], 4);
+			this.fn.Asyncify.asyncPromiseHandlers = {
+				resolve: exit,
+				reject: abort
+			};
+			while (this.er.length > 0) {
+				this.abort(this.er.shift());
+			}
+		}
+		alive() {
+			if (this.AbortState) { return false; }
+			return this.fn['keepRuntimeAlive']();
+		}
+		dispose() {
+			try {
+				this.fn['exitJS'](this.ExitCode);
+			} catch (e) {
+				this.abort(e);
+			}
 		}
 	};
-	let alive = function () {
-		if (this.AbortState) { return false; }
-		return functionList['keepRuntimeAlive']();
-	};
-	while (!window['ModuleState']) {
-		await suspend();
-	}
-	ModuleState.SetDefaultParams(document.body, fetch, alive);
+	ModuleState.SetDefaultModule(new WasmModuleState(document.body));
 })();

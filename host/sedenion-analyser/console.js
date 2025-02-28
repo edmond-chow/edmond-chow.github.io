@@ -852,19 +852,21 @@
 	/* { event-dispatcher } */
 	class ModuleState {
 		/* { infrastructures } */
-		static SetDefaultParams(head, fetch, alive) {
-			Object.defineProperty(window, 'dispatcher', makeDescriptor(new ModuleState(head, fetch, alive), true));
+		static SetDefaultModule(module) {
+			[module].constrainedWithAndThrow(ModuleState);
+			Object.defineProperty(window, 'dispatcher', makeDescriptor(module, true));
 			dispatcher.startAsync();
 		}
-		constructor(head, fetch, alive) {
-			[head, fetch, alive].constrainedWithAndThrow(Element, Function, Function);
+		constructor(head, fetch, alive, dispose) {
+			[head, fetch, alive, dispose].constrainedWithAndThrow(Element, Function, Function, Function);
 			this.isLoaded = false;
 			this.headNode = head;
 			this.fetchModule = fetch;
 			this.runtimeAlive = alive;
+			this.disposeModule = dispose;
 			this.iostream = new Console();
 			lockFields(this, ['isLoaded', 'exitCode', 'abortType', 'abortWhat', 'abortStack'], true);
-			lockFields(this, ['headNode', 'fetchModule', 'runtimeAlive', 'iostream'], false);
+			lockFields(this, ['headNode', 'fetchModule', 'runtimeAlive', 'disposeModule', 'iostream'], false);
 		}
 		async structuredTag() {
 			this.initStream();
@@ -949,6 +951,7 @@
 		}
 		async monitorProcess() {
 			if (!this.runtimeAlive()) {
+				await this.disposeModule();
 				if (!this.AbortState) {
 					await this.iostream.completed(this.ExitCode);
 				} else {
@@ -959,6 +962,6 @@
 		}
 	};
 	shareProperties(ModuleState, ['startAsync', 'ExitCode', 'AbortType', 'AbortWhat', 'AbortStack', 'AbortState'], false);
-	shareProperties(ModuleState, ['SetDefaultParams'], true);
+	shareProperties(ModuleState, ['SetDefaultModule'], true);
 	hardFreeze(window, [ModuleState], false);
 })();
