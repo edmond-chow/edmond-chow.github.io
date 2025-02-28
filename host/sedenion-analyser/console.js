@@ -246,36 +246,29 @@
 			this.InputNode.type = 'text';
 			this.InputNode.placeholder = ' > ';
 			this.InputNode.addEventListener('keydown', async (e) => {
+				let ModifierKeys = e.metaKey || e.ctrlKey || e.shiftKey || e.altKey;
+				let Enter = !ModifierKeys && e.key == 'Enter';
 				if (this.KeyFreeze) {
-					let EscapeKeys = ['ContextMenu', 'Backspace', 'CapsLock', 'Control', 'Escape', 'Shift', 'Meta', 'Alt', 'Tab'];
-					if (EscapeKeys.indexOf(e.key) == -1) {
-						if (e.key == 'Enter') {
-							this.Keys = '\n';
-							this.ForAnyKeyType();
-						}
-					}
-				} else if (this.CanType && e.key == 'Enter') {
-					await this.ReadLineType();
+					this.SetReadKey(this.PopInputLine() + '\n');
+				} else if (this.CanType && Enter) {
+					await this.SetReadLine(this.PopInputLine());
 				}
 			});
-			let InstallInput = false;
-			this.InputNode.addEventListener('input', () => {
-				if (this.KeyFreeze) {
-					this.Keys = this.InputNode.value;
-					this.ForAnyKeyType();
-				} else if (this.CanType) {
-					InstallInput = true;
+			this.InputNode.addEventListener('keyup', () => {
+				if (this.CanType) {
+					this.DataContentNode.textContent = this.InputNode.value;
 				}
+				this.CanScrollIntoBottom();
 			});
 			this.ControlNode.append(this.InputNode);
 			this.ButtonNode = document.createElement('button');
 			this.ButtonNode.addEventListener('click', async () => {
 				if (this.KeyFreeze) {
-					this.Keys = '\n';
-					this.ForAnyKeyType();
+					this.SetReadKey(this.PopInputLine() + '\n');
 				} else if (this.CanType) {
-					await this.ReadLineType();
+					await this.SetReadLine(this.PopInputLine());
 				}
+				this.CanScrollIntoBottom();
 			});
 			this.ControlNode.append(this.ButtonNode);
 			this.ForegroundColor = 'gray';
@@ -295,20 +288,15 @@
 			lockFields(this, ['typing', 'freezing', 'keys', 'ibuffer', 'obuffer'], true);
 			lockFields(this, ['ConsoleNode', 'BufferNode', 'ControlNode', 'DataContentNode', 'InputNode', 'ButtonNode'], false);
 			let FlushNow = 0;
-			ConsoleIntervals.push(() => {
-				if (InstallInput &&= this.CanType) {
-					this.DataContentNode.textContent = this.InputNode.value;
-					this.ScrollIntoBottom();
-					InstallInput = false;
-				} else if (this.obuffer.scroll) {
+			ConsoleIntervals.push(async () => {
+				if (this.obuffer.scroll) {
 					this.ScrollIntoBottom();
 					this.obuffer.scroll = false;
 				} else if (FlushNow == 50) {
 					this.FlushOutStream();
 				} else if (FlushNow == 100) {
-					this.out().then(() => {
-						FlushNow = 0;
-					});
+					await this.out();
+					FlushNow = 0;
 				} else {
 					FlushNow++;
 				}
@@ -316,6 +304,8 @@
 		}
 		ClearBufferNode() {
 			this.BufferNode.textContent = '';
+			this.obuffer.controlized = true;
+			this.obuffer.content = '';
 		}
 		ScrollIntoBottom() {
 			this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
@@ -378,65 +368,64 @@
 				this.keys = value;
 			}
 		}
-		ForAnyKeyType() {
-			if (this.KeyFreeze) {
-				this.InputNode.value = '';
-				this.KeyFreeze = false;
-			}
+		PopInputLine() {
+			let result = this.InputNode.value;
+			this.InputNode.value = '';
+			return result;
 		}
-		async ReadLineType() {
-			let value = this.InputNode.value;
-			if (this.CanType) {
-				if (value.length > 0 && value[0] == '$') {
-					let args = [];
-					let temp = '';
-					let wording = false;
-					let quoting = false;
-					let push = () => {
-						if (temp.length > 0) {
-							args.push(temp);
-							temp = '';
-						}
-					};
-					for (let i = 1; i < value.length; i++) {
-						if (value[i] == ' ' && !quoting) {
-							if (wording) {
-								push();
-								wording = false;
-							}
-							wording = false;
-						} else if (value[i] == '"' && !quoting) {
-							if (wording) {
-								push();
-								wording = false;
-							}
-							quoting = true;
-						} else if (value[i] == '"' && quoting) {
+		SetReadKey(key) {
+			this.Keys = key;
+			this.KeyFreeze = false;
+		}
+		async SetReadLine(line) {
+			if (line.length > 0 && line[0] == '$') {
+				let args = [];
+				let temp = '';
+				let wording = false;
+				let quoting = false;
+				let push = () => {
+					if (temp.length > 0) {
+						args.push(temp);
+						temp = '';
+					}
+				};
+				for (let i = 1; i < line.length; i++) {
+					if (line[i] == ' ' && !quoting) {
+						if (wording) {
 							push();
-							quoting = false;
-						} else {
-							temp += value[i];
-							if (!quoting) {
-								wording = true;
-							}
+							wording = false;
+						}
+						wording = false;
+					} else if (line[i] == '"' && !quoting) {
+						if (wording) {
+							push();
+							wording = false;
+						}
+						quoting = true;
+					} else if (line[i] == '"' && quoting) {
+						push();
+						quoting = false;
+					} else {
+						temp += line[i];
+						if (!quoting) {
+							wording = true;
 						}
 					}
-					push();
-					if (args.length == 2 && args[0] == 'scheme') {
-						this.Scheme = args[1];
-					}
-					await this.write('\n\\f7\\ &   \\ff\\');
-					await this.write(value, false);
-					this.BufferNode.append(this.LastLineNode.Self.previousElementSibling);
-				} else {
-					if (value.length > 1 && value.substring(0, 2) == '\\$') {
-						value = value.substring(1);
-					}
-					this.in(value);
 				}
-				this.InputNode.value = '';
-				this.CanType = false;
+				push();
+				if (args.length == 2 && args[0] == 'scheme') {
+					this.Scheme = args[1];
+				}
+				await this.write('\n\\f7\\ &   \\ff\\');
+				await this.write(line, false);
+				this.BufferNode.append(this.LastLineNode.Self.previousElementSibling);
+			} else {
+				if (line.length > 1 && line.substring(0, 2) == '\\$') {
+					line = line.substring(1);
+				}
+				this.in(line);
 			}
+			this.CanType = false;
 		}
 		get BoxNodes() {
 			return Array.from(this.BufferNode.childNodes).filter((value) => {
