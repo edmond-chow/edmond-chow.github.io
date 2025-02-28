@@ -265,7 +265,6 @@
 					this.ForAnyKeyType();
 				} else if (this.CanType) {
 					InstallInput = true;
-					this.ScrollIntoBottom();
 				}
 			});
 			this.ControlNode.append(this.InputNode);
@@ -287,37 +286,42 @@
 			this.obuffer = {
 				controlized: true,
 				content: '',
-				characters: 1048576,
+				scroll: false,
+				characters: 32768,
 				lines: 32
 			};
-			lockFields(this.obuffer, ['controlized', 'content'], true);
+			lockFields(this.obuffer, ['controlized', 'content', 'scroll'], true);
 			lockFields(this.obuffer, ['characters', 'lines'], false);
 			lockFields(this, ['typing', 'freezing', 'keys', 'ibuffer', 'obuffer'], true);
 			lockFields(this, ['ConsoleNode', 'BufferNode', 'ControlNode', 'DataContentNode', 'InputNode', 'ButtonNode'], false);
 			let FlushNow = 0;
-			let Processing = false;
-			ConsoleIntervals.push(async () => {
-				if (Processing) {
-					return;
-				}
-				if (++FlushNow >= 20) {
-					Processing = true;
-					await this.out();
-					this.FlushOutStream();
-					FlushNow = 0;
-				}
+			ConsoleIntervals.push(() => {
 				if (InstallInput &&= this.CanType) {
-					this.DataContentNode.innerText = this.InputNode.value;
+					this.DataContentNode.textContent = this.InputNode.value;
+					this.ScrollIntoBottom();
 					InstallInput = false;
+				} else if (this.obuffer.scroll) {
+					this.ScrollIntoBottom();
+					this.obuffer.scroll = false;
+				} else if (FlushNow == 50) {
+					this.FlushOutStream();
+				} else if (FlushNow == 100) {
+					this.out().then(() => {
+						FlushNow = 0;
+					});
+				} else {
+					FlushNow++;
 				}
-				Processing = false;
 			});
 		}
 		ClearBufferNode() {
-			this.BufferNode.innerText = '';
+			this.BufferNode.textContent = '';
 		}
 		ScrollIntoBottom() {
 			this.BufferNode.scrollTo(this.BufferNode.scrollLeft, this.BufferNode.scrollHeight - this.BufferNode.clientHeight);
+		}
+		CanScrollIntoBottom() {
+			this.obuffer.scroll = true;
 		}
 		FlushOutStream() {
 			let BoxNodes = this.BoxNodes;
@@ -351,7 +355,7 @@
 					this.InputNode.focus();
 				}
 			} else if (!value && this.typing) {
-				this.DataContentNode.innerText = '';
+				this.DataContentNode.textContent = '';
 				this.DataContentNode.remove();
 			}
 			this.typing = value;
@@ -549,9 +553,7 @@
 		async out() {
 			let controlized = this.obuffer.controlized = true;
 			let content = this.obuffer.content;
-			if (content.length == 0) {
-				return;
-			}
+			let scroll = content.length > 0;
 			this.obuffer.content = '';
 			let lines = 0;
 			let value = '';
@@ -589,7 +591,9 @@
 				this.ForegroundColor = Console.GetColorName(foreground);
 				this.BackgroundColor = Console.GetColorName(background);
 				Console.Title = title;
-				this.ScrollIntoBottom();
+				if (scroll) {
+					this.CanScrollIntoBottom();
+				}
 			};
 			let pushSpan = () => {
 				if (SpanNode == null) {
@@ -768,6 +772,7 @@
 		}
 		async readKey(echoing = true) {
 			[echoing].constrainedWithAndThrow(Boolean);
+			await this.out();
 			this.KeyFreeze = true;
 			while (this.KeyFreeze) {
 				await suspend();
@@ -879,15 +884,9 @@
 			document.title = value;
 		}
 	};
-	shareProperties(LineNodeWrapper, [
-		'SpanNodes',
-		'LastSpanNode'
-	], false);
+	shareProperties(LineNodeWrapper, ['SpanNodes', 'LastSpanNode'], false);
 	hardFreeze(Console, [LineNodeWrapper], false);
-	shareProperties(BoxNodeWrapper, [
-		'LineNodes',
-		'LastLineNode'
-	], false);
+	shareProperties(BoxNodeWrapper, ['LineNodes', 'LastLineNode'], false);
 	hardFreeze(Console, [BoxNodeWrapper], false);
 	Console.Colors[0xFF] = 'default';
 	Object.freeze(Console.Colors);
@@ -938,20 +937,8 @@
 			this.runtimeAlive = alive;
 			this.disposeModule = dispose;
 			this.iostream = new Console();
-			lockFields(this, [
-				'isLoaded',
-				'exitCode',
-				'abortType',
-				'abortWhat',
-				'abortStack'
-			], true);
-			lockFields(this, [
-				'headNode',
-				'fetchModule',
-				'runtimeAlive',
-				'disposeModule',
-				'iostream'
-			], false);
+			lockFields(this, ['isLoaded', 'exitCode', 'abortType', 'abortWhat', 'abortStack'], true);
+			lockFields(this, ['headNode', 'fetchModule', 'runtimeAlive', 'disposeModule', 'iostream'], false);
 		}
 		async structuredTag() {
 			this.initStream();
@@ -1046,16 +1033,7 @@
 			}
 		}
 	};
-	shareProperties(ModuleState, [
-		'startAsync',
-		'ExitCode',
-		'AbortType',
-		'AbortWhat',
-		'AbortStack',
-		'AbortState'
-	], false);
-	shareProperties(ModuleState, [
-		'SetDefaultModule'
-	], true);
+	shareProperties(ModuleState, ['startAsync', 'ExitCode', 'AbortType', 'AbortWhat', 'AbortStack', 'AbortState'], false);
+	shareProperties(ModuleState, ['SetDefaultModule'], true);
 	hardFreeze(window, [ModuleState], false);
 })();
