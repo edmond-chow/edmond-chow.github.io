@@ -553,13 +553,6 @@
 		word-break: break-all;
 		overflow-wrap: anywhere;
 	}
-	console > buffer > box > line > span:after {
-		content: ' ';
-		font-size: 0px;
-		display: inline-block;
-		width: 0px;
-		height: 0px;
-	}
 	console > buffer > box > line > span > data-content {
 		display: inline;
 		white-space: pre-wrap;
@@ -597,7 +590,9 @@
 			background-color: transparent;
 		}
 	}
-	console > buffer > box:last-of-type > line:last-of-type:after {
+	console > buffer > box:last-of-type > line:last-of-type > span:last-of-type > data-content:after,
+	console > buffer > box:last-of-type > line:last-of-type > data-content:after,
+	console > buffer > box:last-of-type > data-content:after {
 		content: '';
 		position: absolute;
 		height: 2px;

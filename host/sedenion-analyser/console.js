@@ -337,8 +337,11 @@
 			this.InputNode.readOnly = !value;
 			this.ButtonNode.disabled = !value;
 			if (value && !this.typing) {
-				let LastSpanNode = this.LastLineNode.LastSpanNode;
-				if (LastSpanNode != null) {
+				let LastLineNode = this.LastLineNode;
+				let LastSpanNode = LastLineNode.LastSpanNode;
+				if (LastSpanNode == null) {
+					LastLineNode.Self.append(this.DataContentNode);
+				} else {
 					LastSpanNode.append(this.DataContentNode);
 				}
 				if (window == window.top) {
@@ -381,8 +384,7 @@
 			if (line.length > 0 && line[0] == '$') {
 				let args = [];
 				let temp = '';
-				let wording = false;
-				let quoting = false;
+				let state = 0;
 				let push = () => {
 					if (temp.length > 0) {
 						args.push(temp);
@@ -390,35 +392,34 @@
 					}
 				};
 				for (let i = 1; i < line.length; i++) {
-					if (line[i] == ' ' && !quoting) {
-						if (wording) {
-							push();
-							wording = false;
-						}
-						wording = false;
-					} else if (line[i] == '"' && !quoting) {
-						if (wording) {
-							push();
-							wording = false;
-						}
-						quoting = true;
-					} else if (line[i] == '"' && quoting) {
+					if (line[i] == ' ' && state == 0) {
+						continue;
+					} else if (line[i] == ' ' && state == 1) {
 						push();
-						quoting = false;
+						state = 0;
+					} else if (line[i] == '"' && state == 0) {
+						state = 2;
+					} else if (line[i] == '"' && state == 1) {
+						push();
+						state = 2;
+					} else if (line[i] == '"' && state == 2) {
+						push();
+						state = 0;
+					} else if (state == 0) {
+						temp += line[i];
+						state = 1;
 					} else {
 						temp += line[i];
-						if (!quoting) {
-							wording = true;
-						}
 					}
 				}
 				push();
 				if (args.length == 2 && args[0] == 'scheme') {
 					this.Scheme = args[1];
 				}
-				await this.write('\n\\f7\\ &   \\ff\\');
+				await this.write('\n\\f7\\ &   \\ff\\', true);
 				await this.write(line, false);
-				this.BufferNode.append(this.LastLineNode.Self.previousElementSibling);
+				await this.out();
+				this.LastBoxNode.Self.append(this.LastLineNode.Self.previousElementSibling);
 			} else {
 				if (line.length > 1 && line.substring(0, 2) == '\\$') {
 					line = line.substring(1);
