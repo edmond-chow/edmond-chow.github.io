@@ -202,7 +202,7 @@
 		get SpanNodes() {
 			return this.Self != null ? Array.from(this.Self.childNodes).filter((value) => {
 				return value.nodeName == 'span'.toUpperCase();
-			}) : null;
+			}) : [];
 		}
 		get LastSpanNode() {
 			let SpanNodes = this.SpanNodes;
@@ -218,11 +218,17 @@
 		get LineNodes() {
 			return this.Self != null ? Array.from(this.Self.childNodes).filter((value) => {
 				return value.nodeName == 'line'.toUpperCase();
-			}) : null;
+			}).map((value) => {
+				return new LineNodeWrapper(value);
+			}) : [];
+		}
+		get FirstLineNode() {
+			let LineNodes = this.LineNodes;
+			return LineNodes.length > 0 ? LineNodes.shift() : new LineNodeWrapper(null);
 		}
 		get LastLineNode() {
 			let LineNodes = this.LineNodes;
-			return LineNodes != null && LineNodes.length > 0 ? LineNodes.pop() : null;
+			return LineNodes.length > 0 ? LineNodes.pop() : new LineNodeWrapper(null);
 		}
 	};
 	let ConsoleIntervals = [];
@@ -416,10 +422,18 @@
 				if (args.length == 2 && args[0] == 'scheme') {
 					this.Scheme = args[1];
 				}
+				let foreground = this.ForegroundColor;
+				let Last2ndBoxNode = this.LastBoxNode;
+				let Last2ndLineNode = this.LastLineNode;
 				await this.write('\n\\f7\\ &   \\ff\\', true);
 				await this.write(line, false);
 				await this.out();
-				this.LastBoxNode.Self.append(this.LastLineNode.Self.previousElementSibling);
+				let Last1stBoxNode = this.LastBoxNode;
+				Last1stBoxNode.Self.append(Last2ndLineNode.Self);
+				if (Last1stBoxNode.Self != Last2ndBoxNode.Self) {
+					Last2ndBoxNode.Self.append(Last1stBoxNode.FirstLineNode.Self);
+				}
+				this.ForegroundColor = foreground;
 			} else {
 				if (line.length > 1 && line.substring(0, 2) == '\\$') {
 					line = line.substring(1);
@@ -444,13 +458,11 @@
 			this.BoxNodes.forEach((value) => {
 				LineNodes.push(...value.LineNodes);
 			});
-			return LineNodes.map((value) => {
-				return new LineNodeWrapper(value);
-			});
+			return LineNodes;
 		}
 		get LastLineNode() {
 			let LastBoxNode = this.LastBoxNode;
-			return new LineNodeWrapper(LastBoxNode != null ? LastBoxNode.LastLineNode : null);
+			return LastBoxNode.Self != null ? LastBoxNode.LastLineNode : new LineNodeWrapper(null);
 		}
 		get Scheme() {
 			return this.ConsoleNode.getAttribute('scheme');
@@ -492,18 +504,35 @@
 			'vintage'
 		]
 		static GetColorCode(name) {
+			[name].constrainedWithAndThrow(String);
 			return Console.Colors.indexOf(name);
 		}
 		static GetColorName(code) {
+			[code].constrainedWithAndThrow(Number);
 			return Console.Colors[code];
 		}
-		static GetColorCharCode(code) {
+		static GetColorCharFromCode(code) {
+			[code].constrainedWithAndThrow(Number);
 			if (code >= 0 && code <= 9) {
 				return code + 48;
 			} else if (code >= 10 && code <= 15) {
 				return code + 87;
 			} else if (code == 0xFF) {
 				return 120;
+			} else {
+				throw 'The code out of range!';
+			}
+		}
+		static GetColorCodeFromChar(code) {
+			[code].constrainedWithAndThrow(Number);
+			if (code >= 48 && code <= 57) {
+				return code - 48;
+			} else if (code >= 65 && code <= 70) {
+				return code - 55;
+			} else if (code >= 97 && code <= 102) {
+				return code - 87;
+			} else if (code == 88 || code == 120) {
+				return 0xFF;
 			} else {
 				throw 'The code out of range!';
 			}
@@ -550,8 +579,8 @@
 			let config = false;
 			let control = null;
 			let breaking = false;
-			let foreground = Console.GetColorCode(this.ForegroundColor);
-			let background = Console.GetColorCode(this.BackgroundColor);
+			let foreground = this.ForegroundColor;
+			let background = this.BackgroundColor;
 			let title = Console.Title;
 			let Fragment = document.createDocumentFragment();
 			let BoxNode = this.LastBoxNode;
@@ -576,10 +605,10 @@
 					NewBoxNode.append(Fragment);
 					this.BufferNode.append(NewBoxNode);
 					Fragment = document.createDocumentFragment();
-					BoxNode = new BoxNodeWrapper(null);
 				}
-				this.ForegroundColor = Console.GetColorName(foreground);
-				this.BackgroundColor = Console.GetColorName(background);
+				BoxNode = new BoxNodeWrapper(null);
+				this.ForegroundColor = foreground;
+				this.BackgroundColor = background;
 				Console.Title = title;
 				if (scroll) {
 					this.CanScrollIntoBottom();
@@ -609,8 +638,8 @@
 					SpanNode = document.createElement('span');
 					LineNode.append(SpanNode);
 				}
-				SpanNode.setAttribute('foreground', Console.GetColorName(foreground));
-				SpanNode.setAttribute('background', Console.GetColorName(background));
+				SpanNode.setAttribute('foreground', foreground);
+				SpanNode.setAttribute('background', background);
 			};
 			let endUp = () => {
 				pushSpan();
@@ -623,24 +652,18 @@
 			let isColorChanged = () => {
 				if (SpanNode == null) {
 					return true;
-				} else if (SpanNode.getAttribute('foreground') != Console.GetColorName(foreground)) {
+				} else if (SpanNode.getAttribute('foreground') != foreground) {
 					return true;
-				} else if (SpanNode.getAttribute('background') != Console.GetColorName(background)) {
+				} else if (SpanNode.getAttribute('background') != background) {
 					return true;
 				} else {
 					return false;
 				}
 			};
-			let getColorCode = (code) => {
-				if (code >= 48 && code <= 57) {
-					return code - 48;
-				} else if (code >= 65 && code <= 70) {
-					return code - 55;
-				} else if (code >= 97 && code <= 102) {
-					return code - 87;
-				} else if (code == 88 || code == 120) {
-					return 0xFF;
-				} else {
+			let getColorName = (code) => {
+				try {
+					return Console.GetColorName(Console.GetColorCodeFromChar(code));
+				} catch (e) {
 					throwNow();
 				}
 			};
@@ -697,10 +720,10 @@
 						title = content[i];
 						control = '+t';
 					} else if (control.toLowerCase() == 'f') {
-						foreground = getColorCode(content.charCodeAt(i));
+						foreground = getColorName(content.charCodeAt(i));
 						control = '';
 					} else if (control.toLowerCase() == 'b') {
-						background = getColorCode(content.charCodeAt(i));
+						background = getColorName(content.charCodeAt(i));
 						control = '';
 					} else {
 						throwNow();
@@ -907,7 +930,8 @@
 		'Themes',
 		'GetColorCode',
 		'GetColorName',
-		'GetColorCharCode',
+		'GetColorCharFromCode',
+		'GetColorCodeFromChar',
 		'Title'
 	], true);
 	hardFreeze(window, [Console], false);

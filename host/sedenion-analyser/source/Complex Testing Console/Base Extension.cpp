@@ -61,13 +61,13 @@ namespace CmplxConExt
 				return Module['getUTF32String'](title, Console.Title);
 			});
 			EM_JS(std::char_traits<wchar_t>::int_type, color_char_code, (std::uint8_t code), {
-				return Console.GetColorCharCode(code);
+				return Console.GetColorCharFromCode(code);
 			});
 			EM_ASYNC_JS(void, write_controlized, (const wchar_t* content), {
-				await Module['iostream'].write(UTF32ToString(content));
+				await Module['iostream'].write(UTF32ToString(content), true);
 			});
 			EM_ASYNC_JS(const wchar_t*, read_echoing, (), {
-				let line = await Module['iostream'].readLine();
+				let line = await Module['iostream'].readLine(true);
 				return Module['getUTF32String'](__asyncjs__read_echoing, line);
 			});
 			EM_ASYNC_JS(void, press_any_key, (), {
